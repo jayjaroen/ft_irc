@@ -84,7 +84,7 @@ void	Command::msgparser(const std::string input)
 	// UserMess	type4;
 	// OperMess	type5;
 	std::string	icomm = commandcheck(input);
-	if (!icomm.empty())
+	if (icomm.empty())
 		this->params[0][0] = icomm;
 	else
 	{
