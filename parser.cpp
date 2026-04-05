@@ -85,7 +85,7 @@ void	Command::msgparser(const std::string input)
 	// OperMess	type5;
 	std::string	icomm = commandcheck(input);
 	if (icomm.empty())
-		this->params[0][0] = icomm;
+		this->params[0][0] = input;
 	else
 	{
 		// size_t	len = this->idcomms(icomm);
