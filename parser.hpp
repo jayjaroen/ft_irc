@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:03:17 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/04/05 22:15:14 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/04/07 21:45:42 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,17 +45,18 @@ enum ConnectMess
 class Command
 {
 	private:
-		// enum	ChannelMess;
-		// enum	ServMess;
-		// enum	UserMess;
-		// enum	OperMess;
 		// typedef void (Command::*Handler)(const IRCMessage&, Client&);
 		// std::map<std::string, Handler> _hanlers;
+		std::map<std::string, ConnectMess> _connectMap;
+		std::map<std::string, ChannelMess> _channelMap;
+		std::map<std::string, ServMess> _servMap;
+		std::map<std::string, UserMess> _userMap;
+		std::map<std::string, OperMess> _operMap;
 		char	***params; //3 pointer for [array set #no][string #no][char(s) in string]
 	public:
 		Command();
 		~Command();
-		void intitHandlers();
+		void initHandlers();
 		void execute_command(const IRCMessage
 		& msg);
 		Command msgparser(const std::string input);

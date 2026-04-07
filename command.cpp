@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/04/05 22:17:32 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/04/07 22:03:19 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,56 @@ IRCMessage translateFromParser(char ***params)
             msg.params.push_back(*(params[i]));
     }
     return msg;
+}
+
+Command::Command()
+{
+    initHandlers();
+}
+
+Command::~Command()
+{
+    
+}
+
+void Command::initHandlers()
+{
+    this->_connectMap["CAP"] = CAP;
+    this->_connectMap["AUTHENTICATE"] = AUTHENTICATE;
+    this->_connectMap["PASS"] = PASS;
+    this->_connectMap["NICK"] = NICK;
+    this->_connectMap["USER"] = USER;
+    this->_connectMap["PING"] = PING;
+    this->_connectMap["PONG"] = PONG;
+    this->_connectMap["OPER"] = OPER;
+    this->_connectMap["QUIT"] = QUIT;
+    this->_connectMap["ERROR"] = ERROR;
+    this->_channelMap["JOIN"] = JOIN;
+    this->_channelMap["PART"] = PART;
+    this->_channelMap["TOPIC"] = TOPIC;
+    this->_channelMap["NAMES"] = NAMES;
+    this->_channelMap["LIST"] = LIST;
+    this->_channelMap["INVITE"] = INVITE;
+    this->_channelMap["KICK"] = KICK;
+    this->_servMap["MOTD"] = MOTD;
+    this->_servMap["VERSION"] = VERSION;
+    this->_servMap["ADMIN"] = ADMIN;
+    this->_servMap["CONNECT"] = CONNECT;
+    this->_servMap["LUSERS"] = LUSERS;
+    this->_servMap["TIME"] = TIME;
+    this->_servMap["STATS"] = STATS;
+    this->_servMap["HELP"] = HELP;
+    this->_servMap["INFO"] = INFO;
+    this->_servMap["MODE"] = MODE;
+    this->_userMap["PRIVMSG"] = PRIVMSG;
+    this->_userMap["NOTICE"] = NOTICE;
+    this->_userMap["WHO"] = WHO;
+    this->_userMap["WHOIS"] = WHOIS;
+    this->_userMap["WHOWAS"] = WHOWAS;
+    this->_operMap["KILL"] = KILL;
+    this->_operMap["REHASH"] = REHASH;
+    this->_operMap["RESTART"] = RESTART;
+    this->_operMap["SQUIT"] = SQUIT;
 }
 
 // void Command::execute_command(const IRCMessage &msg)
