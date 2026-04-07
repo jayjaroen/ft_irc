@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   command.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/04/03 16:20:21 by codespace        ###   ########.fr       */
+/*   Updated: 2026/04/05 22:17:32 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,3 +33,17 @@ IRCMessage translateFromParser(char ***params)
     return msg;
 }
 
+// void Command::execute_command(const IRCMessage &msg)
+// {
+//     if (msg.command)
+// }
+
+void Command::interpret_command(const IRCMessage &msg)
+{
+    if (msg.command == "PASS" || )
+}
+
+void Command::handleConnection(ConnectMess cmd, const IRCMessage &msg)
+{
+    
+}

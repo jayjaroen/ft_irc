@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: codespace <codespace@student.42.fr>        +#+  +:+       +#+        */
+/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:03:17 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/04/04 00:28:21 by codespace        ###   ########.fr       */
+/*   Updated: 2026/04/05 22:15:14 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,10 +26,25 @@ struct IRCMessage{
 	std::string trailing;
 };
 
+enum ConnectMess
+{
+	CONNECT_UNKNOWN,
+	CAP,
+	AUTHENTICATE,
+	PASS,
+	NICK,
+	USER,
+	PING,
+	PONG,
+	OPER,
+	QUIT,
+	ERROR
+};
+
+
 class Command
 {
 	private:
-		// enum	ConnectMess;
 		// enum	ChannelMess;
 		// enum	ServMess;
 		// enum	UserMess;
@@ -37,16 +52,17 @@ class Command
 		// typedef void (Command::*Handler)(const IRCMessage&, Client&);
 		// std::map<std::string, Handler> _hanlers;
 		char	***params; //3 pointer for [array set #no][string #no][char(s) in string]
-		Command();
 	public:
+		Command();
 		~Command();
 		void intitHandlers();
-		void execute_comand(const IRCMessage
+		void execute_command(const IRCMessage
 		& msg);
 		Command msgparser(const std::string input);
+		void interpret_command(const IRCMessage &msg);
 		// void handleChannelOp(ChannelMess cmd, const IRCMessage& msg);
 		// void handleUserComm(UserMess cmd, const IRCMessage& msg);
-		// void handleConnection(ConnectMess cmd, const IRCMessage& msg);
+		void handleConnection(ConnectMess cmd, const IRCMessage& msg);
 		void sendResponse(int fd, const std::string& response);
 };
 
@@ -60,24 +76,10 @@ class EnviVar
 		char	**envparser(const char **env);
 };
 
-enum ConnectMess
-{
-	UNKNOWN_CMD,
-	CAP,
-	AUTHENTICATE,
-	PASS,
-	NICK,
-	USER,
-	PING,
-	PONG,
-	OPER,
-	QUIT,
-	ERROR
-};
 
 enum ChannelMess
 {
-	Channel_unkown,
+	CHANNEL_UNKNOWN,
 	JOIN,
 	PART,
 	TOPIC,
@@ -89,7 +91,7 @@ enum ChannelMess
 
 enum ServMess
 {
-	Serv_unkown,
+	SERV_UNKOWN,
 	MOTD,
 	VERSION,
 	ADMIN,
@@ -104,7 +106,7 @@ enum ServMess
 
 enum UserMess
 {
-	User_unkown,
+	USER_UNKOWN,
 	PRIVMSG,
 	NOTICE,
 	WHO,
@@ -114,7 +116,7 @@ enum UserMess
 
 enum OperMess
 {
-	Oper_unkown,
+	OPER_UNKOWN,
 	KILL,
 	REHASH,
 	RESTART,
