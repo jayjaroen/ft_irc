@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/04/07 22:03:19 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/04/07 22:57:56 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,6 +32,14 @@ IRCMessage translateFromParser(char ***params)
     }
     return msg;
 }
+
+
+
+void Command::interpret_command(const IRCMessage &msg)
+{
+    
+}
+
 
 Command::Command()
 {
@@ -83,10 +91,13 @@ void Command::initHandlers()
     this->_operMap["SQUIT"] = SQUIT;
 }
 
-// void Command::execute_command(const IRCMessage &msg)
-// {
-//     if (msg.command)
-// }
+void Command::execute_command(const IRCMessage &msg)
+{
+    std::string command;
+    for (int i = 0; i < msg.command.size(); i++)
+        command[i] = std::toupper(msg.command[i]);
+    
+}
 
 void Command::interpret_command(const IRCMessage &msg)
 {

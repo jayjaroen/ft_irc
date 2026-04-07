@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:03:17 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/04/07 21:45:42 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/04/07 22:52:39 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,8 @@
 #include <map>
 #include <string>
 #include <functional>
+#include <cctype>
+#include <algorithm>
 
 struct IRCMessage{
 	std::string prefix;
