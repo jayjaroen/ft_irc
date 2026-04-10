@@ -19,7 +19,6 @@ class Command
 	private:
 		// std::string	command;
 		size_t		type;
-		size_t		code;
 		// typedef void (Command::*Handler)(const IRCMessage&, Client&);
 		// std::map<std::string, Handler> _hanlers;
 		std::string	**params; //2 pointer for [array set #no][string #no]
@@ -28,8 +27,8 @@ class Command
 		~Command();
 		// void intitHandlers();
 		// void execute_comand(const IRCMessage & msg);
-		void	msgparser(const std::string input);
-		size_t	idcomms(const std::string word);
+		void		msgparser(const std::string input);
+		std::string	commandcheck(const std::string input);
 		// void handleChannelOp(ChannelMess cmd, const IRCMessage& msg);
 		// void handleUserComm(UserMess cmd, const IRCMessage& msg);
 		// void handleConnection(ConnectMess cmd, const IRCMessage& msg);
@@ -46,60 +45,76 @@ class Command
 // 		char	**envparser(const char **env);
 // };
 
-enum ConnectMess
+// enum ConnectMess
+// {
+// 	CAP,
+// 	AUTHENTICATE,
+// 	PASS,
+// 	NICK,
+// 	USER,
+// 	PING,
+// 	PONG,
+// 	OPER,
+// 	QUIT,
+// 	ERROR
+// };
+// enum ChannelMess
+// {
+// 	JOIN,
+// 	PART,
+// 	TOPIC,
+// 	NAMES,
+// 	LIST,
+// 	INVITE,
+// 	KICK
+// };
+// enum ServMess
+// {
+// 	MOTD,
+// 	VERSION,
+// 	ADMIN,
+// 	CONNECT,
+// 	LUSERS,
+// 	TIME,
+// 	STATS,
+// 	HELP,
+// 	INFO,
+// 	MODE
+// };
+// enum UserMess
+// {
+// 	PRIVMSG,
+// 	NOTICE,
+// 	WHO,
+// 	WHOIS,
+// 	WHOWAS
+// };
+// enum OperMess
+// {
+// 	KILL,
+// 	REHASH,
+// 	RESTART,
+// 	SQUIT
+// };
+
+enum CommandPrompts
 {
 	CAP,
-	AUTHENTICATE,
-	PASS,
-	NICK,
-	USER,
-	PING,
-	PONG,
-	OPER,
+	CONNECT,
 	QUIT,
-	ERROR
-};
-
-enum ChannelMess
-{
 	JOIN,
 	PART,
-	TOPIC,
-	NAMES,
-	LIST,
-	INVITE,
-	KICK
-};
-
-enum ServMess
-{
-	MOTD,
-	VERSION,
-	ADMIN,
-	CONNECT,
-	LUSERS,
-	TIME,
-	STATS,
+	PING,
 	HELP,
-	INFO,
-	MODE
-};
-
-enum UserMess
-{
+	NICK,
+	PASS,
+	TOPIC,
+	INVITE,
+	KICK,
 	PRIVMSG,
-	NOTICE,
-	WHO,
-	WHOIS,
-	WHOWAS
-};
-
-enum OperMess
-{
-	KILL,
-	REHASH,
-	RESTART,
-	SQUIT
+	OPER,
+	MODE,
+	RESTART
 };
 
 // enum NumRpl
