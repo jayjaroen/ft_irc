@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/04/07 22:57:56 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/04/11 14:23:10 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,27 @@ IRCMessage translateFromParser(char ***params)
 
 void Command::interpret_command(const IRCMessage &msg)
 {
+    std::string cmdUpper = msg.command;
+    std::transform(cmdUpper.begin(), cmdUpper.end(), cmdUpper.begin(), ::toupper);
+
+    if (this->_connectMap.count(cmdUpper)) {
+        // handleConnection(this->_connectMap[cmdUpper], msg);
+        return;
+    }
+
+    if (this->_channelMap.count(cmdUpper)) {
+        // handleChannel(this->_channelMap[cmdUpper], msg);
+        return;
+    }
+
+    if (this->_userMap.count(cmdUpper)) {
+        // handleUser(this->_userMap[cmdUpper], msg);
+        return;
+    }
+
+    std::cout << "Unknown command: " << cmdUpper << std::endl;
     
+    // std::cout << cmdUpper << std::endl;
 }
 
 
