@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/04/11 14:23:10 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/04/11 14:30:34 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,16 +41,19 @@ void Command::interpret_command(const IRCMessage &msg)
     std::transform(cmdUpper.begin(), cmdUpper.end(), cmdUpper.begin(), ::toupper);
 
     if (this->_connectMap.count(cmdUpper)) {
+        std::cout << cmdUpper << "เป็นของ connect cmd" << std::endl;
         // handleConnection(this->_connectMap[cmdUpper], msg);
         return;
     }
 
     if (this->_channelMap.count(cmdUpper)) {
+        std::cout << cmdUpper << "เป็นของ channel cmd" << std::endl;
         // handleChannel(this->_channelMap[cmdUpper], msg);
         return;
     }
 
     if (this->_userMap.count(cmdUpper)) {
+        std::cout << cmdUpper << "เป็นของ user cmd" << std::endl;
         // handleUser(this->_userMap[cmdUpper], msg);
         return;
     }
@@ -111,20 +114,20 @@ void Command::initHandlers()
     this->_operMap["SQUIT"] = SQUIT;
 }
 
-void Command::execute_command(const IRCMessage &msg)
-{
-    std::string command;
-    for (int i = 0; i < msg.command.size(); i++)
-        command[i] = std::toupper(msg.command[i]);
+// void Command::execute_command(const IRCMessage &msg)
+// {
+//     std::string command;
+//     for (int i = 0; i < msg.command.size(); i++)
+//         command[i] = std::toupper(msg.command[i]);
     
-}
+// }
 
-void Command::interpret_command(const IRCMessage &msg)
-{
-    if (msg.command == "PASS" || )
-}
+// void Command::interpret_command(const IRCMessage &msg)
+// {
+//     if (msg.command == "PASS" || )
+// }
 
-void Command::handleConnection(ConnectMess cmd, const IRCMessage &msg)
-{
+// void Command::handleConnection(ConnectMess cmd, const IRCMessage &msg)
+// {
     
-}
+// }

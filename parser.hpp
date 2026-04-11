@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:03:17 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/04/07 22:52:39 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/04/11 14:30:42 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,43 +42,6 @@ enum ConnectMess
 	QUIT,
 	ERROR
 };
-
-
-class Command
-{
-	private:
-		// typedef void (Command::*Handler)(const IRCMessage&, Client&);
-		// std::map<std::string, Handler> _hanlers;
-		std::map<std::string, ConnectMess> _connectMap;
-		std::map<std::string, ChannelMess> _channelMap;
-		std::map<std::string, ServMess> _servMap;
-		std::map<std::string, UserMess> _userMap;
-		std::map<std::string, OperMess> _operMap;
-		char	***params; //3 pointer for [array set #no][string #no][char(s) in string]
-	public:
-		Command();
-		~Command();
-		void initHandlers();
-		void execute_command(const IRCMessage
-		& msg);
-		Command msgparser(const std::string input);
-		void interpret_command(const IRCMessage &msg);
-		// void handleChannelOp(ChannelMess cmd, const IRCMessage& msg);
-		// void handleUserComm(UserMess cmd, const IRCMessage& msg);
-		void handleConnection(ConnectMess cmd, const IRCMessage& msg);
-		void sendResponse(int fd, const std::string& response);
-};
-
-class EnviVar
-{
-	private:
-		char	**envmod;
-		EnviVar();
-	public:
-		~EnviVar();
-		char	**envparser(const char **env);
-};
-
 
 enum ChannelMess
 {
@@ -125,6 +88,44 @@ enum OperMess
 	RESTART,
 	SQUIT
 };
+
+class Command
+{
+	private:
+		// typedef void (Command::*Handler)(const IRCMessage&, Client&);
+		// std::map<std::string, Handler> _hanlers;
+		std::map<std::string, ConnectMess> _connectMap;
+		std::map<std::string, ChannelMess> _channelMap;
+		std::map<std::string, ServMess> _servMap;
+		std::map<std::string, UserMess> _userMap;
+		std::map<std::string, OperMess> _operMap;
+		char	***params; //3 pointer for [array set #no][string #no][char(s) in string]
+	public:
+		Command();
+		~Command();
+		void initHandlers();
+		// void execute_command(const IRCMessage
+		// & msg);
+		// Command msgparser(const std::string input);
+		void interpret_command(const IRCMessage &msg);
+		// void handleChannelOp(ChannelMess cmd, const IRCMessage& msg);
+		// void handleUserComm(UserMess cmd, const IRCMessage& msg);
+		void handleConnection(ConnectMess cmd, const IRCMessage& msg);
+		// void sendResponse(int fd, const std::string& response);
+};
+
+class EnviVar
+{
+	private:
+		char	**envmod;
+		EnviVar();
+	public:
+		~EnviVar();
+		char	**envparser(const char **env);
+};
+
+
+
 
 // enum NumRpl
 // {

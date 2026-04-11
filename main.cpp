@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/03 14:30:58 by codespace         #+#    #+#             */
-/*   Updated: 2026/04/11 14:21:00 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/04/11 14:28:21 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@ int main(int ac, char *av[])
 	(void) ac;
 	(void) av;
 	char ***mock_parser = new char**[5];
+	Command test;
 
 	mock_parser[0] = new char*[1]; *mock_parser[0] = (char *)":Gyeepach!u@h";
 	mock_parser[1] = new char*[1]; *mock_parser[1] = (char *)"PRIVMSG";
@@ -35,8 +36,10 @@ int main(int ac, char *av[])
 		std::cout << "[" << msg.params[i] << "] ";
 	std::cout << std::endl;
 
-	if (msg.command == "PRIVMSG")
-		std::cout << "\nAction: Processing chat message to " << msg.params[0] << std::endl;
+	test.interpret_command(msg);
+	
+	// if (msg.command == "PRIVMSG")
+		// std::cout << "\nAction: Processing chat message to " << msg.params[0] << std::endl;
 
 	for (int i = 0; i < 4; ++i) delete[] mock_parser[i];
 	delete[] mock_parser;
