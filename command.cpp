@@ -18,13 +18,10 @@ IRCMessage translateFromParser(char ***params)
 
     if (!params)
         return msg;
-    
     if (params[0] && *(params[0]))
         msg.prefix = *(params[0]);
-
     if (params[1] && *(params[1]))
         msg.command = *(params[1]);
-    
     for (int i = 2; params[i] != NULL; ++i)
     {
         if (*(params[i]))
@@ -35,30 +32,12 @@ IRCMessage translateFromParser(char ***params)
 
 
 
-void Command::interpret_command(const IRCMessage &msg)
+void Command::convert_to_upper(const IRCMessage &msg)
 {
     std::string cmdUpper = msg.command;
     std::transform(cmdUpper.begin(), cmdUpper.end(), cmdUpper.begin(), ::toupper);
 
-    if (this->_connectMap.count(cmdUpper)) {
-        std::cout << cmdUpper << "เป็นของ connect cmd" << std::endl;
-        // handleConnection(this->_connectMap[cmdUpper], msg);
-        return;
-    }
-
-    if (this->_channelMap.count(cmdUpper)) {
-        std::cout << cmdUpper << "เป็นของ channel cmd" << std::endl;
-        // handleChannel(this->_channelMap[cmdUpper], msg);
-        return;
-    }
-
-    if (this->_userMap.count(cmdUpper)) {
-        std::cout << cmdUpper << "เป็นของ user cmd" << std::endl;
-        // handleUser(this->_userMap[cmdUpper], msg);
-        return;
-    }
-
-    std::cout << "Unknown command: " << cmdUpper << std::endl;
+    // std::cout << "Unknown command: " << cmdUpper << std::endl;
     
     // std::cout << cmdUpper << std::endl;
 }
@@ -76,42 +55,22 @@ Command::~Command()
 
 void Command::initHandlers()
 {
-    this->_connectMap["CAP"] = CAP;
-    this->_connectMap["AUTHENTICATE"] = AUTHENTICATE;
-    this->_connectMap["PASS"] = PASS;
-    this->_connectMap["NICK"] = NICK;
-    this->_connectMap["USER"] = USER;
-    this->_connectMap["PING"] = PING;
-    this->_connectMap["PONG"] = PONG;
-    this->_connectMap["OPER"] = OPER;
-    this->_connectMap["QUIT"] = QUIT;
-    this->_connectMap["ERROR"] = ERROR;
-    this->_channelMap["JOIN"] = JOIN;
-    this->_channelMap["PART"] = PART;
-    this->_channelMap["TOPIC"] = TOPIC;
-    this->_channelMap["NAMES"] = NAMES;
-    this->_channelMap["LIST"] = LIST;
-    this->_channelMap["INVITE"] = INVITE;
-    this->_channelMap["KICK"] = KICK;
-    this->_servMap["MOTD"] = MOTD;
-    this->_servMap["VERSION"] = VERSION;
-    this->_servMap["ADMIN"] = ADMIN;
-    this->_servMap["CONNECT"] = CONNECT;
-    this->_servMap["LUSERS"] = LUSERS;
-    this->_servMap["TIME"] = TIME;
-    this->_servMap["STATS"] = STATS;
-    this->_servMap["HELP"] = HELP;
-    this->_servMap["INFO"] = INFO;
-    this->_servMap["MODE"] = MODE;
-    this->_userMap["PRIVMSG"] = PRIVMSG;
-    this->_userMap["NOTICE"] = NOTICE;
-    this->_userMap["WHO"] = WHO;
-    this->_userMap["WHOIS"] = WHOIS;
-    this->_userMap["WHOWAS"] = WHOWAS;
-    this->_operMap["KILL"] = KILL;
-    this->_operMap["REHASH"] = REHASH;
-    this->_operMap["RESTART"] = RESTART;
-    this->_operMap["SQUIT"] = SQUIT;
+    this->_commandprompts["CAP"] = CAP;
+    this->_commandprompts["CONNECT"] = CONNECT;
+    this->_commandprompts["QUIT"] = QUIT;
+    this->_commandprompts["JOIN"] = JOIN;
+    this->_commandprompts["PART"] = PART;
+    this->_commandprompts["PING"] = PING;
+    this->_commandprompts["HELP"] = HELP;
+    this->_commandprompts["NICK"] = NICK;
+    this->_commandprompts["PASS"] = PASS;
+    this->_commandprompts["TOPIC"] = TOPIC;
+    this->_commandprompts["INVITE"] = INVITE;
+    this->_commandprompts["KICK"] = KICK;
+    this->_commandprompts["PRIVMSG"] = PRIVMSG;
+    this->_commandprompts["OPER"] = OPER;
+    this->_commandprompts["MODE"] = MODE;
+    this->_commandprompts["RESTART"] = RESTART;
 }
 
 // void Command::execute_command(const IRCMessage &msg)

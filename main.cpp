@@ -36,7 +36,7 @@ int main(int ac, char *av[])
 		std::cout << "[" << msg.params[i] << "] ";
 	std::cout << std::endl;
 
-	test.interpret_command(msg);
+	test.convert_to_upper(msg);
 	
 	// if (msg.command == "PRIVMSG")
 		// std::cout << "\nAction: Processing chat message to " << msg.params[0] << std::endl;

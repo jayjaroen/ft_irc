@@ -28,65 +28,24 @@ struct IRCMessage{
 	std::string trailing;
 };
 
-enum ConnectMess
+enum CommandPrompts
 {
-	CONNECT_UNKNOWN,
 	CAP,
-	AUTHENTICATE,
-	PASS,
-	NICK,
-	USER,
-	PING,
-	PONG,
-	OPER,
+	CONNECT,
 	QUIT,
-	ERROR
-};
-
-enum ChannelMess
-{
-	CHANNEL_UNKNOWN,
 	JOIN,
 	PART,
-	TOPIC,
-	NAMES,
-	LIST,
-	INVITE,
-	KICK
-};
-
-enum ServMess
-{
-	SERV_UNKOWN,
-	MOTD,
-	VERSION,
-	ADMIN,
-	CONNECT,
-	LUSERS,
-	TIME,
-	STATS,
+	PING,
 	HELP,
-	INFO,
-	MODE
-};
-
-enum UserMess
-{
-	USER_UNKOWN,
+	NICK,
+	PASS,
+	TOPIC,
+	INVITE,
+	KICK,
 	PRIVMSG,
-	NOTICE,
-	WHO,
-	WHOIS,
-	WHOWAS
-};
-
-enum OperMess
-{
-	OPER_UNKOWN,
-	KILL,
-	REHASH,
-	RESTART,
-	SQUIT
+	OPER,
+	MODE,
+	RESTART
 };
 
 class Command
@@ -94,11 +53,7 @@ class Command
 	private:
 		// typedef void (Command::*Handler)(const IRCMessage&, Client&);
 		// std::map<std::string, Handler> _hanlers;
-		std::map<std::string, ConnectMess> _connectMap;
-		std::map<std::string, ChannelMess> _channelMap;
-		std::map<std::string, ServMess> _servMap;
-		std::map<std::string, UserMess> _userMap;
-		std::map<std::string, OperMess> _operMap;
+		std::map<std::string, CommandPrompts> _commandprompts;
 		char	***params; //3 pointer for [array set #no][string #no][char(s) in string]
 	public:
 		Command();
@@ -107,10 +62,10 @@ class Command
 		// void execute_command(const IRCMessage
 		// & msg);
 		// Command msgparser(const std::string input);
-		void interpret_command(const IRCMessage &msg);
+		void convert_to_upper(const IRCMessage &msg);
 		// void handleChannelOp(ChannelMess cmd, const IRCMessage& msg);
 		// void handleUserComm(UserMess cmd, const IRCMessage& msg);
-		void handleConnection(ConnectMess cmd, const IRCMessage& msg);
+		// void handleConnection(ConnectMess cmd, const IRCMessage& msg);
 		// void sendResponse(int fd, const std::string& response);
 };
 
