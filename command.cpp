@@ -74,6 +74,41 @@ void Command::initHandlers()
     this->_commandprompts["RESTART"] = RESTART;
 }
 
+void Command::execute_command(IRCMessage &msg)
+{
+    this->convert_to_upper(msg);
+
+    if (this->_commandprompts.count(msg.command) == 0)
+    {
+        std::cout << "Error: Unknown command" << msg.command << std::endl;
+        return ;
+    }
+
+    CommandPrompts cmdType = this->_commandprompts[msg.command];
+
+    switch (cmdType)
+    {
+        case PASS:
+            std::cout << "Executing PASS..." << std::endl;
+            break;
+        case NICK:
+            std::cout << "Executing NICK..." << std::endl;
+            break;
+        case JOIN:
+            std::cout << "Joining channel: " << msg.params[0] << std::endl;
+            break;
+        case PRIVMSG:
+            std::cout << "Sending message to: " << msg.params[0] << std::endl;
+            break;
+        case QUIT:
+            std::cout << "Client quitting..." << std::endl;
+            break;
+        default:
+            std::cout << "Command " << msg.command << " not implementes" << std::endl;
+            break;
+    }
+}
+
 // void Command::execute_command(const IRCMessage &msg)
 // {
 //     std::string command;

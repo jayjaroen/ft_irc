@@ -59,10 +59,9 @@ class Command
 		Command();
 		~Command();
 		void initHandlers();
-		// void execute_command(const IRCMessage
-		// & msg);
+		void execute_command(IRCMessage &msg);
 		// Command msgparser(const std::string input);
-		void Command::convert_to_upper(IRCMessage &msg);
+		void convert_to_upper(IRCMessage &msg);
 		// void handleChannelOp(ChannelMess cmd, const IRCMessage& msg);
 		// void handleUserComm(UserMess cmd, const IRCMessage& msg);
 		// void handleConnection(ConnectMess cmd, const IRCMessage& msg);
