@@ -32,10 +32,11 @@ IRCMessage translateFromParser(char ***params)
 
 
 
-void Command::convert_to_upper(const IRCMessage &msg)
+void Command::convert_to_upper(IRCMessage &msg)
 {
-    std::string cmdUpper = msg.command;
-    std::transform(cmdUpper.begin(), cmdUpper.end(), cmdUpper.begin(), ::toupper);
+    std::transform(msg.command.begin(), msg.command.end(), msg.command.begin(), ::toupper);
+    // std::string cmdUpper = msg.command;
+    // std::transform(cmdUpper.begin(), cmdUpper.end(), cmdUpper.begin(), ::toupper);
 
     // std::cout << "Unknown command: " << cmdUpper << std::endl;
     
