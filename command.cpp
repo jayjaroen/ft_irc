@@ -35,12 +35,6 @@ IRCMessage translateFromParser(char ***params)
 void Command::convert_to_upper(IRCMessage &msg)
 {
     std::transform(msg.command.begin(), msg.command.end(), msg.command.begin(), ::toupper);
-    // std::string cmdUpper = msg.command;
-    // std::transform(cmdUpper.begin(), cmdUpper.end(), cmdUpper.begin(), ::toupper);
-
-    // std::cout << "Unknown command: " << cmdUpper << std::endl;
-    
-    // std::cout << cmdUpper << std::endl;
 }
 
 
@@ -74,24 +68,41 @@ void Command::initHandlers()
     this->_commandprompts["RESTART"] = RESTART;
 }
 
-void Command::execute_command(IRCMessage &msg)
+void Command::execute_command(IRCMessage &msg, Client &sender)
 {
     this->convert_to_upper(msg);
-
     if (this->_commandprompts.count(msg.command) == 0)
     {
         std::cout << "Error: Unknown command" << msg.command << std::endl;
         return ;
     }
-
     CommandPrompts cmdType = this->_commandprompts[msg.command];
+    
+    if (!sender.isRegistered())
+    {
+        if (cmdType != PASS && cmdType != NICK && cmdType != USER && cmdType != CAP)
+        {
+            // send ERR_NOTREGISTERED
+            return ;
+        }
+    }
 
     switch (cmdType)
     {
+        case CAP:
+            std::cout << "Executing CAP..." << std::endl;
+            break;
+        case CONNECT:
+            std::cout <<  "Executing CONNECT..." << std::endl;
+            break;
+        case RESTART:
+            std::cout << "Executing RESTART...", << std::endl;
+            break;
         case PASS:
             std::cout << "Executing PASS..." << std::endl;
             break;
         case NICK:
+            handleNick(msg, sender);
             std::cout << "Executing NICK..." << std::endl;
             break;
         case JOIN:
@@ -109,20 +120,13 @@ void Command::execute_command(IRCMessage &msg)
     }
 }
 
-// void Command::execute_command(const IRCMessage &msg)
-// {
-//     std::string command;
-//     for (int i = 0; i < msg.command.size(); i++)
-//         command[i] = std::toupper(msg.command[i]);
-    
-// }
+void Command::handleNick(IRCMessage &msg, Client &sender)
+{
+    if (msg.params.empty())
+    {
+        return;
+    }
+    sender.setNick(msg.params[0]);
+    std::cout << "Client FD " << sender.getFD() << " changed nick to " << msg.params[0] << std::endl;
+}
 
-// void Command::interpret_command(const IRCMessage &msg)
-// {
-//     if (msg.command == "PASS" || )
-// }
-
-// void Command::handleConnection(ConnectMess cmd, const IRCMessage &msg)
-// {
-    
-// }
