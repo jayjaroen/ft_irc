@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 15:02:06 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/04/04 17:30:37 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/04/17 17:25:46 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -102,7 +102,105 @@ bool Server::bindAndListen(int fd, int port, int backlog)
     return true;
 }
 
+void Server::disconnectClient(int client_fd)
+{
+    std::cout << "Disconnect client fd: " << client_fd << std::endl;
+    //close socket
+    close(client_fd);
+    //remove from poll
+    for (std::vector<pollfd>::iterator it = _fds.begin(); it != _fds.end(); ++it)
+    {
+        if (it->fd == client_fd)
+        {
+            _fds.erase(it);
+            break;
+        }
+    }
+    //remove from client map
+    std::map<int, Client*>::iterator it = _clients.find(client_fd);
+    if (it != _clients.end())//why checking end
+    {
+        delete it->second;
+        _clients.erase(it);
+    }
+}
 
+void Server::acceptNewClient()
+{
+    std::cout << "In accept new client function" << std::endl;
+    while (true)
+    {
+        struct sockaddr_in addr;
+        socklen_t len = sizeof(addr);
+        
+        int client_fd = accept(_server_fd, (struct sockaddr*)&addr, &len);
+        
+        if (client_fd < 0)
+        {
+            if (errno == EAGAIN || errno == EWOULDBLOCK)
+                break;
+            else
+            {
+                perror("accept");
+                break;
+            }
+        }
+        //extract client info
+        int port = ntohs(addr.sin_port);
+        std::string ip = inet_ntoa(addr.sin_addr);
+        std::cout << "New client: fd: " << client_fd
+                << " ip = " << ip
+                << " port = " << port << std::endl;
+        
+        if (!setNonBlocking(client_fd))
+        {
+            std::cerr << "Failed to set non-blocking" << std::endl;
+            close(client_fd);
+            continue;
+        }
+        pollfd p = {client_fd, POLLIN, 0}; //fd,events,revents
+        _fds.push_back(p);
+        _clients[client_fd] = new Client(client_fd, port, ip);
+    }
+}
+
+void Server::run()
+{
+    pollfd server_fd = {_server_fd, POLLIN, 0};
+    _fds.push_back(server_fd);
+    while (true)
+    {
+        int ret = poll(_fds.data(), _fds.size(), 1000);//number of fds have event
+        if (ret < 0)
+        {
+            if (errno == EINTR)
+                continue;
+            throw std::runtime_error("poll failed");
+        }
+        for (size_t i = 0 ; i < _fds.size(); i++)
+        {
+            pollfd &p = _fds[i];
+            if (p.revents == 0)
+                continue;
+            //handle error
+            if (p.revents & (POLLHUP | POLLERR))
+            {
+                disconnectClient(p.fd);
+                continue;
+            }
+            //new connection
+            if (p.fd == _server_fd)
+            {
+                acceptNewClient();
+            }
+            else if (p.revents & POLLIN)
+            {
+                //handleClientMessage(p.fd);
+            }
+            
+        }
+    }
+}
 
 bool Server::start()
 {

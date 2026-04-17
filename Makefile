@@ -6,13 +6,13 @@
 #    By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/03/21 16:19:53 by jjaroens          #+#    #+#              #
-#    Updated: 2026/04/04 17:22:27 by jjaroens         ###   ########.fr        #
+#    Updated: 2026/04/17 17:01:15 by jjaroens         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = ft_irc
 
-SRC = srcs/main.cpp srcs/Server.cpp 
+SRC = srcs/main.cpp srcs/Server.cpp srcs/Client.cpp
 
 HEADER = include/Server.hpp include/Client.hpp
 

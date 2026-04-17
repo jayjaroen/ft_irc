@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 12:49:24 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/04/11 12:45:25 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/04/17 17:46:25 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,19 +23,19 @@ class Client
         std::string _nickname;
         std::string _username;
         std::string _buffer;
-        std::string _hostname;
+        std::string _ip;
         
-        bool    _isAuthenticated;
-        bool    _isOperator;
+        // bool    _isAuthenticated;
+        // bool    _isOperator;
         
         Client();
         
-    
-    public:
-        Client(int fd, int port, const std::string &hostname);
+        
+        public:
+        ~Client();
+        Client(int fd, int port, const std::string &ip);
         Client(const Client &src);
         Client &operator=(const Client &other);
-        ~Client();
         
         int getFd() const;
         int getPort() const;

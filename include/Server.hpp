@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 16:27:41 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/04/04 17:13:51 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/04/17 17:41:38 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,10 @@
 # include <fcntl.h> //fcnlt() provide control over files to set non-blocking
 # include <netinet/in.h>
 # include <unistd.h>
+# include <arpa/inet.h> //inet_aton socket programming to convert an IPv4 network address (binary) to ASCII
 # include "Client.hpp"
+
+class Client;
 
 class Server
 {
@@ -32,7 +35,7 @@ class Server
 		int	_backlog;
 		std::string	_password;
 		
-		std::vector<pollfd>	_pollfds;
+		std::vector<pollfd>	_fds;
 		std::map<int, Client*>	_clients;
 		Server();
 	
@@ -47,10 +50,13 @@ class Server
 		bool	setNonBlocking(int fd);
 		void	setCloexec(int fd);
 		bool	bindAndListen(int fd, int port, int backlog);
+		void	run();
+		void	acceptNewClient();
+		void	disconnectClient(int client_fd);
 		
-		bool	handClient(int cliend_fd);
-		bool	handleEvents();
-		bool	sendMessage(int fd, std::string msg);
+		// bool	handClient(int cliend_fd);
+		// bool	handleEvents();
+		// bool	sendMessage(int fd, std::string msg);
 };
 
 #endif
