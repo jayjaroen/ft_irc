@@ -12,32 +12,6 @@
 
 #include "parser.hpp"
 
-IRCMessage translateFromParser(char ***params)
-{
-    IRCMessage msg;
-
-    if (!params)
-        return msg;
-    if (params[0] && *(params[0]))
-        msg.prefix = *(params[0]);
-    if (params[1] && *(params[1]))
-        msg.command = *(params[1]);
-    for (int i = 2; params[i] != NULL; ++i)
-    {
-        if (*(params[i]))
-            msg.params.push_back(*(params[i]));
-    }
-    return msg;
-}
-
-
-// เอาออกไป
-void Command::convert_to_upper(IRCMessage &msg)
-{
-    std::transform(msg.command.begin(), msg.command.end(), msg.command.begin(), ::toupper);
-}
-
-
 Command::Command()
 {
     initHandlers();
@@ -68,7 +42,7 @@ void Command::initHandlers()
     this->_commandprompts["RESTART"] = RESTART;
 }
 
-void Command::execute_command(IRCMessage &msg, Client &sender)
+void Command::execute_command(Client &sender)
 {
     this->convert_to_upper(msg);
     if (this->_commandprompts.count(msg.command) == 0)
@@ -77,15 +51,16 @@ void Command::execute_command(IRCMessage &msg, Client &sender)
         return ;
     }
     CommandPrompts cmdType = this->_commandprompts[msg.command];
-    
-    if (!sender.isRegistered())
-    {
-        if (cmdType != PASS && cmdType != NICK && cmdType != USER && cmdType != CAP)
-        {
-            // send ERR_NOTREGISTERED
-            return ;
-        }
-    }
+
+    // add after apply with connect pass etc. with server message
+    // if (!sender.isRegistered())
+    // {
+    //     if (cmdType != PASS && cmdType != NICK && cmdType != USER && cmdType != CAP)
+    //     {
+    //         // send ERR_NOTREGISTERED
+    //         return ;
+    //     }
+    // }
 
     switch (cmdType)
     {
