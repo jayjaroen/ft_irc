@@ -31,7 +31,7 @@ IRCMessage translateFromParser(char ***params)
 }
 
 
-
+// เอาออกไป
 void Command::convert_to_upper(IRCMessage &msg)
 {
     std::transform(msg.command.begin(), msg.command.end(), msg.command.begin(), ::toupper);
@@ -96,7 +96,7 @@ void Command::execute_command(IRCMessage &msg, Client &sender)
             std::cout <<  "Executing CONNECT..." << std::endl;
             break;
         case RESTART:
-            std::cout << "Executing RESTART...", << std::endl;
+            std::cout << "Executing RESTART..." << std::endl;
             break;
         case PASS:
             std::cout << "Executing PASS..." << std::endl;
