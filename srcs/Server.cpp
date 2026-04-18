@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 15:02:06 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/04/18 11:15:26 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/04/18 16:06:09 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -191,6 +191,10 @@ void Server::handleClientMessage(int client_fd)
         std::cout << "Received from client fd " << client_fd << ": [ " << message << " ]" << std::endl;
         
         /// ****handle command fucntion ****
+        /// link to parser ///
+        // Command obj;
+        // void execute_command(IRCMessage &msg, Client &sender);
+        // obj.execute_command(&message, client);
     }
     
 }

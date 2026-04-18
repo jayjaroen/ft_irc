@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   command.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
+/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/04/11 14:30:34 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/04/18 15:57:50 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,14 +78,14 @@ void Command::execute_command(IRCMessage &msg, Client &sender)
     }
     CommandPrompts cmdType = this->_commandprompts[msg.command];
     
-    if (!sender.isRegistered())
-    {
-        if (cmdType != PASS && cmdType != NICK && cmdType != USER && cmdType != CAP)
-        {
-            // send ERR_NOTREGISTERED
-            return ;
-        }
-    }
+    // if (!sender.isRegistered())
+    // {
+    //     if (cmdType != PASS && cmdType != NICK && cmdType != USER && cmdType != CAP)
+    //     {
+    //         // send ERR_NOTREGISTERED
+    //         return ;
+    //     }
+    // }
 
     switch (cmdType)
     {
@@ -127,6 +127,6 @@ void Command::handleNick(IRCMessage &msg, Client &sender)
         return;
     }
     sender.setNick(msg.params[0]);
-    std::cout << "Client FD " << sender.getFD() << " changed nick to " << msg.params[0] << std::endl;
+    std::cout << "Client FD " << sender.getFd() << " changed nick to " << msg.params[0] << std::endl;
 }
 

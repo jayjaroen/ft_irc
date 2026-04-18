@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 16:27:41 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/04/18 10:29:37 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/04/18 16:02:10 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,6 +28,9 @@
 # include <cstdio>
 # include <arpa/inet.h> //inet_aton socket programming to convert an IPv4 network address (binary) to ASCII
 # include "Client.hpp"
+# include "../parser.hpp"
+
+class Command;
 
 class Client;
 

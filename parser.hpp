@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
+/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:03:17 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/04/11 14:30:42 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/04/18 15:56:54 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,9 @@
 #include <functional>
 #include <cctype>
 #include <algorithm>
+#include "./include/Client.hpp"
+
+class Client;
 
 struct IRCMessage{
 	std::string prefix;
