@@ -22,6 +22,10 @@
 # include <fcntl.h> //fcnlt() provide control over files to set non-blocking
 # include <netinet/in.h>
 # include <unistd.h>
+# include <cstdlib>
+# include <cstring>
+# include <cerrno>
+# include <cstdio>
 # include <arpa/inet.h> //inet_aton socket programming to convert an IPv4 network address (binary) to ASCII
 # include "Client.hpp"
 
