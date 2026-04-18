@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 12:49:24 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/04/17 17:46:25 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/04/18 10:59:54 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,10 +20,10 @@ class Client
     private:
         int _fd;
         int _port;
+        std::string _ip;
         std::string _nickname;
         std::string _username;
         std::string _buffer;
-        std::string _ip;
         
         // bool    _isAuthenticated;
         // bool    _isOperator;
@@ -41,6 +41,8 @@ class Client
         int getPort() const;
         
         void    setNick(const std::string &nickname);
+        void    appendBuffer(const std::string &data);
+        std::string& getBuffer();
         // std::string sendResponse(std::string message);
 };
 

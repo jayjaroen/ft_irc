@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 16:27:41 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/04/17 17:41:38 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/04/18 10:29:37 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,9 +53,8 @@ class Server
 		void	run();
 		void	acceptNewClient();
 		void	disconnectClient(int client_fd);
+		void	handleClientMessage(int client_fd);
 		
-		// bool	handClient(int cliend_fd);
-		// bool	handleEvents();
 		// bool	sendMessage(int fd, std::string msg);
 };
 

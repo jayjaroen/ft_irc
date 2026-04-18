@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/04 15:02:06 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/04/17 17:25:46 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/04/18 11:15:26 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -164,6 +164,37 @@ void Server::acceptNewClient()
     }
 }
 
+void Server::handleClientMessage(int client_fd)
+{
+    std::cout << "----In handle client function----" << std::endl;
+    char buffer[512];
+    memset(buffer, 0, sizeof(buffer));
+    
+    int bytes = recv(client_fd, buffer, sizeof(buffer), 0);
+    //client disconnect or error
+    if (bytes <= 0) //check condition: 0 -> client close connection, < 0 -> error
+    {
+        std::cout << "Client " << client_fd << " disconnected" << std::endl;
+        disconnectClient(client_fd);
+    }
+    Client* client = _clients[client_fd];
+    //append to existing buffer
+    client->appendBuffer(std::string(buffer, bytes));
+    //get buffer
+    std::string &buf = client->getBuffer();
+    size_t pos;
+    std::cout << "Am here" << std::endl;
+    while ((pos = buf.find("\r\n")) != std::string::npos)
+    {
+        std::string message = buf.substr(0, pos);//extract msg
+        buf.erase(0, pos + 2); //remove proceed msg from buffer
+        std::cout << "Received from client fd " << client_fd << ": [ " << message << " ]" << std::endl;
+        
+        /// ****handle command fucntion ****
+    }
+    
+}
+
 void Server::run()
 {
     pollfd server_fd = {_server_fd, POLLIN, 0};
@@ -195,7 +226,7 @@ void Server::run()
             }
             else if (p.revents & POLLIN)
             {
-                //handleClientMessage(p.fd);
+                handleClientMessage(p.fd);
             }
             
         }

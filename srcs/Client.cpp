@@ -6,14 +6,14 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/11 11:50:51 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/04/17 17:46:52 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/04/18 11:00:50 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Client.hpp"
 
 Client::Client(int fd, int port, const std::string &ip): _fd(fd), _port(port),\
-	_ip(ip)
+	_ip(ip), _nickname(""), _username(""), _buffer("")
 {
 }
 
@@ -52,6 +52,15 @@ void Client::setNick(const std::string &nickname)
 	_nickname = nickname;
 }
 
+void Client::appendBuffer(const std::string &data)
+{
+    _buffer += data;
+}
+
+std::string& Client::getBuffer()
+{
+    return _buffer;
+}
 
 
 
