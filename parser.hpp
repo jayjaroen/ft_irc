@@ -7,6 +7,9 @@
 #include <string>
 #include <functional>
 
+#define SUCCESS 0
+#define FAILURE 1
+
 // struct IRCMessage{
 // 	std::string prefix;
 // 	std::string command;
@@ -14,8 +17,17 @@
 // 	std::string trailing;
 // };
 
+// enum tokentype
+// {
+// 	WORD,
+// 	COLON,
+// 	REFER,
+// 	HASH
+// };
+
 enum CommandPrompts
 {
+	UNKNOWN_CMD,
 	CAP,
 	CONNECT,
 	QUIT,
@@ -34,30 +46,31 @@ enum CommandPrompts
 	RESTART
 };
 
+// typedef struct tokens
+// {
+// 	tokentype		type;
+// 	std::string		value;
+// 	size_t			spaces;
+// 	struct tokens	*next;
+// };
+
 class Command
 {
 	private:
-		// std::string	command;
 		size_t		type;
-		// typedef void (Command::*Handler)(const IRCMessage&, Client&);
-		// std::map<std::string, Handler> _hanlers;
-		std::string	**params; //2 pointer for [array set #no][string #no]
+		std::vector<std::vector<std::string> > params;
 	public:
 		Command();
 		~Command();
-		// void intitHandlers();
-		// void execute_comand(const IRCMessage & msg);
 		void		msgparser(const std::string input);
 		std::string	commandcheck(const std::string input);
-		// void handleChannelOp(ChannelMess cmd, const IRCMessage& msg);
-		// void handleUserComm(UserMess cmd, const IRCMessage& msg);
-		// void handleConnection(ConnectMess cmd, const IRCMessage& msg);
-		// void sendResponse(int fd, const std::string& response);
+		size_t	lexer(const std::string &input, const std::string &icomm, std::vector<std::vector<std::string> > &output);
 };
+
 
 enum NumRpl
 {
-	UNKNOWN_CMD,
+	NONEED,
 	RPL_WELCOME = 001,
 	RPL_YOURHOST = 002,
 	RPL_CREATED = 003,
