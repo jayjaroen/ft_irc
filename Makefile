@@ -1,8 +1,8 @@
-NAME = main
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98
+NAME = ircserv
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -g3
 CXX = c++
 
-SRCS = main.cpp command.cpp
+SRCS = main.cpp command.cpp parser.cpp lexer.cpp ./srcs/Client.cpp ./srcs/Server.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 all: $(NAME)

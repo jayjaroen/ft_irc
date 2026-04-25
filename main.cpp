@@ -11,38 +11,41 @@
 /* ************************************************************************** */
 
 #include "parser.hpp"
+#include "./include/Server.hpp"
 
-int main(int ac, char *av[])
+int main(int argc, char **argv)
 {
-
-	(void) ac;
-	(void) av;
-	char ***mock_parser = new char**[5];
-	Command test;
-
-	mock_parser[0] = new char*[1]; *mock_parser[0] = (char *)":Gyeepach!u@h";
-	mock_parser[1] = new char*[1]; *mock_parser[1] = (char *)"PRIVMSG";
-	mock_parser[2] = new char*[1]; *mock_parser[2] = (char *)"#lobby";
-	mock_parser[3] = new char*[1]; *mock_parser[3] = (char *)"Hello world!";
-	mock_parser[4] = NULL;
-
-	IRCMessage msg = translateFromParser(mock_parser);
-
-	std::cout << "--- Logic Received Data ---" << std::endl;
-	std::cout << "Prefix: " << msg.prefix << std::endl;
-	std::cout << "Command: " << msg.command << std::endl;
-	std::cout << "Params: ";
-	for (size_t i = 0; i < msg.params.size(); ++i)
-		std::cout << "[" << msg.params[i] << "] ";
-	std::cout << std::endl;
-
-	// test.execute_command(msg); need to merge client to apply test
-	
-	// if (msg.command == "PRIVMSG")
-		// std::cout << "\nAction: Processing chat message to " << msg.params[0] << std::endl;
-
-	for (int i = 0; i < 4; ++i) delete[] mock_parser[i];
-	delete[] mock_parser;
-
-	return 0;
+    if (argc != 3)
+    {
+        std::cerr << "Usage: ./ircserv <port> <password>" << std::endl;
+        return 1;
+    }
+    //check error after
+    int port = std::atoi(argv[1]);
+    std::string password = argv[2];
+    Server irc(port, password);
+    try
+    {
+        irc.start();
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << "Error:" << e.what() << std::endl;
+    }
+    irc.run();
+    return 0;
 }
+
+
+// int main(int ac, char *av[])
+// {
+
+// 	(void) ac;
+// 	(void) av;
+// 	Command cmd;
+
+// 	std::string str = "PRIVMSG Joe,Fluke,Jay : Hello World";
+// 	// cmd.msgparser(str);
+// 	// cmd.execute_command();
+// 	return 0;
+// }
