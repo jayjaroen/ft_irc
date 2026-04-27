@@ -12,81 +12,33 @@
 
 #include "parser.hpp"
 
-IRCMessage translateFromParser(char ***params)
-{
-    IRCMessage msg;
 
-    if (!params)
-        return msg;
-    if (params[0] && *(params[0]))
-        msg.prefix = *(params[0]);
-    if (params[1] && *(params[1]))
-        msg.command = *(params[1]);
-    for (int i = 2; params[i] != NULL; ++i)
+void Command::execute_command(Client &sender)
+{
+    if (this->type == 0)
     {
-        if (*(params[i]))
-            msg.params.push_back(*(params[i]));
+        // std::string err = ":ircserver" + std::to_string(UNKNOWN_CMD) + " " + sender.getNick() + " :Unknown command\r\n";
+        // sendResponse(sender.getFd(), err);
+        // std::cout << "Unknown command from client fd " << sender.getFd() << ": " << err << std::endl;
+        return;
     }
-    return msg;
-}
+    size_t cmdType = this->type;
 
-
-// เอาออกไป
-void Command::convert_to_upper(IRCMessage &msg)
-{
-    std::transform(msg.command.begin(), msg.command.end(), msg.command.begin(), ::toupper);
-}
-
-
-Command::Command()
-{
-    initHandlers();
-}
-
-Command::~Command()
-{
+    std::cout << cmdType << std::endl;
     
-}
 
-void Command::initHandlers()
-{
-    this->_commandprompts["CAP"] = CAP;
-    this->_commandprompts["CONNECT"] = CONNECT;
-    this->_commandprompts["QUIT"] = QUIT;
-    this->_commandprompts["JOIN"] = JOIN;
-    this->_commandprompts["PART"] = PART;
-    this->_commandprompts["PING"] = PING;
-    this->_commandprompts["HELP"] = HELP;
-    this->_commandprompts["NICK"] = NICK;
-    this->_commandprompts["PASS"] = PASS;
-    this->_commandprompts["TOPIC"] = TOPIC;
-    this->_commandprompts["INVITE"] = INVITE;
-    this->_commandprompts["KICK"] = KICK;
-    this->_commandprompts["PRIVMSG"] = PRIVMSG;
-    this->_commandprompts["OPER"] = OPER;
-    this->_commandprompts["MODE"] = MODE;
-    this->_commandprompts["RESTART"] = RESTART;
-}
-
-void Command::execute_command(IRCMessage &msg, Client &sender)
-{
-    this->convert_to_upper(msg);
-    if (this->_commandprompts.count(msg.command) == 0)
-    {
-        std::cout << "Error: Unknown command" << msg.command << std::endl;
-        return ;
-    }
-    CommandPrompts cmdType = this->_commandprompts[msg.command];
-    
+    // add after apply with connect pass etc. with server message
     // if (!sender.isRegistered())
     // {
     //     if (cmdType != PASS && cmdType != NICK && cmdType != USER && cmdType != CAP)
     //     {
-    //         // send ERR_NOTREGISTERED
+    //         std::string err = ":ircserver" + std::to_string(ERR_NOTREGISTERED) + " " + sender.getNick() + " :You have not registered\r\n";
+    //         // sendResponse(sender.getFd(), err);
+    //         std::cout << "Client fd " << sender.getFd() << " attempted to execute command without registering: " << err << std::endl;
     //         return ;
     //     }
     // }
-
+// 
     switch (cmdType)
     {
         case CAP:
@@ -100,33 +52,87 @@ void Command::execute_command(IRCMessage &msg, Client &sender)
             break;
         case PASS:
             std::cout << "Executing PASS..." << std::endl;
+            // handlePass(sender);
             break;
         case NICK:
-            handleNick(msg, sender);
+            handleNick(sender);
             std::cout << "Executing NICK..." << std::endl;
             break;
         case JOIN:
-            std::cout << "Joining channel: " << msg.params[0] << std::endl;
+            // handleJOIN(sender);
+            // std::cout << "Joining channel: " << msg.params[0] << std::endl;
             break;
         case PRIVMSG:
-            std::cout << "Sending message to: " << msg.params[0] << std::endl;
+            // handlePRIVMSG(sender);
+            // std::cout << "Sending message to: " << msg.params[0] << std::endl;
             break;
         case QUIT:
             std::cout << "Client quitting..." << std::endl;
+            // handleQuit(sender);
+            break;
+        case PING:
+            // std::cout << "Received PING, sending PONG..." << std::endl;
+            // std::string pongResponse = "PONG :" + sender.getNick() + "\r\n";
+            // sendResponse(sender.getFd(), pongResponse);
             break;
         default:
-            std::cout << "Command " << msg.command << " not implementes" << std::endl;
+            // std::cout << "Command " << this->params[0][0] << " not implementes" << std::endl;
             break;
     }
 }
 
-void Command::handleNick(IRCMessage &msg, Client &sender)
+void Command::handleNick(Client &sender)
 {
-    if (msg.params.empty())
-    {
+    if (this->params.empty() || this->params[0].empty())
         return;
-    }
-    sender.setNick(msg.params[0]);
-    std::cout << "Client FD " << sender.getFd() << " changed nick to " << msg.params[0] << std::endl;
+    std::string newNick = this->params[0][0];
+    sender.setNick(newNick);
+    std::cout << "Client FD " << sender.getFd() << " changed nick to " << newNick << std::endl;
 }
 
+
+
+// void Command::handlePass(Client &sender)
+// {
+//     if (this->params == 0)
+//         return;
+//     // if (msg.params[0] == serverPassword)
+//     //     sender.setAuthenticated(true);
+//     //     std::cout << "Client FD " << sender.getFd() << " authenticated successfully." << std::endl;
+//     // else if (sender.isAuthenticated())
+//     // {
+//     //     std::string err = ":ircserver" + std::to_string(ALREADY_REG) + " " + sender.getNick() + " :You may not register again\r\n";
+//     //     sendResponse(sender.getFd(), err);
+//     //     std::cout << "Client FD " << sender.getFd() << " attempted to re-authenticate." << std::endl;
+//     // }
+//     // else
+//     // {
+//     //     std::string err = ":ircserver" + std::to_string(PASS_ERR) + " " + sender.getNick() + " :Password incorrect\r\n";  
+//     //     sendResponse(sender.getFd(), err);  
+//     //     sender.setAuthenticated(false);
+//     // }
+// }
+
+// void Command::handleQuit(Client &sender)
+// {
+//     // sendResponse(sender.getFd(), "Goodbye!\r\n");
+//     std::cout << "Client FD " << sender.getFd() << " is quitting." << std::endl;
+//     // server.disconnectClient(sender.getFd());
+// }
+
+// void Command::handlePRIVMSG(Client &sender)
+// {
+//     if (this->params == 0)
+//         return;
+//     std::string target = msg.params[0]; // first parameter is the target (user or channel)
+//     std::string message = msg.params[1]; // second parameter is the message
+//     // server.sendMessageToTarget(target, message);
+// }
+
+// void Command::handleJOIN(Client &sender)
+// {
+//     if (this->params == 0)
+//         return;
+//     std::string channelName = msg.params[0];
+//     // server.addClientToChannel(sender.getFd(), channelName);
+// }

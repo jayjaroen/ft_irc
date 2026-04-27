@@ -1,16 +1,6 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/04/04 15:02:06 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/04/18 16:06:09 by jjaroens         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "../include/Server.hpp"
+#include <cstdio>
 
 Server::Server(){}
 
@@ -91,12 +81,12 @@ bool Server::bindAndListen(int fd, int port, int backlog)
     addr.sin_addr.s_addr = htonl(INADDR_ANY); //by all ips
     
     if (bind(fd, (sockaddr*)&addr, sizeof(addr)) < 0) { 
-        perror("Failed to bind");
+        std::perror("Failed to bind");
         //exit(EXIT_FAILURE);
         return false;
     }
     if (listen(fd, backlog) < 0) { 
-        perror("Failed to listen");
+        std::perror("Failed to listen");
         return false; 
     }
     return true;
@@ -141,7 +131,7 @@ void Server::acceptNewClient()
                 break;
             else
             {
-                perror("accept");
+                std::perror("accept");
                 break;
             }
         }
@@ -188,13 +178,11 @@ void Server::handleClientMessage(int client_fd)
     {
         std::string message = buf.substr(0, pos);//extract msg
         buf.erase(0, pos + 2); //remove proceed msg from buffer
-        std::cout << "Received from client fd " << client_fd << ": [ " << message << " ]" << std::endl;
-        
-        /// ****handle command fucntion ****
-        /// link to parser ///
-        // Command obj;
-        // void execute_command(IRCMessage &msg, Client &sender);
-        // obj.execute_command(&message, client);
+        std::cout << "Received from client fd " << client_fd << " Client name " << client->getName() << ": [ " << message << " ]" << std::endl;
+        Command cmd;
+        cmd.msgparser(message);
+        cmd.execute_command(*client);
+        /// ****handle command function ****
     }
     
 }

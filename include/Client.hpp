@@ -1,18 +1,10 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Client.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/04/04 12:49:24 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/04/18 10:59:54 by jjaroens         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef CLIENT_HPP
 # define CLIENT_HPP
 # include "Server.hpp"
+# include <iostream>
+# include <string>
+# include <vector>
+# include <map>
 
 
 class Client
@@ -39,7 +31,7 @@ class Client
         
         int getFd() const;
         int getPort() const;
-        
+        std::string getName() const;
         void    setNick(const std::string &nickname);
         void    appendBuffer(const std::string &data);
         std::string& getBuffer();

@@ -12,7 +12,7 @@
 
 NAME = ft_irc
 
-SRC = srcs/main.cpp srcs/Server.cpp srcs/Client.cpp
+SRC = srcs/main.cpp srcs/Server.cpp srcs/Client.cpp command.cpp parser.cpp lexer.cpp
 
 HEADER = include/Server.hpp include/Client.hpp
 
