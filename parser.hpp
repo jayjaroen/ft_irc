@@ -20,17 +20,17 @@ enum CommandPrompts
 	UNKNOWN_CMD,
 	CAP,
 	CONNECT,
-	QUIT,
-	JOIN,
-	PART,
-	PING,
+	QUIT, // To do
+	JOIN, // To do
+	PART, // To do
+	PING, // TO do
 	HELP,
-	NICK,
-	PASS,
+	NICK, // Done
+	PASS, // To do
 	TOPIC,
 	INVITE,
 	KICK,
-	PRIVMSG,
+	PRIVMSG, // To do
 	OPER,
 	MODE,
 	RESTART

@@ -90,6 +90,8 @@ void Command::handleNick(Client &sender)
     std::cout << "Client FD " << sender.getFd() << " changed nick to " << newNick << std::endl;
 }
 
+
+
 // void Command::handlePass(Client &sender)
 // {
 //     if (this->params == 0)
