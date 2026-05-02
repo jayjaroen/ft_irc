@@ -50,7 +50,7 @@ class Client
         
         void    appendBuffer(const std::string &data);
         void    write(const std::string &message);
-        void    join(Channel *channel);
+        // void    join(Channel *channel);
 
 };
 

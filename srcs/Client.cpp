@@ -72,9 +72,9 @@ void    Client::write(const std::string &message)
         throw std::runtime_error("Error: sending message");
 }
 
-void	Client::join(Channel *channel)
-{
-	_channel = channel;//multiple channel?
-	channel->add_client(this);
+// void	Client::join(Channel *channel)
+// {
+// 	_channel = channel;//multiple channel?
+// 	channel->addClient(this);
 
-}
+// }
