@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:03:17 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/04/18 15:56:54 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/05/02 15:18:05 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@
 #define SUCCESS 0
 #define FAILURE 1
 
+class Server;
 class Client;
 
 enum CommandPrompts
@@ -62,7 +63,8 @@ class Command
 		Command();
 		~Command();
 		// void intitHandlers();
-		void execute_command(Client &sender);
+		// void execute_command(Client &sender);
+		void execute_command(Server &server, Client &sender);
 		void		msgparser(const std::string input);
 		std::string	commandcheck(const std::string input);
 		size_t	lexer(const std::string& input, const std::string& icomm, std::vector<std::vector<std::string> >& output);
@@ -70,7 +72,7 @@ class Command
 		// void handlePass(Client &sender);
 		// void handleQuit(Client &sender);
 		// void handlePRIVMSG(Client &sender);
-		// void handleJOIN(Client &sender);
+		void handleJOIN(Server &server, Client &sender);
 };
 
 

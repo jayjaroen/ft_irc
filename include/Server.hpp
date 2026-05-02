@@ -14,10 +14,13 @@
 # include <arpa/inet.h> //inet_aton socket programming to convert an IPv4 network address (binary) to ASCII
 # include <cstdlib> //atoi
 # include <cerrno> //perror
+# include <cstdio>
 # include "Client.hpp"
+# include "Channel.hpp"
 # include "../parser.hpp"
 
 class Client;
+class Channel;
 
 class Server
 {
@@ -29,6 +32,8 @@ class Server
 		
 		std::vector<pollfd>	_fds;
 		std::map<int, Client*>	_clients;
+		std::vector<Channel*> _channels;
+		
 		Server();
 	
 	public:
@@ -46,6 +51,10 @@ class Server
 		void	acceptNewClient();
 		void	disconnectClient(int client_fd);
 		void	handleClientMessage(int client_fd);
+
+		Channel*	findChannel(const std::string name);
+		Channel*	createChannel(const std::string &name, const std::string &key, Client *client);
+		Channel*	findOrCreateChannel(const std::string &name, const std::string &key, Client *client);
 		
 		// bool	sendMessage(int fd, std::string msg);
 };

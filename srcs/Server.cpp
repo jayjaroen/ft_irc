@@ -1,6 +1,6 @@
 
 #include "../include/Server.hpp"
-#include <cstdio>
+// #include <cstdio>
 
 Server::Server(){}
 
@@ -179,13 +179,49 @@ void Server::handleClientMessage(int client_fd)
         std::string message = buf.substr(0, pos);//extract msg
         buf.erase(0, pos + 2); //remove proceed msg from buffer
         std::cout << "Received from client fd " << client_fd << " Client name " << client->getName() << ": [ " << message << " ]" << std::endl;
+        /// ****handle command function ****
         Command cmd;
         cmd.msgparser(message);
-        cmd.execute_command(*client);
-        /// ****handle command function ****
+        // cmd.execute_command(*client);
+        cmd.execute_command(*this, *client); 
+		// sending both server and client info
     }
-    
 }
+
+Channel*	Server::findChannel(const std::string name)
+{
+	for (unsigned long i = 0; i < _channels.size(); i++)
+	{
+		if (_channels[i]->getName() == name)
+			return _channels[i];
+	}
+	return NULL;
+}
+
+Channel*	Server::createChannel(const std::string &name, const std::string &key, Client *client)
+{
+	Channel *channel = new Channel(name, key, client);
+	_channels.push_back(channel);
+	return channel;
+}
+
+Channel*	Server::findOrCreateChannel(const std::string &name, const std::string &key, Client *client)
+{
+	Channel *channel = findChannel(name);
+	if (channel)
+	{
+		if (!channel->checkKey(key))
+		{
+			std::cout << "Wrong key to join channel: " << name << std::endl;
+			return NULL;
+		}
+		channel->addClient(client);
+		return channel;
+	}
+	return createChannel(name, key, client);
+}
+
+
 
 void Server::run()
 {
@@ -220,7 +256,6 @@ void Server::run()
             {
                 handleClientMessage(p.fd);
             }
-            
         }
     }
 }
