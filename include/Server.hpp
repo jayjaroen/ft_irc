@@ -43,10 +43,11 @@ class Server
 		void	setCloexec(int fd);
 		bool	bindAndListen(int fd, int port, int backlog);
 		void	run();
+		std::string get_password() const;
 		void	acceptNewClient();
 		void	disconnectClient(int client_fd);
 		void	handleClientMessage(int client_fd);
-		
+		std::string get_creation_date() const;
 		// bool	sendMessage(int fd, std::string msg);
 };
 

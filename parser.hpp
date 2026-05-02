@@ -7,19 +7,23 @@
 #include <string>
 #include <functional>
 #include <cctype>
+#include <sstream>
+
+// Forward declarations
+class Client;
+class Server;
+
 #include "./include/Client.hpp"
 #include "./include/Server.hpp"
 
 #define SUCCESS 0
 #define FAILURE 1
 
-class Client;
-
 enum CommandPrompts
 {
 	UNKNOWN_CMD,
 	CAP,
-	CONNECT,
+	USER,
 	QUIT, // To do
 	JOIN, // To do
 	PART, // To do
@@ -33,7 +37,8 @@ enum CommandPrompts
 	PRIVMSG, // To do
 	OPER,
 	MODE,
-	RESTART
+	RESTART,
+	PONG
 };
 
 
@@ -111,13 +116,22 @@ class Command
 		Command();
 		~Command();
 		// void intitHandlers();
-		void execute_command(Client &sender);
+		void execute_command(Client &sender, Server &server);
+			// void execute_command(Client &sender); --- IGNORE ---
 		void		msgparser(const std::string input);
 		std::string	commandcheck(const std::string input);
 		size_t	lexer(const std::string& input, const std::string& icomm, std::vector<std::vector<std::string> >& output);
 		void handleNick(Client &sender);
-		// void handlePass(Client &sender);
-		// void handleQuit(Client &sender);
+		void handleUSER(Client &sender);
+			// void handleUSER(Client &sender); --- IGNORE ---
+				// I have a question about this function should I pass the server as a parameter to handleUSER function or not??
+				// No, you do not need to pass the server as a parameter to the handleUSER function. The USER command is typically used for setting the username and other user-related information, and it does not require direct access to the server's state or configuration. The handleUSER function can simply update the client's information based on the parameters provided in the command without needing to interact with the server. Therefore, it is sufficient to only pass the Client object as a parameter to the handleUSER function.
+		void handlePass(Client &sender, Server &server);
+			// void handlePass(Client &sender); --- IGNORE ---
+			// void handlePass(Client &sender, Server &server); --- IGNORE ---
+				// I have a question about this function should I pass the server as a parameter to handlePass function or not??
+				// Yes, you should pass the server as a parameter to the handlePass function. The PASS command is typically used for authentication, and it may require access to the server's state or configuration to validate the password and authenticate the client. By passing the server as a parameter, you can access any necessary information or functions within the server class to properly handle the PASS command and authenticate the client.
+		void handleQuit(Client &sender, Server &server);
 		// void handlePRIVMSG(Client &sender);
 		// void handleJOIN(Client &sender);
 };
@@ -164,6 +178,8 @@ enum NumRpl
 	ERR_CHANOPRIVSNEEDED = 482,
 	ERR_NOOPERHOST = 491,
 	ERR_USERSDONTMATCH = 502,
+	ERR_ALREADYREGISTRED = 462,
+	ERR_NOTREGISTERED = 451
 //	.
 //	.
 //	.
@@ -231,5 +247,6 @@ enum NumRpl
 // 	SQUIT
 // };
 
+std::string intToString(int n);
 
 #endif

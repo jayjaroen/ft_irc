@@ -166,6 +166,7 @@ void Server::handleClientMessage(int client_fd)
     {
         std::cout << "Client " << client_fd << " disconnected" << std::endl;
         disconnectClient(client_fd);
+        return;
     }
     Client* client = _clients[client_fd];
     //append to existing buffer
@@ -181,7 +182,7 @@ void Server::handleClientMessage(int client_fd)
         std::cout << "Received from client fd " << client_fd << " Client name " << client->getName() << ": [ " << message << " ]" << std::endl;
         Command cmd;
         cmd.msgparser(message);
-        cmd.execute_command(*client);
+        cmd.execute_command(*client, *this);
         /// ****handle command function ****
     }
     
@@ -200,7 +201,7 @@ void Server::run()
                 continue;
             throw std::runtime_error("poll failed");
         }
-        for (size_t i = 0 ; i < _fds.size(); i++)
+        for (int i = 0 ; i < (int)_fds.size(); i++)
         {
             pollfd &p = _fds[i];
             if (p.revents == 0)
@@ -209,6 +210,7 @@ void Server::run()
             if (p.revents & (POLLHUP | POLLERR))
             {
                 disconnectClient(p.fd);
+                i--; // Adjust index since we just removed an element
                 continue;
             }
             //new connection
@@ -218,7 +220,16 @@ void Server::run()
             }
             else if (p.revents & POLLIN)
             {
-                handleClientMessage(p.fd);
+                // Check if client still exists before handling
+                if (_clients.find(p.fd) != _clients.end())
+                {
+                    handleClientMessage(p.fd);
+                    // Check if client was disconnected during handleClientMessage
+                    if (_clients.find(p.fd) == _clients.end())
+                    {
+                        i--; // Adjust index since we just removed an element
+                    }
+                }
             }
             
         }
@@ -237,4 +248,18 @@ bool Server::start()
     }
     std::cout << "Server: listening on port: " << _port << std::endl;
     return true;
+}
+
+
+std::string Server::get_password() const
+{
+    return _password;
+}
+
+std::string Server::get_creation_date() const
+{
+    time_t now = time(0);
+    char buf[80];
+    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", localtime(&now));
+    return std::string(buf);
 }
