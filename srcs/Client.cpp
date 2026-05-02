@@ -35,22 +35,46 @@ int Client::getPort() const
 	return _port;
 }
 
+std::string Client::getName() const
+{
+	return _nickname.empty() ? _ip : _nickname;
+}
+
+std::string& Client::getBuffer()
+{
+	return _buffer;
+}
+
+Channel*	Client::getChannel() const
+{
+	return _channel;
+}
+
 void Client::setNick(const std::string &nickname)
 {
 	_nickname = nickname;
 }
 
-std::string Client::getName() const
+void	Client::setChannel(Channel *channel)
 {
-    return _nickname.empty() ? _ip : _nickname;
+	_channel = channel;
 }
 
 void Client::appendBuffer(const std::string &data)
 {
-    _buffer += data;
+	_buffer += data;
 }
 
-std::string& Client::getBuffer()
+void    Client::write(const std::string &message)
 {
-    return _buffer;
+    std::string buffer = message + "\r\n";
+    if (send(_fd, buffer.c_str(), buffer.length(), 0) < 0)
+        throw std::runtime_error("Error: sending message");
+}
+
+void	Client::join(Channel *channel)
+{
+	_channel = channel;//multiple channel?
+	channel->add_client(this);
+
 }
