@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/03/21 16:27:41 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/04/18 10:29:37 by jjaroens         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
@@ -22,10 +10,17 @@
 # include <fcntl.h> //fcnlt() provide control over files to set non-blocking
 # include <netinet/in.h>
 # include <unistd.h>
+# include <cstring>
 # include <arpa/inet.h> //inet_aton socket programming to convert an IPv4 network address (binary) to ASCII
+# include <cstdlib> //atoi
+# include <cerrno> //perror
+# include <cstdio>
 # include "Client.hpp"
+# include "Channel.hpp"
+# include "../parser.hpp"
 
 class Client;
+class Channel;
 
 class Server
 {
@@ -37,6 +32,8 @@ class Server
 		
 		std::vector<pollfd>	_fds;
 		std::map<int, Client*>	_clients;
+		std::vector<Channel*> _channels;
+		
 		Server();
 	
 	public:
@@ -54,11 +51,12 @@ class Server
 		void	acceptNewClient();
 		void	disconnectClient(int client_fd);
 		void	handleClientMessage(int client_fd);
+
+		Channel*	findChannel(const std::string name);
+		Channel*	createChannel(const std::string &name, const std::string &key, Client *client);
+		Channel*	findOrCreateChannel(const std::string &name, const std::string &key, Client *client);
 		
 		// bool	sendMessage(int fd, std::string msg);
 };
 
 #endif
-
-
-

@@ -1,16 +1,6 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/04/04 15:02:06 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/04/18 11:15:26 by jjaroens         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
 
 #include "../include/Server.hpp"
+// #include <cstdio>
 
 Server::Server(){}
 
@@ -91,12 +81,12 @@ bool Server::bindAndListen(int fd, int port, int backlog)
     addr.sin_addr.s_addr = htonl(INADDR_ANY); //by all ips
     
     if (bind(fd, (sockaddr*)&addr, sizeof(addr)) < 0) { 
-        perror("Failed to bind");
+        std::perror("Failed to bind");
         //exit(EXIT_FAILURE);
         return false;
     }
     if (listen(fd, backlog) < 0) { 
-        perror("Failed to listen");
+        std::perror("Failed to listen");
         return false; 
     }
     return true;
@@ -141,7 +131,7 @@ void Server::acceptNewClient()
                 break;
             else
             {
-                perror("accept");
+                std::perror("accept");
                 break;
             }
         }
@@ -188,12 +178,50 @@ void Server::handleClientMessage(int client_fd)
     {
         std::string message = buf.substr(0, pos);//extract msg
         buf.erase(0, pos + 2); //remove proceed msg from buffer
-        std::cout << "Received from client fd " << client_fd << ": [ " << message << " ]" << std::endl;
-        
-        /// ****handle command fucntion ****
+        std::cout << "Received from client fd " << client_fd << " Client name " << client->getName() << ": [ " << message << " ]" << std::endl;
+        /// ****handle command function ****
+        Command cmd;
+        cmd.msgparser(message);
+        // cmd.execute_command(*client);
+        cmd.execute_command(*this, *client); 
+		// sending both server and client info
     }
-    
 }
+
+Channel*	Server::findChannel(const std::string name)
+{
+	for (unsigned long i = 0; i < _channels.size(); i++)
+	{
+		if (_channels[i]->getName() == name)
+			return _channels[i];
+	}
+	return NULL;
+}
+
+Channel*	Server::createChannel(const std::string &name, const std::string &key, Client *client)
+{
+	Channel *channel = new Channel(name, key, client);
+	_channels.push_back(channel);
+	return channel;
+}
+
+Channel*	Server::findOrCreateChannel(const std::string &name, const std::string &key, Client *client)
+{
+	Channel *channel = findChannel(name);
+	if (channel)
+	{
+		if (!channel->checkKey(key))
+		{
+			std::cout << "Wrong key to join channel: " << name << std::endl;
+			return NULL;
+		}
+		channel->addClient(client);
+		return channel;
+	}
+	return createChannel(name, key, client);
+}
+
+
 
 void Server::run()
 {
@@ -228,7 +256,6 @@ void Server::run()
             {
                 handleClientMessage(p.fd);
             }
-            
         }
     }
 }

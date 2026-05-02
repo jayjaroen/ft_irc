@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parser.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/03/31 13:03:17 by gyeepach          #+#    #+#             */
+/*   Updated: 2026/05/02 15:18:05 by jjaroens         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
@@ -6,6 +18,16 @@
 #include <map>
 #include <string>
 #include <functional>
+#include <cctype>
+#include <algorithm>
+#include "./include/Client.hpp"
+#include "./include/Server.hpp"
+
+#define SUCCESS 0
+#define FAILURE 1
+
+class Server;
+class Client;
 
 #define SUCCESS 0
 #define FAILURE 1
@@ -46,13 +68,6 @@ enum CommandPrompts
 	RESTART
 };
 
-// typedef struct tokens
-// {
-// 	tokentype		type;
-// 	std::string		value;
-// 	size_t			spaces;
-// 	struct tokens	*next;
-// };
 
 class Command
 {
@@ -62,9 +77,17 @@ class Command
 	public:
 		Command();
 		~Command();
+		// void intitHandlers();
+		// void execute_command(Client &sender);
+		void execute_command(Server &server, Client &sender);
 		void		msgparser(const std::string input);
 		std::string	commandcheck(const std::string input);
-		size_t	lexer(const std::string &input, const std::string &icomm, std::vector<std::vector<std::string> > &output);
+		size_t	lexer(const std::string& input, const std::string& icomm, std::vector<std::vector<std::string> >& output);
+		void handleNick(Client &sender);
+		// void handlePass(Client &sender);
+		// void handleQuit(Client &sender);
+		// void handlePRIVMSG(Client &sender);
+		void handleJOIN(Server &server, Client &sender);
 };
 
 
