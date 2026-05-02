@@ -9,7 +9,7 @@ std::string	Command::commandcheck(const std::string input)
 	while (input[len] && !isspace(input[len]))
 		len++;
 	std::string	word = input.substr(0, len);
-	std::string commlist[] = {"CAP", "CONNECT", "QUIT", "JOIN", "PART", "PING", "HELP",
+	std::string commlist[] = {"CAP", "USER", "QUIT", "JOIN", "PART", "PING", "HELP",
 		"NICK", "PASS", "TOPIC", "INVITE", "KICK", "PRIVMSG", "OPER", "MODE", "RESTART"};
 	for (size_t i = 0; i < 16; i++)
 	{

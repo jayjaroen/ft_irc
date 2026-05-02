@@ -29,7 +29,7 @@ enum CommandPrompts
 {
 	UNKNOWN_CMD,
 	CAP,
-	CONNECT,
+	USER,
 	QUIT,
 	JOIN,
 	PART,
