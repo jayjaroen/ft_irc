@@ -3,15 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
+/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/04/03 14:30:58 by codespace         #+#    #+#             */
-/*   Updated: 2026/04/11 14:28:21 by gyeepach         ###   ########.fr       */
+/*   Created: 2026/03/21 16:21:05 by jjaroens          #+#    #+#             */
+/*   Updated: 2026/04/17 14:42:06 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "parser.hpp"
-#include "./include/Server.hpp"
+#include "../include/Server.hpp"
 
 int main(int argc, char **argv)
 {
@@ -35,17 +34,3 @@ int main(int argc, char **argv)
     irc.run();
     return 0;
 }
-
-
-// int main(int ac, char *av[])
-// {
-
-// 	(void) ac;
-// 	(void) av;
-// 	Command cmd;
-
-// 	std::string str = "PRIVMSG Joe,Fluke,Jay : Hello World";
-// 	// cmd.msgparser(str);
-// 	// cmd.execute_command();
-// 	return 0;
-// }

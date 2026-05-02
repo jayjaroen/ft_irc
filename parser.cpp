@@ -38,15 +38,16 @@ void	Command::msgparser(const std::string input)
 			return;
 		if (this->lexer(input, icomm, this->params) == FAILURE)
 			return;
+		
 		for (size_t i = 0; i < this->params.size(); i++)
 		{
 			for (size_t j = 0; j < this->params[i].size(); j++)
 			{
-				std::cout << " Param[" << i << "][" << j << "]: ";
 				std::cout << this->params[i][j] << " ";
 			}
 			std::cout << std::endl;
 		}
+
 		// size_t	block = 0;
 		// size_t	content = 0;
 		// size_t	last = icomm.length() + 1;

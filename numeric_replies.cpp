@@ -32,21 +32,23 @@ std::string	numeric_replies(const size_t code)
 		case 381:
 			return "You are an Operator";
 		case 401:
-			return "No Nickname $USER Found";
+			return "No such Nickname";
 		case 402:
-			return "No Server $SERVER Found";
+			return "No such Server";
 		case 403:
-			return "No Channel $CHANNEL Found";
+			return "No such Channel";
 		case 404:
-			return "Cannot Send Message to Channel $CHANNEL";
+			return "Cannot Send to Channel $CHANNEL";
 		case 405:
-			return "Too Many Channels Mentioned";
+			return "You have joined too many channels";
 		case 409:
-			return "";
+			return "No Origin Specified";
 		case 411:
-			return "";
+			return "No Recipient Given";
 		case 412:
-			return "";
+			return "No Text to send";
+		case 421:
+			return "Unknown Command";
 		case 431:
 			return "No Nickname Given";
 		case 432:
@@ -55,10 +57,14 @@ std::string	numeric_replies(const size_t code)
 			return "This Nickname is Already in Use";
 		case 436:
 			return "";
+		case 441:
+			return "$NICK are not on the mentioned channel";
 		case 442:
-			return "You are not in the mentioned channel";
+			return "You are not on the mentioned channel";
 		case 443:
 			return "$USER is on the channel";
+		case 451:
+			return "You have Not Registered";
 		case 461:
 			return "Insufficient Parameters";
 		case 462:
@@ -66,7 +72,7 @@ std::string	numeric_replies(const size_t code)
 		case 464:
 			return "Incorrect Password";
 		case 471:
-			return "Channel Is Full";
+			return "Channel is Full";
 		case 473:
 			return "This Channel $CHANNEL is joined by Invitation Only";
 		case 474:

@@ -1,23 +1,43 @@
-NAME = ircserv
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -g3
-CXX = c++
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2026/03/21 16:19:53 by jjaroens          #+#    #+#              #
+#    Updated: 2026/05/02 15:23:00 by jjaroens         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
 
-SRCS = main.cpp command.cpp parser.cpp lexer.cpp ./srcs/Client.cpp ./srcs/Server.cpp
-OBJS = $(SRCS:.cpp=.o)
+NAME = ft_irc
+
+SRC = srcs/main.cpp srcs/Server.cpp srcs/Client.cpp command.cpp parser.cpp lexer.cpp \
+		srcs/Channel.cpp
+
+HEADER = include/Server.hpp include/Client.hpp include/Channel.hpp
+
+CC = c++ -Wall -Wextra -Werror -std=c++98
+
+OBJ_DIR = obj/
+
+OBJ = $(SRC:%.cpp=$(OBJ_DIR)%.o)
 
 all: $(NAME)
 
-$(NAME) : $(OBJS)
-	@$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
+$(NAME): $(OBJ) $(HEADER)
+		$(CC) $(OBJ) -o $(NAME) 
 
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(OBJ_DIR)%.o: %.cpp $(HEADER) Makefile
+		@mkdir -p $(dir $@)
+		$(CC) -I. -o $@ -c $<
 
 clean:
-	@rm -rf $(OBJS)
+	rm -rf $(OBJ_DIR)
 
 fclean: clean
-	@rm -rf $(NAME)
+	rm -f $(NAME)
 
-re: clean all
+re: fclean all
+
 .PHONY: all clean fclean re

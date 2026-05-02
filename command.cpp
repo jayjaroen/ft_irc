@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   command.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
+/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/04/11 14:30:34 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/05/02 15:48:15 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ void sendResponse(int fd, const std::string &message)
 }
 
 
-void Command::execute_command(Client &sender, Server &server)
+void Command::execute_command(Server &server, Client &sender)
 {
     ///Debugging: Send a response to the client to confirm that the command is being processed
     // bool pass_check = sender.isPassSet();
@@ -77,7 +77,7 @@ void Command::execute_command(Client &sender, Server &server)
             std::cout << "Executing NICK..." << std::endl;
             break;
         case JOIN:
-            // handleJOIN(sender);
+            handleJOIN(server, sender);
             // std::cout << "Joining channel: " << msg.params[0] << std::endl;
             break;
         case PRIVMSG:
@@ -188,10 +188,19 @@ void Command::handleUSER(Client &sender)
 //     // server.sendMessageToTarget(target, message);
 // }
 
-// void Command::handleJOIN(Client &sender)
-// {
-//     if (this->params == 0)
-//         return;
-//     std::string channelName = msg.params[0];
-//     // server.addClientToChannel(sender.getFd(), channelName);
-// }
+void Command::handleJOIN(Server &server, Client &sender)
+{
+    std::cout << "I'm in handle join function" << std::endl;
+    if (this->params.empty())
+        return;
+    std::cout << "When having params " << std::endl;
+    std::string key = "";
+    std::cout << "am here2" << std::endl;
+    if (params[1].empty())
+        key = this->params[1][0];
+    std::cout << "am here1" << std::endl;
+    std::string channel_name = this->params[0][0];
+    std::cout << "Channel name is: " << channel_name << " key is " << key << std::endl;
+    server.findOrCreateChannel(channel_name, key, &sender);
+    // server.addClientToChannel(sender.getFd(), channelName);
+}
