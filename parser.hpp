@@ -29,22 +29,40 @@
 class Server;
 class Client;
 
+#define SUCCESS 0
+#define FAILURE 1
+
+// struct IRCMessage{
+// 	std::string prefix;
+// 	std::string command;
+// 	std::vector<std::string> params;
+// 	std::string trailing;
+// };
+
+// enum tokentype
+// {
+// 	WORD,
+// 	COLON,
+// 	REFER,
+// 	HASH
+// };
+
 enum CommandPrompts
 {
 	UNKNOWN_CMD,
 	CAP,
-	CONNECT,
-	QUIT, // To do
-	JOIN, // To do
-	PART, // To do
-	PING, // TO do
+	USER,
+	QUIT,
+	JOIN,
+	PART,
+	PING,
 	HELP,
-	NICK, // Done
-	PASS, // To do
+	NICK,
+	PASS,
 	TOPIC,
 	INVITE,
 	KICK,
-	PRIVMSG, // To do
+	PRIVMSG,
 	OPER,
 	MODE,
 	RESTART
@@ -54,10 +72,7 @@ enum CommandPrompts
 class Command
 {
 	private:
-		// std::string	command;
 		size_t		type;
-		// typedef void (Command::*Handler)(const IRCMessage&, Client&);
-		// std::map<std::string, Handler> _hanlers;
 		std::vector<std::vector<std::string> > params;
 	public:
 		Command();
@@ -92,7 +107,7 @@ enum NumRpl
 	RPL_NAMREPLY = 353,
 	RPL_ENDOFNAMES = 366,
 	RPL_YOUREOPER = 381,
-	ERR_NOSUCHNICK = 401, 
+	ERR_NOSUCHNICK = 401,
 	ERR_NOSUCHSERVER = 402,
 	ERR_NOSUCHCHANNEL = 403,
 	ERR_CANNOTSENDTOCHAN = 404,
@@ -110,7 +125,7 @@ enum NumRpl
 	ERR_ALREADYREGISTERED = 462,
 	ERR_PASSWDMISMATCH = 464,
 	ERR_CHANNELISFULL = 471,
-	ERR_INVILEONLYCHAN = 473,
+	ERR_INVITEONLYCHAN = 473,
 	ERR_BANNEDFROMCHAN = 474,
 	ERR_BADCHANNELKEY = 475,
 	ERR_BADCHANMASK = 476, //optional
@@ -183,6 +198,5 @@ enum NumRpl
 // 	RESTART,
 // 	SQUIT
 // };
-
 
 #endif
