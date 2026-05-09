@@ -57,6 +57,7 @@ class Server
 		Channel*	findChannel(const std::string name);
 		Channel*	createChannel(const std::string &name, const std::string &key, Client *client);
 		Channel*	findOrCreateChannel(const std::string &name, const std::string &key, Client *client);
+		void		deleteChannel(const std::string name);
 
 		Client*		findClient(const std::string name);
 		

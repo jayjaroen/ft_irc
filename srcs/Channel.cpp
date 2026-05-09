@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:39 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/05/09 14:02:44 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/05/09 16:28:23 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -123,4 +123,31 @@ void    Channel::setAdmin(Client *admin)
 void    Channel::setName(std::string name)
 {
     _name = name;
+}
+
+void    Channel::removeClient(Client *client)
+{
+    for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
+    {
+        if (*it == client)
+        {
+            _clients.erase(it);
+            return;
+        }
+    }
+}
+
+void    Channel::removeOperator(Client *client)
+{
+    if (_admin == client)
+    {
+        _admin = NULL;
+        if (!_clients.empty())
+            _admin = _clients[0]; //reset admin 
+    } 
+}
+
+bool    Channel::isEmpty()
+{
+    return _clients.empty();
 }

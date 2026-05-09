@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/05/09 15:04:24 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/05/09 16:50:17 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -99,6 +99,11 @@ void Command::execute_command(Server &server, Client &sender)
             std::string token = this->params[0][0]; // ดึงสิ่งที่ Client ส่งมา (เช่น ชื่อเซิร์ฟเวอร์หรือเลขสุ่ม)
             std::string pongResponse = ":ircserver PONG ircserver :" + token + "\r\n";
             sendResponse(sender.getFd(), pongResponse);
+            break;
+        }
+        case PART:
+        {
+            handlePart(server, sender);
             break;
         }
         // case PRIVMSG:
@@ -234,4 +239,32 @@ void Command::handleJOIN(Server &server, Client &sender)
         key = this->params[1][0];
     std::cout << "Channel name is: " << "\"" << channel_name << "\"" << " key is " << "\"" << key << "\"" << std::endl;
     server.findOrCreateChannel(channel_name, key, &sender);
+}
+
+void    Command::handlePart(Server &server, Client &sender)
+{
+    if (this->params.empty())
+        return;
+    std::string channel_name = this->params[0][0];
+    Channel* channel = server.findChannel(channel_name);
+    if (!channel)
+    {
+        std::cout << "The channel is not found" << std::endl;
+        return;
+    }
+    if (!channel->hasClient(&sender))
+    {
+        std::cout << "Client does not belong to the channel " << channel_name << std::endl;
+        return;
+    }
+    std::string message = ":" + sender.getName() + " PART " + channel_name + "\r\n";
+    channel->broadcast(&sender, message);
+    channel->removeClient(&sender);
+    channel->removeOperator(&sender);
+    std::cout << sender.getName() << " left channel " << channel_name << std::endl;
+    if (channel->isEmpty())
+    {
+        std::cout << "Deleting the channel " << channel_name << std::endl;
+        server.deleteChannel(channel_name);
+    }
 }
