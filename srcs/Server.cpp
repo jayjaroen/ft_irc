@@ -220,7 +220,7 @@ Channel*	Server::findOrCreateChannel(const std::string &name, const std::string 
 		channel->addClient(client);
 		return channel;
 	}
-	return createChannel(name, key, client);
+    return createChannel(name, key, client);
 }
 
 

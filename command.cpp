@@ -101,6 +101,15 @@ void Command::execute_command(Server &server, Client &sender)
             sendResponse(sender.getFd(), pongResponse);
             break;
         }
+        // case PRIVMSG:
+        // {
+        //     // if (this->params.empty() || this->params[0].empty() || this->params[1].empty())
+        //     //     return;
+        //     // std::string target = this->params[0][0]; // first parameter is the target (user or channel)
+        //     // std::string message = this->params[1][0]; // second parameter is the message
+        //     // server.sendMessageToTarget(target, message);
+        //     break;
+        // }
         default:
             // std::cout << "Command " << this->params[0][0] << " not implementes" << std::endl;
             break;
@@ -168,8 +177,8 @@ void Command::handleQuit(Client &sender, Server &server)
 
 void Command::handleUSER(Client &sender)
 {
-    // if (this->params.empty() || this->params[0].size() < 4)
-    //     return;
+    if (this->params.empty() || this->params.size() != 4)
+        return;
     std::string username = this->params[0][0];
     std::string hostname = this->params[1][0];
     std::string servername = this->params[2][0];
@@ -217,17 +226,12 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
 
 void Command::handleJOIN(Server &server, Client &sender)
 {
-    std::cout << "I'm in handle join function" << std::endl;
     if (this->params.empty())
         return;
-    std::cout << "When having params " << std::endl;
     std::string key = "";
-    std::cout << "am here2" << std::endl;
-    if (params[1].empty())
-        key = this->params[1][0];
-    std::cout << "am here1" << std::endl;
     std::string channel_name = this->params[0][0];
-    std::cout << "Channel name is: " << channel_name << " key is " << key << std::endl;
+    if (this->params.size() > 1 && !this->params[1].empty())
+        key = this->params[1][0];
+    std::cout << "Channel name is: " << "\"" << channel_name << "\"" << " key is " << "\"" << key << "\"" << std::endl;
     server.findOrCreateChannel(channel_name, key, &sender);
-    // server.addClientToChannel(sender.getFd(), channelName);
 }

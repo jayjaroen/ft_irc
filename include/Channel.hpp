@@ -54,6 +54,8 @@ class Channel
 		// void					remove_client(Client* client);
 		//kick?
 		bool					hasClient(Client *client) const;
+		void					setAdmin(Client *admin);
+		void					setName(std::string name);
 		
 		
 		

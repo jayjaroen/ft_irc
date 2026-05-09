@@ -114,3 +114,13 @@ bool    Channel::hasClient(Client *client) const
 // {
 	
 // }
+
+void    Channel::setAdmin(Client *admin)
+{
+    _admin = admin;
+}
+
+void    Channel::setName(std::string name)
+{
+    _name = name;
+}
