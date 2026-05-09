@@ -66,6 +66,16 @@ void	Channel::setExtMsg(bool flag)
     _msgs = flag;
 }
 
+void    Channel::setAdmin(Client *admin)
+{
+    _admin = admin;
+}
+
+void    Channel::setName(std::string name)
+{
+    _name = name;
+}
+
 void	Channel::broadcast(const std::string &message)
 {
     std::vector<Client*>::iterator it_start = _clients.begin();
