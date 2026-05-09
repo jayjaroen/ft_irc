@@ -96,3 +96,13 @@ void	Channel::addClient(Client *client)
 // {
 	
 // }
+
+void    Channel::setAdmin(Client *admin)
+{
+    _admin = admin;
+}
+
+void    Channel::setName(std::string name)
+{
+    _name = name;
+}
