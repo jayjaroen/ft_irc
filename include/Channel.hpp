@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:29 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/05/09 13:19:26 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/05/09 16:23:49 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,14 +51,13 @@ class Channel
 		void					broadcast(Client *, const std::string &message);
 		// void					broadcast(const std::string &message, Client* exclude);
 		void					addClient(Client *client);
-		// void					remove_client(Client* client);
+		void					removeClient(Client* client);
+		void					removeOperator(Client* client);
 		//kick?
 		bool					hasClient(Client *client) const;
 		void					setAdmin(Client *admin);
-		void					setName(std::string name);
-		
-		
-		
+		void					setName(std::string name);	
+		bool					isEmpty();
 };
 
 #endif

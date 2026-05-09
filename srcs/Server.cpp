@@ -189,6 +189,19 @@ void Server::handleClientMessage(int client_fd)
     }
 }
 
+void    Server::deleteChannel(const std::string name)
+{
+    for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); it++)
+    {
+        if ((*it)->getName() == name)
+        {
+            delete *it; 
+            _channels.erase(it);
+            return;
+        }
+    }
+}
+
 Channel*	Server::findChannel(const std::string name)
 {
 	for (unsigned long i = 0; i < _channels.size(); i++)
@@ -204,6 +217,7 @@ Channel*	Server::createChannel(const std::string &name, const std::string &key, 
 	Channel *channel = new Channel(name, key, client);
 	_channels.push_back(channel);
 	channel->addClient(client);
+	channel->setAdmin(client);
 	return channel;
 }
 
@@ -217,7 +231,8 @@ Channel*	Server::findOrCreateChannel(const std::string &name, const std::string 
 			std::cout << "Wrong key to join channel: " << name << std::endl;
 			return NULL;
 		}
-		channel->addClient(client);
+        if (!channel->hasClient(client))
+		    channel->addClient(client);//add if not already in the channel
 		return channel;
 	}
     return createChannel(name, key, client);

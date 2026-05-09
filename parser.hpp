@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:03:17 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/05/09 13:34:46 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/05/09 16:05:24 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,6 +95,7 @@ class Command
 		void handleQuit(Client &sender, Server &server);
 		void handlePRIVMSG(Server &server, Client &sender);
 		void handleJOIN(Server &server, Client &sender);
+		void handlePart(Server &server, Client &sender);
 };
 
 
