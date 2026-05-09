@@ -43,8 +43,6 @@ class Channel
 		size_t					getChannelSize();
 
 		void					setKey(std::string key);
-		void					setAdmin(Client *admin);
-		void					setName(std::string name);
 		void					setLimit(size_t limit);
 		void					setExtMsg(bool flag);
 		
