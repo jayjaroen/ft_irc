@@ -177,8 +177,8 @@ void Command::handleQuit(Client &sender, Server &server)
 
 void Command::handleUSER(Client &sender)
 {
-    // if (this->params.empty() || this->params[0].size() < 4)
-    //     return;
+    if (this->params.empty() || this->params.size() != 4)
+        return;
     std::string username = this->params[0][0];
     std::string hostname = this->params[1][0];
     std::string servername = this->params[2][0];
