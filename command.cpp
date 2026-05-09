@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/05/02 15:48:15 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/05/09 15:04:24 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -81,7 +81,7 @@ void Command::execute_command(Server &server, Client &sender)
             // std::cout << "Joining channel: " << msg.params[0] << std::endl;
             break;
         case PRIVMSG:
-            // handlePRIVMSG(sender);
+            handlePRIVMSG(server,sender);
             // std::cout << "Sending message to: " << msg.params[0] << std::endl;
             break;
         case QUIT:
@@ -179,14 +179,41 @@ void Command::handleUSER(Client &sender)
     sender.setUserSet(true);
 }
 
-// void Command::handlePRIVMSG(Client &sender)
-// {
-//     if (this->params == 0)
-//         return;
-//     std::string target = msg.params[0]; // first parameter is the target (user or channel)
-//     std::string message = msg.params[1]; // second parameter is the message
-//     // server.sendMessageToTarget(target, message);
-// }
+void Command::handlePRIVMSG(Server &server, Client &sender)
+{
+    std::cout << "I'm in private message function" << std::endl;
+    if (this->params.empty())
+        return;
+    std::string target = this->params[0][0]; // first parameter is the target (user or channel)
+    std::string message = this->params[1][0]; // second parameter is the message
+    // in case channel
+    std::cout << "The channel name is " << target << std::endl;
+    if (target[0] == '#' )
+    {
+        Channel* channel = server.findChannel(target);
+        if (!channel)
+        {
+            std::cout << "Channel not found" << std::endl;
+            return;
+        }
+        if (!channel->hasClient(&sender))
+        {
+            std::cout << "Sender does not belong to " << target << std::endl;
+            return;
+        }
+        std::string text = ":" + sender.getName() + " PRIVMSG " + target + " : " + message + "\r\n";
+        channel->broadcast(&sender, text);
+    }
+    else
+    {
+        Client *target_client = server.findClient(target);
+        if (!target_client)
+            return;
+        std::string text = ":" + sender.getName() + " PRIVMSG " + target + " : " + message + "\r\n";
+        send(target_client->getFd(), text.c_str(), text.size(), 0);
+    }
+    // server.sendMessageToTarget(target, message);
+}
 
 void Command::handleJOIN(Server &server, Client &sender)
 {
