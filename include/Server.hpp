@@ -57,6 +57,8 @@ class Server
 		Channel*	findChannel(const std::string name);
 		Channel*	createChannel(const std::string &name, const std::string &key, Client *client);
 		Channel*	findOrCreateChannel(const std::string &name, const std::string &key, Client *client);
+
+		Client*		findClient(const std::string name);
 		
 		// bool	sendMessage(int fd, std::string msg);
 };

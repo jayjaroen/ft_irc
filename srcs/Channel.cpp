@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:39 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/05/02 15:51:05 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/05/09 14:02:44 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,16 +66,24 @@ void	Channel::setExtMsg(bool flag)
     _msgs = flag;
 }
 
-void	Channel::broadcast(const std::string &message)
+void	Channel::broadcast(Client* sender, const std::string &message)
 {
-    std::vector<Client*>::iterator it_start = _clients.begin();
-    std::vector<Client*>::iterator it_end = _clients.end();
-    
-    while (it_start != it_end)
+    for (unsigned long i = 0; i < _clients.size(); i++)
     {
-        (*it_start)->write(message); //client write message
-        it_start++;
+        Client* target = _clients[i];
+        if (target == sender)
+            continue;
+        send(target->getFd(), message.c_str(), message.size(), 0);
     }
+    // std::vector<Client*>::iterator it_start = _clients.begin();
+    // std::vector<Client*>::iterator it_end = _clients.end();
+    
+    // while (it_start != it_end)
+    // {
+    //     (*it_start)->write(message); //client write message
+    //     it_start++;
+    // }
+    
 }
 //write exclude
 
@@ -90,6 +98,16 @@ void	Channel::addClient(Client *client)
 {
 	_clients.push_back(client);
     std::cout << "In addClient function, client fd: " << client->getFd() << std::endl;
+}
+
+bool    Channel::hasClient(Client *client) const
+{
+    for (std::vector<Client*>::const_iterator it = _clients.begin(); it != _clients.end(); it++)
+    {
+        if (*it == client)
+            return true;
+    }
+    return false;
 }
 
 // void	Channel::remove_client(Client *client)

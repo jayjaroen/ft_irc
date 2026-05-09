@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:03:17 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/05/02 15:18:05 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/05/09 13:34:46 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,7 +93,7 @@ class Command
 				// I have a question about this function should I pass the server as a parameter to handlePass function or not??
 				// Yes, you should pass the server as a parameter to the handlePass function. The PASS command is typically used for authentication, and it may require access to the server's state or configuration to validate the password and authenticate the client. By passing the server as a parameter, you can access any necessary information or functions within the server class to properly handle the PASS command and authenticate the client.
 		void handleQuit(Client &sender, Server &server);
-		// void handlePRIVMSG(Client &sender);
+		void handlePRIVMSG(Server &server, Client &sender);
 		void handleJOIN(Server &server, Client &sender);
 };
 

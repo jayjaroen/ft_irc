@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:29 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/05/02 15:16:14 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/05/09 13:19:26 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,11 +48,12 @@ class Channel
 		
 		bool					checkKey(const std::string &key);
 		/*Channel actions*/
-		void					broadcast(const std::string &message);
+		void					broadcast(Client *, const std::string &message);
 		// void					broadcast(const std::string &message, Client* exclude);
 		void					addClient(Client *client);
 		// void					remove_client(Client* client);
 		//kick?
+		bool					hasClient(Client *client) const;
 		void					setAdmin(Client *admin);
 		void					setName(std::string name);
 		

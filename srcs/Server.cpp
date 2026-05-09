@@ -203,6 +203,7 @@ Channel*	Server::createChannel(const std::string &name, const std::string &key, 
 {
 	Channel *channel = new Channel(name, key, client);
 	_channels.push_back(channel);
+	channel->addClient(client);
 	return channel;
 }
 
@@ -297,4 +298,14 @@ std::string Server::get_creation_date() const
     char buf[80];
     strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", localtime(&now));
     return std::string(buf);
+}
+
+Client*	Server::findClient(const std::string name)
+{
+	for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
+	{
+		if (it->second->getName() == name)
+			return it->second;
+	}
+	return NULL;
 }
