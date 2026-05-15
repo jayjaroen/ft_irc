@@ -54,8 +54,6 @@ void Command::execute_command(Server &server, Client &sender)
             return ;
         }
     }
-
-
     switch (cmdType)
     {
         case CAP:
@@ -88,11 +86,16 @@ void Command::execute_command(Server &server, Client &sender)
             std::cout << "Client quitting..." << std::endl;
             handleQuit(sender, server);
             break;
+        case MODE:
+            std::cout << "Executing MODE..." << std::endl;
+            handleMODE(sender, server);
+            break;
         case PONG:
         {
             std::cout << "Received PONG from client fd " << sender.getFd() << std::endl;
             break;
         }
+        
         case PING:
         {
             if (this->params.empty() || this->params[0].empty()) return;
@@ -101,15 +104,6 @@ void Command::execute_command(Server &server, Client &sender)
             sendResponse(sender.getFd(), pongResponse);
             break;
         }
-        // case PRIVMSG:
-        // {
-        //     // if (this->params.empty() || this->params[0].empty() || this->params[1].empty())
-        //     //     return;
-        //     // std::string target = this->params[0][0]; // first parameter is the target (user or channel)
-        //     // std::string message = this->params[1][0]; // second parameter is the message
-        //     // server.sendMessageToTarget(target, message);
-        //     break;
-        // }
         default:
             // std::cout << "Command " << this->params[0][0] << " not implementes" << std::endl;
             break;
@@ -142,8 +136,6 @@ void Command::handleNick(Client &sender)
     std::cout << "Client FD " << sender.getFd() << " changed nick to " << newNick << std::endl;
 }
 
-
-
 void Command::handlePass(Client &sender, Server &server)
 {
     if (this->params.empty() || this->params[0].empty())
@@ -172,7 +164,6 @@ void Command::handleQuit(Client &sender, Server &server)
     sendResponse(sender.getFd(), "Goodbye!\r\n");
     std::cout << "Client FD " << sender.getFd() << " is quitting." << std::endl;
     server.disconnectClient(sender.getFd());
-
 }
 
 void Command::handleUSER(Client &sender)
@@ -207,4 +198,89 @@ void Command::handleJOIN(Server &server, Client &sender)
         key = this->params[1][0];
     std::cout << "Channel name is: " << "\"" << channel_name << "\"" << " key is " << "\"" << key << "\"" << std::endl;
     server.findOrCreateChannel(channel_name, key, &sender);
+}
+
+void Command::handleMODE(Client &sender, Server &server)
+{
+    std::string modeTarget = this->params[0][0]; // The target of the MODE command (channel or user)
+    std::string modeChanges = this->params[1][0]; // The mode changes
+    bool client_or_channel = (modeTarget[0] == '#'); // Determine if the target is a channel or a user based on the first character
+    if (client_or_channel)
+    {
+        if (modeChanges.empty())
+        {
+            std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
+            sendResponse(sender.getFd(), err);
+            std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
+            return;
+        }
+        if (modeChanges[0] != '+' && modeChanges[0] != '-')
+        {
+            std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[0] + " :Unknown MODE flag\r\n";
+            sendResponse(sender.getFd(), err);
+            std::cout << "Client FD " << sender.getFd() << " attempted to change modes with invalid mode string: " << modeChanges << std::endl;
+            return;
+        }
+        // Handle channel mode changes
+        Channel* channel = server.findChannel(modeTarget);
+        if (channel)
+        {
+            switch (modeChanges[1]) // Example: Check the second character for specific mode flags
+            {
+                case 'k': // Channel key
+                    std::cout << "Handling channel key mode change for channel: " << modeTarget << std::endl;
+                    // Implement logic to set or remove channel key
+                    break;
+                case 'l': // User limit
+                    std::cout << "Handling user limit mode change for channel: " << modeTarget << std::endl;
+                    // Implement logic to set or remove user limit
+                    break;
+                case 'm': // Moderated channel
+                    std::cout << "Handling moderated channel mode change for channel: " << modeTarget << std::endl;
+                    // Implement logic to set or remove moderated channel mode
+                    break;
+                default:
+                    std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
+                    sendResponse(sender.getFd(), err);
+                    std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
+                    return;
+            }
+            // Here you would implement the logic to change the channel modes based on modeChanges
+        }
+        else
+        {
+            std::string err = ":ircserver " + intToString(ERR_NOSUCHCHANNEL) + " " + sender.getName() + " " + modeTarget + " :No such channel\r\n";
+            sendResponse(sender.getFd(), err);
+            std::cout << "Client FD " << sender.getFd() << " attempted to change modes for non-existent channel: " << modeTarget << std::endl;
+        }
+    }
+    else
+    {
+        // Handle user mode changes
+        Client* targetClient = server.findClientByName(modeTarget);
+        if (targetClient)
+        {
+            switch (modeChanges[1])
+            {
+                case 'o':
+                    std::cout << "Handling operator status mode change for user: " << modeTarget << std::endl;
+                    break;
+                case 'i': // Invisible mode
+                    std::cout << "Handling invisible mode change for user: " << modeTarget << std::endl;
+                    break;
+                default:
+                    std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :Unknown MODE flag\r\n";
+                    sendResponse(sender.getFd(), err);
+                    std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
+                    return;
+            }
+        }
+        else
+        {
+            std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " " + modeTarget + " :No such nick\r\n";
+            sendResponse(sender.getFd(), err);
+            std::cout << "Client FD " << sender.getFd() << " attempted to change modes for non-existent user: " << modeTarget << std::endl;
+        }
+    }
+    std::cout << "Handling MODE command for client fd " << sender.getFd() << std::endl;
 }
