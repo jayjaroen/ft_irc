@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   command.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: psenalia <psenalia@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/05/02 15:48:15 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/05/22 15:41:54 by psenalia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -235,10 +235,16 @@ void Command::handleMODE(Client &sender, Server &server)
                     std::cout << "Handling user limit mode change for channel: " << modeTarget << std::endl;
                     // Implement logic to set or remove user limit
                     break;
-                case 'm': // Moderated channel
-                    std::cout << "Handling moderated channel mode change for channel: " << modeTarget << std::endl;
+                case 't': // restrictions of the TOPIC channel
+                    std::cout << "Handling t channel mode change for channel: " << modeTarget << std::endl;
                     // Implement logic to set or remove moderated channel mode
                     break;
+				case 'o': // operator given mode
+					std::cout << "Handling operator given mode change for channel: " << modeTarget << std::endl;
+					break;
+				case 'i': // invite-only mode
+					std:: cout << "Handling Invite only channel mode change for channel: " << modeTarget << std::endl;
+					break;
                 default:
                     std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
                     sendResponse(sender.getFd(), err);
@@ -256,31 +262,58 @@ void Command::handleMODE(Client &sender, Server &server)
     }
     else
     {
-        // Handle user mode changes
-        Client* targetClient = server.findClientByName(modeTarget);
-        if (targetClient)
-        {
-            switch (modeChanges[1])
-            {
-                case 'o':
-                    std::cout << "Handling operator status mode change for user: " << modeTarget << std::endl;
-                    break;
-                case 'i': // Invisible mode
-                    std::cout << "Handling invisible mode change for user: " << modeTarget << std::endl;
-                    break;
-                default:
-                    std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :Unknown MODE flag\r\n";
-                    sendResponse(sender.getFd(), err);
-                    std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
-                    return;
-            }
-        }
-        else
-        {
-            std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " " + modeTarget + " :No such nick\r\n";
-            sendResponse(sender.getFd(), err);
-            std::cout << "Client FD " << sender.getFd() << " attempted to change modes for non-existent user: " << modeTarget << std::endl;
-        }
+		return ;
+        // // Handle user mode changes
+        // Client* targetClient = server.findUser(modeTarget);
+        // if (targetClient)
+        // {
+        //     switch (modeChanges[1])
+        //     {
+        //         case 'o':
+        //             std::cout << "Handling operator status mode change for user: " << modeTarget << std::endl;
+        //             break;
+        //         case 'i': // Invisible mode
+        //             std::cout << "Handling invisible mode change for user: " << modeTarget << std::endl;
+        //             break;
+        //         default:
+        //             std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :Unknown MODE flag\r\n";
+        //             sendResponse(sender.getFd(), err);
+        //             std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
+        //             return;
+        //     }
+        // }
+        // else
+        // {
+        //     std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " " + modeTarget + " :No such nick\r\n";
+        //     sendResponse(sender.getFd(), err);
+        //     std::cout << "Client FD " << sender.getFd() << " attempted to change modes for non-existent user: " << modeTarget << std::endl;
+        // }
     }
-    std::cout << "Handling MODE command for client fd " << sender.getFd() << std::endl;
+    // std::cout << "Handling MODE command for client fd " << sender.getFd() << std::endl;
 }
+
+// void Command::handleOPER(Client &sender, Server &server)
+// {
+//     if (this->params.empty())
+//         return;
+//     std::string target = this->params[0][0];
+// 	std::string passwd = this->params[1][0];
+// 	if (server.getOperUser == target)
+// 	{
+// 		std::string err = ":ircserver " + intToString(ERR_NOOPERHOST) + " " + sender.getName() + " " + modeTarget + " :No 0-lines for your host\r\n";
+//         sendResponse(sender.getFd(), err);
+//         std::cout << "Client FD " << sender.getFd() << " requested operator priviledge with incorrect operator username: " << modeTarget << std::endl;
+// 		return;
+//     }
+// 	if (server.getOperPass == passwd)
+// 	{
+// 		std::string err = ":ircserver " + intToString(ERR_PASSWDMISMATCH) + " " + sender.getName() + " " + modeTarget + " :Password incorrect\r\n";
+//         sendResponse(sender.getFd(), err);
+//         std::cout << "Client FD " << sender.getFd() << " requested operator priviledge with incorrect operator password: " << modeTarget << std::endl;
+// 		return;
+//     }
+//     sender.setOperator(sender);
+// 	std::string reply = ":ircserver " + intToString(RPL_YOUREOPER) + " " + sender.getName() + " " + modeTarget + " :You are now an IRC operator\r\n";
+// 	sendResponse(sender.getFd(), reply);
+//     std::cout << "Client FD " << sender.getFd() << sender.getName() << " gained IRC operator priviledges." << std::endl;
+// }

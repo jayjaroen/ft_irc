@@ -47,34 +47,6 @@ void	Command::msgparser(const std::string input)
 			}
 			std::cout << std::endl;
 		}
-
-		// size_t	block = 0;
-		// size_t	content = 0;
-		// size_t	last = icomm.length() + 1;
-		// for (size_t i = last; input[i]; i++)
-		// {
-		// 	if (input[i] == ',')
-		// 	{
-		// 		this->params[block][content] = input.substr(last, i - 1);
-		// 		content++;
-		// 		if (input[i + 1])
-		// 			last = i + 1;
-		// 	}
-		// 	else if (isspace(input[i]) && !isspace(input[i - 1]))
-		// 	{
-		// 		this->params[block][content] = input.substr(last, i - 1);
-		// 		block++;
-		// 		content = 0;
-		// 		if (input[i + 1])
-		// 			last = i + 1;
-		// 	}
-		// 	else if (input[i] == '\0')
-		// 	{
-		// 		if (!isspace(input[i - 1]))
-		// 		this->params[block][content] = input.substr(last, i - 1);
-		// 		break;
-		// 	}
-		// }
 	}
 }
 

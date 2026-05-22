@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: psenalia <psenalia@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:29 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/05/02 15:16:14 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/05/22 16:15:37 by psenalia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,9 +24,10 @@ class Channel
 		std::vector<Client *>	_clients;
 
 		/* Channel modes*/
-		std::string				_key; //channel key
-		size_t					_limit; //limit number of channel members
+		std::string				_key; //channel key, linked with k
+		size_t					_limit; //limit number of channel members, linked to l
 		bool					_msgs; // yes/no to external msgs
+		// enum					_mode; //indicate the mode (such as k, l, t, o, i)
 
 		Channel();
 		Channel(const Channel &other);

@@ -21,6 +21,7 @@ class Client
         Channel*    _channel;
         //client join many channels?
         // std::vector<Channel*>   _channels;
+  
         
         bool    _isAuthenticated;
         bool    _isOperator;
