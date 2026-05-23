@@ -660,6 +660,7 @@ void Command::handleCAP(Client &sender, Server &server)
                 sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() + " NAK :" + this->params[0][1] + "\r\n");
             break;
         case END:
+            // add flag client end cap on client + set cap status negotiation R+ P'Jay
             std::cout << "Client FD " << sender.getFd() << "end CAP negotiations" << std::endl;
             break;
         
