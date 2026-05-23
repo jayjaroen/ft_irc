@@ -96,6 +96,9 @@ class Command
 		void handlePRIVMSG(Server &server, Client &sender);
 		void handleJOIN(Server &server, Client &sender);
 		void handlePart(Server &server, Client &sender);
+		void handleMODE(Client &sender, Server &server);
+		void handleHELP(Client &sender, Server &server);
+		// void handleTOPIC(Client &sender, Server &server);
 };
 
 
@@ -141,7 +144,8 @@ enum NumRpl
 	ERR_NOOPERHOST = 491,
 	ERR_USERSDONTMATCH = 502,
 	ERR_ALREADYREGISTRED = 462,
-	ERR_NOTREGISTERED = 451
+	ERR_NOTREGISTERED = 451,
+	ERR_UMODEUNKOWNFLAG = 221
 //	.
 //	.
 //	.

@@ -54,6 +54,7 @@ class Server
 		void	handleClientMessage(int client_fd);
 		std::string get_creation_date() const;
 
+		// Channel*	findUser(const std::string name);
 		Channel*	findChannel(const std::string name);
 		Channel*	createChannel(const std::string &name, const std::string &key, Client *client);
 		Channel*	findOrCreateChannel(const std::string &name, const std::string &key, Client *client);

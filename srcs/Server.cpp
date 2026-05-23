@@ -209,6 +209,7 @@ Channel*	Server::findChannel(const std::string name)
 		if (_channels[i]->getName() == name)
 			return _channels[i];
 	}
+    // add error message for channel not found ERR_NOSUCHCHANNEL
 	return NULL;
 }
 

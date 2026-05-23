@@ -66,7 +66,7 @@ void	Channel::setExtMsg(bool flag)
     _msgs = flag;
 }
 
-void	Channel::broadcast(Client* sender, const std::string &message)
+void	Channel::broadcast(Client *sender, const std::string &message)
 {
     for (unsigned long i = 0; i < _clients.size(); i++)
     {

@@ -3,7 +3,7 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: psenalia <psenalia@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:29 by jjaroens          #+#    #+#             */
 /*   Updated: 2026/05/09 16:23:49 by jjaroens         ###   ########.fr       */
@@ -24,9 +24,10 @@ class Channel
 		std::vector<Client *>	_clients;
 
 		/* Channel modes*/
-		std::string				_key; //channel key
-		size_t					_limit; //limit number of channel members
+		std::string				_key; //channel key, linked with k
+		size_t					_limit; //limit number of channel members, linked to l
 		bool					_msgs; // yes/no to external msgs
+		// enum					_mode; //indicate the mode (such as k, l, t, o, i)
 
 		Channel();
 		Channel(const Channel &other);
@@ -43,20 +44,20 @@ class Channel
 		size_t					getChannelSize();
 
 		void					setKey(std::string key);
+		void					setAdmin(Client *admin);
+		void					setName(std::string name);
 		void					setLimit(size_t limit);
 		void					setExtMsg(bool flag);
 		
 		bool					checkKey(const std::string &key);
 		/*Channel actions*/
-		void					broadcast(Client *, const std::string &message);
+		void					broadcast(Client *sender, const std::string &message);
 		// void					broadcast(const std::string &message, Client* exclude);
 		void					addClient(Client *client);
 		void					removeClient(Client* client);
 		void					removeOperator(Client* client);
 		//kick?
 		bool					hasClient(Client *client) const;
-		void					setAdmin(Client *admin);
-		void					setName(std::string name);	
 		bool					isEmpty();
 };
 
