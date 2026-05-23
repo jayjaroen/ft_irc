@@ -14,6 +14,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <cstdio>
+#include <string>
 
 void sendResponse(int fd, const std::string &message)
 {
@@ -46,7 +47,7 @@ void Command::execute_command(Server &server, Client &sender)
     if (sender.isAuthenticated() == false)
     {
         // std::cout << sender.isAuthenticated() << std::endl;
-        if (cmdType != PASS && cmdType != NICK && cmdType != USER)
+        if (cmdType != PASS && cmdType != NICK && cmdType != USER && cmdType != CAP)
         {
             std::string err = ":ircserver " + intToString(ERR_NOTREGISTERED) + " " + sender.getName() + " :You have not registered\r\n";
             sendResponse(sender.getFd(), err);
@@ -58,6 +59,7 @@ void Command::execute_command(Server &server, Client &sender)
     {
         case CAP:
             std::cout << "Executing CAP..." << std::endl;
+            sendResponse(sender.getFd(), "CAP * LS :\r\n");
             break;
         case USER:
             std::cout <<  "Executing USER..." << std::endl;
@@ -316,6 +318,16 @@ void Command::handleMODE(Client &sender, Server &server)
                     break;
 				case 'o': // operator given mode
 					std::cout << "Handling operator given mode change for channel: " << modeTarget << std::endl;
+                    // if (modeChanges[0] == '+')
+                    //     // channel.admin.push_back(sender); // Need function to add co-admin, and change _admin type to vector<Clients*>
+                    // else if (modeChanges[0] == '-')
+                    //     // channel.admin.remove(sender); // Need function to remove admin
+                    // else
+                    // {
+                    //     std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
+                    //     sendResponse(sender.getFd(), err);
+                    //     std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
+                    // }
 					break;
 				case 'i': // invite-only mode
 					std:: cout << "Handling Invite only channel mode change for channel: " << modeTarget << std::endl;
@@ -441,6 +453,7 @@ void Command::handleHELP(Client &sender, Server &server)
         std::string helpMsg = ":ircserver 704" + sender.getName() + " NICK :** The NICK command **\r\n";
         helpMsg += ":ircserver 705 " + sender.getName() + " NICK :\r\n";
         helpMsg += ":ircserver 705 " + sender.getName() + " NICK :The /NICK command is used by a client to set or change their nickname on the IRC server. The client must provide the desired nickname as a parameter. If the nickname is available and not already in use by another client, the server will update the client's nickname accordingly. If the nickname is already taken, the server will respond with an error message, prompting the client to choose a different nickname.\r\n";
+        helpMsg += ":ircserver 706 " + sender.getName() + " NICK :Usage: /NICK <name>\r\n";
         sendResponse(sender.getFd(), helpMsg);
         return;
     }
@@ -530,7 +543,6 @@ void Command::handleHELP(Client &sender, Server &server)
 
 // void Command::handleTOPIC(Client &sender, Server &server)
 // {
-  
 //     std::string channelName = this->params[0][0];
 //     std::string newTopic = this->params[1][0];
 //     if (this->params.empty() || this->params[0].empty())
@@ -582,3 +594,76 @@ void Command::handleHELP(Client &sender, Server &server)
 //         std::cout << "Client FD " << sender.getFd() << " set topic for channel " << channelName << " to: " << newTopic << std::endl;
 //     }
 // }
+
+void Command::handleCAP(Client &sender, Server &server)
+{
+    (void) server;
+    if (this->params.empty())
+    {
+        std::string err = ":ircserver "+ intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " CAP :Not enough parameters\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to inquire capabilities without proper input(s)." << std::endl;
+        return;
+    }
+    std::string subcommand = this->params[0][0];
+    std::string commlist[] = {"LS", "LIST", "REQ", "END"};
+    CapSubCommands  sub = UNKNOWN_CMD_CAP;
+    for (size_t i = 0; i < 4; i++)
+    {
+        if (this->params[0][0] == commlist[i])
+		{
+			switch (i)
+            {
+                case 0:
+                    sub = LS;
+                    break;
+                case 1:
+                    sub = LIST;
+                    break;
+                case 2:
+                    sub = REQ;
+                    break;
+                case 3:
+                    sub = END;
+                    break;
+                
+                default:
+                    break;
+            }
+		}
+    }
+    if (sub == UNKNOWN_CMD_CAP)
+    {
+        std::string err = ":ircserver "+ intToString(ERR_INVALIDCAPCMD) + " " + sender.getName() + " CAP :Invalid CAP subcommands\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to inquire capabilities without proper subcommand." << std::endl;
+        return;
+    }
+    switch (sub)
+    {
+        case LS:
+            if (this->params[1].size() > 1 && !this->params[1].empty())
+                sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() +  " LS "  + this->params[1][0] + " " + ":multi-prefix\r\n");
+            else
+                sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() + " LS :multi-prefix\r\n");
+            break;
+        case LIST:
+            // if (sender.hasMultiPrefixEnabled() == true) // add more function in client to get enable cap feature R+ P'Jay
+            //     sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() + " LIST :multi-prefix\r\n");
+            // else
+            //     sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() + " LIST :\r\n");
+            // break;
+        case REQ:
+            if (this->params[1].size() > 1 && this->params[2][0].find("multi-prefix") != std::string::npos)
+                sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() + " ACK :multi-prefix\r\n");
+            else
+                sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() + " NAK :" + this->params[0][1] + "\r\n");
+            break;
+        case END:
+            std::cout << "Client FD " << sender.getFd() << "end CAP negotiations" << std::endl;
+            break;
+        
+        default:
+            break;
+    }
+}

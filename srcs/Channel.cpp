@@ -54,6 +54,8 @@ size_t	Channel::getChannelSize()
 
 void	Channel::setKey(std::string key)
 {
+    // if (key.empty())
+    //  _key.clear();
     _key = key;
 }
 
@@ -221,19 +223,24 @@ void    Channel::handleKeyMode(Client &sender, const std::string &modeChanges, c
     {
         if (param.empty())
         {
-            std::string err = ":ircserver 461 " +
-                sender.getName() +
-                "MODE : Not enough parameters\r\n";
+            std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
             response(sender.getFd(), err);
+            std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
             return;
         }
         _hasKey = true;
         _key = param;
     }
-    else
+    else if (modeChanges[0] == '-')
     {
         _hasKey = false;
         _key.clear();
+    }
+    else
+    {
+        std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
+        response(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
     }
     broadcastModeChange(sender, modeChanges);
 }
@@ -246,19 +253,24 @@ void    Channel::handleLimitMode(Client &sender, const std::string &modeChanges,
     {
         if (param.empty())
         {
-            std::string err = ":ircserver 461 " +
-                sender.getName() +
-                "MODE : Not enough parameters\r\n";
+            std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
             response(sender.getFd(), err);
+            std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
             return;
         }
         _hasLimited = true;
         _limit = std::atoi(param.c_str());
     }
-    else
+    else if (modeChanges[0] == '-')
     {
         _hasLimited = false;
         _limit = 0;
+    }
+    else
+    {
+        std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
+        response(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
     }
     broadcastModeChange(sender, modeChanges);
     //Need to change the logic in JOIN
@@ -270,24 +282,29 @@ void    Channel::handleOperatorMode(Client &sender, const std::string &modeChang
         return;
     if (nick.empty())
     {
-        std::string err = ":ircserver 461 " + //refactor error msg
-            sender.getName() +
-            "MODE : Not enough parameters\r\n";
+        std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
         response(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
         return;
     }
     Client* target = server.findClient(sender.getName());
     if (!target)
     {
-        std::string err = ":ircserver 401 " + 
-            sender.getName() + " " + nick + " :No such nick\r\n";
+        std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " :No such nick\r\n";
         response(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to change modes for non-existent user: " << std::endl;
         return;
     }
     if (modeChanges[0] == '+')
         addOperator(target->getFd());
-    else
+    else if (modeChanges[0] == '-')
         removeOperator(target->getFd());
+    else
+    {
+        std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
+        response(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
+    }
     broadcastModeChange(sender, modeChanges);
 }
 

@@ -39,14 +39,14 @@ void	Command::msgparser(const std::string input)
 		if (this->lexer(input, icomm, this->params) == FAILURE)
 			return;
 		
-		for (size_t i = 0; i < this->params.size(); i++)
-		{
-			for (size_t j = 0; j < this->params[i].size(); j++)
-			{
-				std::cout << this->params[i][j] << " ";
-			}
-			std::cout << std::endl;
-		}
+		// for (size_t i = 0; i < this->params.size(); i++)
+		// {
+		// 	for (size_t j = 0; j < this->params[i].size(); j++)
+		// 	{
+		// 		std::cout << this->params[i][j] << " ";
+		// 	}
+		// 	std::cout << std::endl;
+		// }
 	}
 }
 

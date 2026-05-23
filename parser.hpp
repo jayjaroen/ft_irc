@@ -21,6 +21,7 @@
 #include <cctype>
 #include <sstream>
 
+
 #include "./include/Client.hpp"
 #include "./include/Server.hpp"
 
@@ -67,6 +68,14 @@ enum CommandPrompts
 	PONG
 };
 
+enum CapSubCommands
+{
+	UNKNOWN_CMD_CAP,
+	LS,
+	LIST,
+	REQ,
+	END
+};
 
 class Command
 {
@@ -98,6 +107,7 @@ class Command
 		void handlePart(Server &server, Client &sender);
 		void handleMODE(Client &sender, Server &server);
 		void handleHELP(Client &sender, Server &server);
+		void handleCAP(Client &sender, Server &server);
 		// void handleTOPIC(Client &sender, Server &server);
 };
 
@@ -124,6 +134,7 @@ enum NumRpl
 	ERR_CANNOTSENDTOCHAN = 404,
 	ERR_TOOMANYCHANNELS = 405,
 	ERR_NOORIGIN = 409,
+	ERR_INVALIDCAPCMD = 410,
 	ERR_NORECIPIENT = 411,
 	ERR_NOTEXTTOSEND = 412,
 	ERR_NONICKNAMEGIVEN = 431,
