@@ -96,6 +96,8 @@ class Command
 		// void handlePRIVMSG(Client &sender);
 		void handleJOIN(Server &server, Client &sender);
 		void handleMODE(Client &sender, Server &server);
+		void handleHELP(Client &sender, Server &server);
+		void handleTOPIC(Client &sender, Server &server);
 };
 
 
