@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:39 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/05/09 16:28:23 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/05/23 17:19:44 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,7 +16,8 @@ Channel::Channel(){}
 Channel::~Channel(){}
 
 Channel::Channel(const std::string &name, const std::string &key, Client *admin)
-    :_name(name), _admin(admin), _key(key), _limit(0), _msgs(false)
+    :_name(name), _admin(admin), _key(key), _limit(0), _inviteOnly(false),
+    _topicRestrict(false), _hasKey(false), _hasLimited(false)
 {
     
 }
@@ -41,10 +42,10 @@ size_t	Channel::getLimit()
     return _limit;
 }
 
-bool	Channel::getExtMsg()
-{
-    return _msgs;
-}
+// bool	Channel::getExtMsg()
+// {
+//     return _msgs;
+// }
 
 size_t	Channel::getChannelSize()
 {
@@ -61,10 +62,10 @@ void	Channel::setLimit(size_t limit)
     _limit = limit;
 }
 
-void	Channel::setExtMsg(bool flag)
-{
-    _msgs = flag;
-}
+// void	Channel::setExtMsg(bool flag)
+// {
+//     _msgs = flag;
+// }
 
 void	Channel::broadcast(Client *sender, const std::string &message)
 {
@@ -74,18 +75,12 @@ void	Channel::broadcast(Client *sender, const std::string &message)
         if (target == sender)
             continue;
         send(target->getFd(), message.c_str(), message.size(), 0);
-    }
-    // std::vector<Client*>::iterator it_start = _clients.begin();
-    // std::vector<Client*>::iterator it_end = _clients.end();
-    
-    // while (it_start != it_end)
-    // {
-    //     (*it_start)->write(message); //client write message
-    //     it_start++;
-    // }
-    
+    } 
 }
-//write exclude
+void    Channel::response(int fd, const std::string &msg)
+{
+    send(fd, msg.c_str(), msg.size(), 0);
+}
 
 bool    Channel::checkKey(const std::string &key)
 {
@@ -109,11 +104,6 @@ bool    Channel::hasClient(Client *client) const
     }
     return false;
 }
-
-// void	Channel::remove_client(Client *client)
-// {
-	
-// }
 
 void    Channel::setAdmin(Client *admin)
 {
@@ -151,3 +141,158 @@ bool    Channel::isEmpty()
 {
     return _clients.empty();
 }
+
+bool    Channel::isOperator(int fd)
+{
+    for (size_t i = 0; i < _operators.size(); i++)
+    {
+        if (_operators[i] == fd)
+            return true;
+    }
+    return false;
+}
+
+void    Channel::addOperator(int fd)
+{
+    if (!isOperator(fd))
+        _operators.push_back(fd);
+}
+
+void    Channel::removeOperator(int fd)
+{
+    for (std::vector<int>::iterator it = _operators.begin(); it != _operators.end(); ++it)
+    {
+        if (*it == fd)
+        {
+            _operators.erase(it);
+            return;
+        }
+    }
+}
+
+void    Channel::broadcastModeChange(Client &sender, const std::string &modeChanges)
+{
+    std::string msg = ":" + sender.getName() + " MODE " +
+                        _name + " " + modeChanges + "\r\n";
+    broadcast(&sender, msg); 
+}
+
+bool    Channel::checkOperator(Client &client)
+{
+    if (!isOperator(client.getFd())) //can refactor the function
+    {
+        std::string err = 
+        ":ircserver 482 " + client.getName() +
+        " " + _name + " :You're not channel operator\r\n";
+        response(client.getFd(), err);
+        return false;
+    }
+    return true;
+}
+
+void    Channel::handleInviteMode(Client &sender, const std::string &modeChanges)
+{
+    if (!checkOperator(sender))
+        return;
+    if (modeChanges[0] == '+')//can't automatically, how to change after
+        _inviteOnly = true;
+    else
+        _inviteOnly = false;
+    broadcastModeChange(sender, modeChanges);
+}
+
+void    Channel::handleTopicMode(Client &sender, const std::string &modeChanges)
+{
+    if (!checkOperator(sender))
+        return;
+    if (modeChanges[0] == '+')
+        _topicRestrict = true;
+    else
+        _topicRestrict = false;
+    broadcastModeChange(sender, modeChanges);
+}
+
+
+void    Channel::handleKeyMode(Client &sender, const std::string &modeChanges, const std::string &param)
+{
+    if (!checkOperator(sender))
+        return;
+    if (modeChanges[0] == '+')
+    {
+        if (param.empty())
+        {
+            std::string err = ":ircserver 461 " +
+                sender.getName() +
+                "MODE : Not enough parameters\r\n";
+            response(sender.getFd(), err);
+            return;
+        }
+        _hasKey = true;
+        _key = param;
+    }
+    else
+    {
+        _hasKey = false;
+        _key.clear();
+    }
+    broadcastModeChange(sender, modeChanges);
+}
+
+void    Channel::handleLimitMode(Client &sender, const std::string &modeChanges, const std::string &param)
+{
+    if (!checkOperator(sender))
+        return;
+    if (modeChanges[0] == '+')
+    {
+        if (param.empty())
+        {
+            std::string err = ":ircserver 461 " +
+                sender.getName() +
+                "MODE : Not enough parameters\r\n";
+            response(sender.getFd(), err);
+            return;
+        }
+        _hasLimited = true;
+        _limit = std::atoi(param.c_str());
+    }
+    else
+    {
+        _hasLimited = false;
+        _limit = 0;
+    }
+    broadcastModeChange(sender, modeChanges);
+    //Need to change the logic in JOIN
+}
+
+void    Channel::handleOperatorMode(Client &sender, const std::string &modeChanges, const std::string &nick, Server &server)
+{
+    if (!checkOperator(sender))
+        return;
+    if (nick.empty())
+    {
+        std::string err = ":ircserver 461 " + //refactor error msg
+            sender.getName() +
+            "MODE : Not enough parameters\r\n";
+        response(sender.getFd(), err);
+        return;
+    }
+    Client* target = server.findClient(sender.getName());
+    if (!target)
+    {
+        std::string err = ":ircserver 401 " + 
+            sender.getName() + " " + nick + " :No such nick\r\n";
+        response(sender.getFd(), err);
+        return;
+    }
+    if (modeChanges[0] == '+')
+        addOperator(target->getFd());
+    else
+        removeOperator(target->getFd());
+    broadcastModeChange(sender, modeChanges);
+}
+
+
+
+
+
+
