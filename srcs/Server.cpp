@@ -219,6 +219,7 @@ Channel*	Server::createChannel(const std::string &name, const std::string &key, 
 	_channels.push_back(channel);
 	channel->addClient(client);
 	channel->setAdmin(client);
+    channel->addOperator(client->getFd());//add channel operator
 	return channel;
 }
 

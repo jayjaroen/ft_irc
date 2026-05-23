@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   command.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: psenalia <psenalia@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/05/09 16:50:17 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/05/23 16:27:39 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -301,14 +301,17 @@ void Command::handleMODE(Client &sender, Server &server)
             {
                 case 'k': // Channel key
                     std::cout << "Handling channel key mode change for channel: " << modeTarget << std::endl;
+                    channel->handleKeyMode(sender, modeChanges, this->params[2][0]); //third argument
                     // Implement logic to set or remove channel key
                     break;
                 case 'l': // User limit
                     std::cout << "Handling user limit mode change for channel: " << modeTarget << std::endl;
+                    channel->handleLimitMode(sender, modeChanges, this->params[2][0]);
                     // Implement logic to set or remove user limit
                     break;
                 case 't': // restrictions of the TOPIC channel
                     std::cout << "Handling t channel mode change for channel: " << modeTarget << std::endl;
+                    channel->handleTopicMode(sender, modeChanges);
                     // Implement logic to set or remove moderated channel mode
                     break;
 				case 'o': // operator given mode
@@ -316,6 +319,7 @@ void Command::handleMODE(Client &sender, Server &server)
 					break;
 				case 'i': // invite-only mode
 					std:: cout << "Handling Invite only channel mode change for channel: " << modeTarget << std::endl;
+                    channel->handleInviteMode(sender, modeChanges);
 					break;
                 default:
                     std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
