@@ -262,13 +262,10 @@ void Command::handleJOIN(Server &server, Client &sender)
     std::string channel_name = this->params[0][0];
     std::string key = "";
     
-    // 💡 ดักล้างเครื่องหมาย ':' ที่ชอบติดมาข้างหน้าชื่อห้องออกไปให้สะอาดสะอ้าน
     if (!channel_name.empty() && channel_name[0] == ':')
     {
         channel_name.erase(0, 1);
     }
-    
-    // ถ้าล้างแล้วสตริงว่างเปล่า หรือหลุดฟอร์แมต ให้ดีดตัวกลับเงียบๆ
     if (channel_name.empty())
         return;
 
@@ -358,21 +355,12 @@ void Command::handleMODE(Client &sender, Server &server)
                     break;
                 case 't': // restrictions of the TOPIC channel
                     std::cout << "Handling t channel mode change for channel: " << modeTarget << std::endl;
-                    channel->handleTopicMode(sender, modeChanges);
+                    server.findChannel(modeTarget)->handleTopicMode(sender, modeChanges);
                     // Implement logic to set or remove moderated channel mode
                     break;
 				case 'o': // operator given mode
 					std::cout << "Handling operator given mode change for channel: " << modeTarget << std::endl;
-                    // if (modeChanges[0] == '+')
-                    //     // channel.admin.push_back(sender); // Need function to add co-admin, and change _admin type to vector<Clients*>
-                    // else if (modeChanges[0] == '-')
-                    //     // channel.admin.remove(sender); // Need function to remove admin
-                    // else
-                    // {
-                    //     std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
-                    //     sendResponse(sender.getFd(), err);
-                    //     std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
-                    // }
+                    channel->handleOperatorMode(sender, modeChanges, this->params[2][0], server); //third argument is the nick of the user to be opped/deopped
 					break;
 				case 'i': // invite-only mode
 					std:: cout << "Handling Invite only channel mode change for channel: " << modeTarget << std::endl;
@@ -562,59 +550,61 @@ void Command::handleHELP(Client &sender, Server &server)
     }
 }
 
-// void Command::handleTOPIC(Client &sender, Server &server)
-// {
-//     std::string channelName = this->params[0][0];
-//     std::string newTopic = this->params[1][0];
-//     if (this->params.empty() || this->params[0].empty())
-//     {
-//         std::string err = ":ircserver "+ intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " TOPIC :Not enough parameters\r\n";
-//         sendResponse(sender.getFd(), err);
-//         std::cout << "Client FD " << sender.getFd() << " attempted to set topic without providing channel name." << std::endl;
-//         return;
-//     }
-//     if (newTopic.empty())
-//     {
-//         std::string topic = server->findChannel(channelName)->getTopic();
-//         if (!topic.empty())
-//         {
-//             std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + topic + "\r\n";
-//             sendResponse(sender.getFd(), topicMsg);
-//             std::cout << "Client FD " << sender.getFd() << " requested topic for channel " << channelName << ". Current topic: " << topic << std::endl;
-//         }
-//         else
-//         {
-//             std::string noTopicMsg = ":ircserver 331 " + sender.getName() + " " + channelName + " :No topic is set\r\n";
-//             sendResponse(sender.getFd(), noTopicMsg);
-//             std::cout << "Client FD " << sender.getFd() << " requested topic for channel " << channelName << ". No topic is set." << std::endl;
-//         }
-//         return;
-//     }
-//     bool mode = server->findChannel(channelName)->getTopicMode(); // do this to check if the channel is moderated or not
-//     if (mode == true)
-//     {
-//         if (server->findChannel(channelName)->isOperator(&sender) == true)
-//         {
-//             server->findChannel(channelName)->setTopic(newTopic);
-//             std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n";
-//             sendResponse(sender.getFd(), topicMsg);
-//             std::cout << "Client FD " << sender.getFd() << " set topic for channel " << channelName << " to: " << newTopic << std::endl;
-//         }
-//         else
-//         {
-//             std::string err = ":ircserver 482 " + sender.getName() + " " + channelName + " :You're not channel operator\r\n";
-//             sendResponse(sender.getFd(), err);
-//             std::cout << "Client FD " << sender.getFd() << " attempted to set topic for channel " << channelName << " without operator privileges." << std::endl;
-//         }
-//     }
-//     else
-//     {
-//         server->findChannel(channelName)->setTopic(newTopic);
-//         std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n";
-//         sendResponse(sender.getFd(), topicMsg);
-//         std::cout << "Client FD " << sender.getFd() << " set topic for channel " << channelName << " to: " << newTopic << std::endl;
-//     }
-// }
+void Command::handleTOPIC(Client &sender, Server &server)
+{
+    std::string channelName = this->params[0][0];
+    std::string newTopic = this->params[1][0];
+    if (this->params.empty() || this->params[0].empty())
+    {
+        std::string err = ":ircserver "+ intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " TOPIC :Not enough parameters\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to set topic without providing channel name." << std::endl;
+        return;
+    }
+    if (newTopic.empty())
+    {
+        std::string topic = server.findChannel(channelName)->getTopic();
+        if (!topic.empty())
+        {
+            std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + topic + "\r\n";
+            sendResponse(sender.getFd(), topicMsg);
+            std::cout << "Client FD " << sender.getFd() << " requested topic for channel " << channelName << ". Current topic: " << topic << std::endl;
+        }
+        else
+        {
+            std::string noTopicMsg = ":ircserver 331 " + sender.getName() + " " + channelName + " :No topic is set\r\n";
+            sendResponse(sender.getFd(), noTopicMsg);
+            std::cout << "Client FD " << sender.getFd() << " requested topic for channel " << channelName << ". No topic is set." << std::endl;
+        }
+        return;
+    }
+    bool mode = server.findChannel(channelName)->getTopic_mode(); // do this to check if the channel is moderated or not
+    if (mode == true)
+    {
+        if (server.findChannel(channelName)->isOperator(sender.getFd()) == true)
+        {
+            server.findChannel(channelName)->setTopic(newTopic);
+            server.findChannel(channelName)->handleTopicMode(sender, newTopic); // Broadcast the topic change to all channel members
+            std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n";
+            sendResponse(sender.getFd(), topicMsg);
+            std::cout << "Client FD " << sender.getFd() << " set topic for channel " << channelName << " to: " << newTopic << std::endl;
+        }
+        else
+        {
+            server.findChannel(channelName)->handleTopicMode(sender, newTopic); // Broadcast the topic change to all channel members
+            std::string err = ":ircserver 482 " + sender.getName() + " " + channelName + " :You're not channel operator\r\n";
+            sendResponse(sender.getFd(), err);
+            std::cout << "Client FD " << sender.getFd() << " attempted to set topic for channel " << channelName << " without operator privileges." << std::endl;
+        }
+    }
+    else
+    {
+        server.findChannel(channelName)->setTopic(newTopic);
+        std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n";
+        sendResponse(sender.getFd(), topicMsg);
+        std::cout << "Client FD " << sender.getFd() << " set topic for channel " << channelName << " to: " << newTopic << std::endl;
+    }
+}
 
 void Command::handleCAP(Client &sender, Server &server)
 {

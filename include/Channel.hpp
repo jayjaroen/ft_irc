@@ -22,6 +22,7 @@ class Channel
 {
     private:
 		std::string				_name;
+		std::string				_topic;
 		Client*					_admin;
 		std::vector<Client *>	_clients;
 		std::vector<int>		_operators;
@@ -35,7 +36,6 @@ class Channel
 		bool					_topicRestrict;
 		bool					_hasKey;
 		bool					_hasLimited;
-		
 		// enum					_mode; //indicate the mode (such as k, l, t, o, i), default mode 
 		
 		Channel();
@@ -56,6 +56,9 @@ class Channel
 		void					setAdmin(Client *admin);
 		void					setName(std::string name);
 		void					setLimit(size_t limit);
+		bool					getTopic_mode() const;
+		void					setTopic(const std::string &topic);
+		std::string				getTopic() const;
 		// void					setExtMsg(bool flag);
 		
 		bool					checkKey(const std::string &key);

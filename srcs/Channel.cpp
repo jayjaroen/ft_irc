@@ -309,7 +309,21 @@ void    Channel::handleOperatorMode(Client &sender, const std::string &modeChang
 }
 
 
+void    Channel::setTopic(const std::string &topic)
+{
+    _topic = topic;
+}
+
+std::string    Channel::getTopic() const
+{
+    return _topic;
+}
 
 
-
-
+bool    Channel::getTopic_mode() const
+{
+    if (_topicRestrict)
+        return true;
+    else
+        return false;
+}

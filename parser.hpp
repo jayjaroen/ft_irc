@@ -112,7 +112,7 @@ class Command
 		void handleCAP(Client &sender, Server &server);
 		void handleINVITE(Client &sender, Server &server);
 		void handleKICK(Client &sender, Server &server);
-		// void handleTOPIC(Client &sender, Server &server);
+		void handleTOPIC(Client &sender, Server &server);
 };
 
 
