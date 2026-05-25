@@ -10,6 +10,7 @@
 /*                                                                            */
 /* ************************************************************************** */
 
+
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
@@ -108,6 +109,8 @@ class Command
 		void handleMODE(Client &sender, Server &server);
 		void handleHELP(Client &sender, Server &server);
 		void handleCAP(Client &sender, Server &server);
+		void handleINVITE(Client &sender, Server &server);
+		void handleKICK(Client &sender, Server &server);
 		// void handleTOPIC(Client &sender, Server &server);
 };
 

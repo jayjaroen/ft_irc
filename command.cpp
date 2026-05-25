@@ -109,6 +109,16 @@ void Command::execute_command(Server &server, Client &sender)
             handlePart(server, sender);
             break;
         }
+        case INVITE:
+        {
+            handleINVITE(sender, server);
+            break;
+        }
+        case KICK:
+        {
+            handleKICK(sender, server);
+            break;
+        }
         // case PRIVMSG:
         // {
         //     // if (this->params.empty() || this->params[0].empty() || this->params[1].empty())
@@ -380,31 +390,7 @@ void Command::handleMODE(Client &sender, Server &server)
     // std::cout << "Handling MODE command for client fd " << sender.getFd() << std::endl;
 }
 
-// void Command::handleOPER(Client &sender, Server &server)
-// {
-//     if (this->params.empty())
-//         return;
-//     std::string target = this->params[0][0];
-// 	std::string passwd = this->params[1][0];
-// 	if (server.getOperUser == target)
-// 	{
-// 		std::string err = ":ircserver " + intToString(ERR_NOOPERHOST) + " " + sender.getName() + " " + modeTarget + " :No 0-lines for your host\r\n";
-//         sendResponse(sender.getFd(), err);
-//         std::cout << "Client FD " << sender.getFd() << " requested operator priviledge with incorrect operator username: " << modeTarget << std::endl;
-// 		return;
-//     }
-// 	if (server.getOperPass == passwd)
-// 	{
-// 		std::string err = ":ircserver " + intToString(ERR_PASSWDMISMATCH) + " " + sender.getName() + " " + modeTarget + " :Password incorrect\r\n";
-//         sendResponse(sender.getFd(), err);
-//         std::cout << "Client FD " << sender.getFd() << " requested operator priviledge with incorrect operator password: " << modeTarget << std::endl;
-// 		return;
-//     }
-//     sender.setOperator(sender);
-// 	std::string reply = ":ircserver " + intToString(RPL_YOUREOPER) + " " + sender.getName() + " " + modeTarget + " :You are now an IRC operator\r\n";
-// 	sendResponse(sender.getFd(), reply);
-//     std::cout << "Client FD " << sender.getFd() << sender.getName() << " gained IRC operator priviledges." << std::endl;
-// }
+// These are function not testing yet, so I will implement them later after I finish the main functions of the server and client
 
 void Command::handleHELP(Client &sender, Server &server)
 {
@@ -666,5 +652,116 @@ void Command::handleCAP(Client &sender, Server &server)
         
         default:
             break;
+    }
+}
+
+
+// ERR_NEEDMOREPARAMS checked
+// ERR_NOSUCHNICK checked
+// ERR_NOSUCHCHANNEL checked
+// ERR_USERONCHANNEL checked
+// RPL_INVITING checked
+void Command::handleINVITE(Client &sender, Server &server)
+{
+    if (this->params.empty() || this->params[0].empty() || this->params.size() < 2 || this->params[1].empty())
+    {
+        std::string err = ":ircserver "+ intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " INVITE :Not enough parameters\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to invite without providing necessary parameters." << std::endl;        
+        return;
+    }
+    std::string targetNick = this->params[0][0];
+    std::string channelName = this->params[1][0];
+    Client* targetClient = server.findClient(targetNick);
+    Channel* targetChannel = server.findChannel(channelName);
+    if (!targetClient)
+    {
+        std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " " + targetNick + " :No such nick\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to invite non-existent user: " << targetNick << std::endl;
+        return;
+    }
+    if (!targetChannel)
+    {
+        std::string err = ":ircserver " + intToString(ERR_NOSUCHCHANNEL) + " " + sender.getName() + " " + channelName + " :No such channel\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to invite to non-existent channel: " << channelName << std::endl;
+        return;
+    }
+    if (!targetChannel->hasClient(&sender))
+    {
+        std::string err = ":ircserver 442 " + sender.getName() + " " + channelName + " :You're not on that channel\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to invite user to channel they are not part of: " << channelName << std::endl;
+        return;
+    }
+    if (targetChannel->hasClient(targetClient))
+    {
+        std::string err = ":ircserver " + intToString(ERR_USERONCHANNEL) + " " + sender.getName() + " " + targetNick + " " + channelName + " :is already on channel\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to invite user who is already on the channel: " << targetNick << " to channel: " << channelName << std::endl;
+        return;
+    }
+    std::string inviteMsg = ":ircserver " + intToString(RPL_INVITING) + " " + sender.getName() + " " + targetNick + " :" + channelName + "\r\n";
+    targetChannel->removeClient(targetClient); // remove the client from the channel's invite list if they were previously invited
+    sendResponse(targetClient->getFd(), inviteMsg);
+    std::cout << sender.getName() << " invited " << targetNick << " to join channel " << channelName << std::endl;
+}
+
+
+// ERR_NEEDMOREPARAMS checked
+// ERR_NOSUCHNICK checked
+// ERR_NOSUCHCHANNEL checked
+// ERR_NOTONCHANNEL checked
+// ERR_USERNOTONCHANNEL checked
+void Command::handleKICK(Client &sender, Server &server)
+{
+    if (this->params.empty() || this->params[0].empty() || this->params.size() < 2 || this->params[1].empty())
+    {
+        std::string err = ":ircserver "+ intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " KICK :Not enough parameters\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to kick without providing necessary parameters." << std::endl;        
+        return;
+    }
+    std::string targetNick = this->params[0][0];
+    std::string channelName = this->params[1][0];
+    Client* targetClient = server.findClient(targetNick);
+    Channel* targetChannel = server.findChannel(channelName);
+    if (!targetClient)
+    {
+        std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " " + targetNick + " :No such nick\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to kick non-existent user: " << targetNick << std::endl;
+        return;
+    }
+    if (!targetChannel)
+    {
+        std::string err = ":ircserver " + intToString(ERR_NOSUCHCHANNEL) + " " + sender.getName() + " " + channelName + " :No such channel\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to kick from non-existent channel: " << channelName << std::endl;
+        return;
+    }
+    if (!targetChannel->hasClient(&sender))
+    {
+        std::string err = ":ircserver 442 " + sender.getName() + " " + channelName + " :You're not on that channel\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to kick user from channel they are not part of: " << channelName << std::endl;
+        return;
+    }
+    if (!targetChannel->hasClient(targetClient))
+    {
+        std::string err = ":ircserver " + intToString(ERR_NOTONCHANNEL) + " " + sender.getName() + " " + targetNick + " " + channelName + " :is not on channel\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to kick user who is not on the channel: " << targetNick << " from channel: " << channelName << std::endl;
+        return;
+    }
+    std::string kickMsg = ":ircserver KICK " + channelName + " " + targetNick + " :Kicked by " + sender.getName() + "\r\n";
+    targetChannel->broadcast(targetClient, kickMsg); // Notify the channel that the user has been kicked
+    targetChannel->removeClient(targetClient); // Remove the client from the channel
+    std::cout << sender.getName() << " kicked " << targetNick << " from channel " << channelName << std::endl;
+    if (targetChannel->isEmpty())
+    {
+        std::cout << "Deleting the channel " << channelName << " as it is now empty after kick." << std::endl;
+        server.deleteChannel(channelName);
     }
 }
