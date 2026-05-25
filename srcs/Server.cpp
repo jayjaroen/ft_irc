@@ -182,9 +182,8 @@ void Server::handleClientMessage(int client_fd)
         std::cout << "Received from client fd " << client_fd << " Client name " << client->getName() << ": [ " << message << " ]" << std::endl;
         /// ****handle command function ****
         Command cmd;
-        cmd.msgparser(message);
-        // cmd.execute_command(*client);
-        cmd.execute_command(*this, *client); 
+        cmd.msgparser(message, *this, *client);
+        // cmd.execute_command(*this, *client); 
 		// sending both server and client info
     }
 }

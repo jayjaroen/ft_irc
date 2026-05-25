@@ -28,6 +28,8 @@ class Client
         bool    _issetNick;
         bool    _issetUser;
         bool    _issetPass;
+        bool    _iscap;
+        bool    _isCapNegotiating;
         
         Client();
         
@@ -53,6 +55,10 @@ class Client
         bool    isAuthenticated() const;
         bool    setOperator(bool op);
         bool    isOperator() const;
+        bool    setCap(bool cap);
+        bool    isCap() const;
+        bool    setCapNegotiating(bool negotiating);
+        bool    isCapNegotiating() const;
         std::string& getBuffer();
         Channel*    getChannel() const;
 

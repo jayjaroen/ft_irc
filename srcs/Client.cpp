@@ -1,8 +1,9 @@
 #include "../include/Client.hpp"
 
 Client::Client(int fd, int port, const std::string &ip): _fd(fd), _port(port),\
-	_ip(ip), _nickname(""), _username(""), _buffer(""), _isAuthenticated(false), _isOperator(false), _issetNick(false),\
-    _issetUser(false), _issetPass(false)
+    _ip(ip), _nickname(""), _username(""), _buffer(""), _channel(NULL), \
+    _isAuthenticated(false), _isOperator(false), _issetNick(false),\
+    _issetUser(false), _issetPass(false), _iscap(false), _isCapNegotiating(false)
 {
     
 }
@@ -26,11 +27,14 @@ Client& Client::operator=(Client const &other)
         _nickname = other._nickname;
         _username = other._username;
         _buffer = other._buffer;
+        _channel = other._channel;
         _isAuthenticated = other._isAuthenticated;
         _isOperator = other._isOperator;
         _issetNick = other._issetNick;
         _issetUser = other._issetUser;
         _issetPass = other._issetPass;
+        _iscap = other._iscap;
+        _isCapNegotiating = other._isCapNegotiating;
     }
     return *this;
 }
@@ -151,3 +155,25 @@ bool Client::isPassSet() const
 // 	channel->addClient(this);
 
 // }
+
+bool Client::setCap(bool cap)
+{
+    _iscap = cap;
+    return _iscap;
+}
+
+bool Client::isCap() const
+{
+    return _iscap;
+}
+
+bool Client::setCapNegotiating(bool negotiating)
+{
+    _isCapNegotiating = negotiating;
+    return _isCapNegotiating;
+}
+
+bool Client::isCapNegotiating() const
+{
+    return _isCapNegotiating;
+}

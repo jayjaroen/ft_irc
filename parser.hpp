@@ -89,7 +89,8 @@ class Command
 		// void intitHandlers();
 		// void execute_command(Client &sender);
 		void execute_command(Server &server, Client &sender);
-		void		msgparser(const std::string input);
+		// void		msgparser(const std::string input);
+		void msgparser(const std::string input, Server &server, Client &sender);
 		std::string	commandcheck(const std::string input);
 		size_t	lexer(const std::string& input, const std::string& icomm, std::vector<std::vector<std::string> >& output);
 		void handleNick(Client &sender);
@@ -228,5 +229,6 @@ enum NumRpl
 // };
 
 std::string intToString(int n);
+void sendWelcomeMessage(Server &server, Client &sender);
 
 #endif

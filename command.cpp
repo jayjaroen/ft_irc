@@ -59,11 +59,16 @@ void Command::execute_command(Server &server, Client &sender)
     {
         case CAP:
             std::cout << "Executing CAP..." << std::endl;
-            sendResponse(sender.getFd(), "CAP * LS :\r\n");
+            handleCAP(sender, server);
+            // sendResponse(sender.getFd(), "CAP * LS :\r\n");
             break;
         case USER:
             std::cout <<  "Executing USER..." << std::endl;
             handleUSER(sender);
+            if (sender.isCapNegotiating() == false)
+            {
+              sendWelcomeMessage(server, sender);
+            }
             break;
         case RESTART:
             std::cout << "Executing RESTART..." << std::endl;
@@ -137,15 +142,20 @@ void Command::execute_command(Server &server, Client &sender)
             // std::cout << "Command " << this->params[0][0] << " not implementes" << std::endl;
             break;
     }
-    if (sender.isNickSet() == true && sender.isUserSet() == true && sender.isPassSet() == true && sender.isAuthenticated() == false)
-    {
-        sender.setAuthenticated(true);
-        std::cout << "Client FD " << sender.getFd() << " has successfully registered." << std::endl;
-        std::string welcomeMsg = ":ircserver " + intToString(RPL_WELCOME) + " " + sender.getName() + " :Welcome to the IRC server!\r\n";
-        welcomeMsg += ":ircserver " + intToString(RPL_YOURHOST) + " " + sender.getName() + " :Your host is ircserver, running version 1.0\r\n";
-        welcomeMsg += ":ircserver " + intToString(RPL_CREATED) + " " + sender.getName() + " :This server was created on" + server.get_creation_date() + "\r\n";
-        sendResponse(sender.getFd(), welcomeMsg);
-    }
+    // if (sender.isNickSet() == true && sender.isUserSet() == true && sender.isPassSet() == true && sender.isAuthenticated() == false)
+    // {
+    //     if (sender.isCapNegotiating() == false)
+    //     {
+    //         sender.setAuthenticated(true);
+    //         std::cout << "Client FD " << sender.getFd() << " has successfully registered." << std::endl;
+    //         if (sender.getName().empty())
+    //             sender.setNick("user" + intToString(sender.getFd()));
+    //         std::string welcomeMsg = ":ircserver " + intToString(RPL_WELCOME) + " " + sender.getName() + " :Welcome to the IRC server!\r\n";
+    //         welcomeMsg += ":ircserver " + intToString(RPL_YOURHOST) + " " + sender.getName() + " :Your host is ircserver, running version 1.0\r\n";
+    //         welcomeMsg += ":ircserver " + intToString(RPL_CREATED) + " " + sender.getName() + " :This server was created on" + server.get_creation_date() + "\r\n";
+    //         sendResponse(sender.getFd(), welcomeMsg);
+    //     }
+    // }
     if (this->type == 0)
     {
     //     // std::string err = ":ircserver" + std::to_string(UNKNOWN_CMD) + " " + sender.getNick() + " :Unknown command\r\n";
@@ -246,15 +256,40 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
 
 void Command::handleJOIN(Server &server, Client &sender)
 {
-    if (this->params.empty())
+    if (this->params.empty() || this->params[0].empty())
         return;
-    std::string key = "";
+        
     std::string channel_name = this->params[0][0];
+    std::string key = "";
+    
+    // 💡 ดักล้างเครื่องหมาย ':' ที่ชอบติดมาข้างหน้าชื่อห้องออกไปให้สะอาดสะอ้าน
+    if (!channel_name.empty() && channel_name[0] == ':')
+    {
+        channel_name.erase(0, 1);
+    }
+    
+    // ถ้าล้างแล้วสตริงว่างเปล่า หรือหลุดฟอร์แมต ให้ดีดตัวกลับเงียบๆ
+    if (channel_name.empty())
+        return;
+
     if (this->params.size() > 1 && !this->params[1].empty())
         key = this->params[1][0];
+        
     std::cout << "Channel name is: " << "\"" << channel_name << "\"" << " key is " << "\"" << key << "\"" << std::endl;
     server.findOrCreateChannel(channel_name, key, &sender);
 }
+
+// void Command::handleJOIN(Server &server, Client &sender)
+// {
+//     if (this->params.empty())
+//         return;
+//     std::string key = "";
+//     std::string channel_name = this->params[0][0];
+//     if (this->params.size() > 1 && !this->params[1].empty())
+//         key = this->params[1][0];
+//     std::cout << "Channel name is: " << "\"" << channel_name << "\"" << " key is " << "\"" << key << "\"" << std::endl;
+//     server.findOrCreateChannel(channel_name, key, &sender);
+// }
 
 void    Command::handlePart(Server &server, Client &sender)
 {
@@ -628,6 +663,7 @@ void Command::handleCAP(Client &sender, Server &server)
     switch (sub)
     {
         case LS:
+            sender.setCapNegotiating(true); // set a flag in client to indicate that CAP negotiation is in progress
             if (this->params[1].size() > 1 && !this->params[1].empty())
                 sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() +  " LS "  + this->params[1][0] + " " + ":multi-prefix\r\n");
             else
@@ -640,13 +676,45 @@ void Command::handleCAP(Client &sender, Server &server)
             //     sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() + " LIST :\r\n");
             // break;
         case REQ:
-            if (this->params[1].size() > 1 && this->params[2][0].find("multi-prefix") != std::string::npos)
-                sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() + " ACK :multi-prefix\r\n");
+        {
+            bool has_multi_prefix = false;
+            for (size_t i = 1; i < this->params.size(); ++i)
+            {
+                if (!this->params[i].empty())
+                {
+                    // ตรวจค้นคำว่า "multi-prefix" (วิธีนี้ต่อให้ติดเครื่องหมาย : หรือเว้นวรรคแปลกๆ ก็เอาอยู่)
+                    if (this->params[i][0].find("multi-prefix") != std::string::npos)
+                    {
+                        has_multi_prefix = true;
+                        break;
+                    }
+                }
+            }
+            if (has_multi_prefix)
+            {
+                // ตอบรับ (ACK) ด้วยรูปแบบที่ Irssi ต้องการ
+                // สำคัญมาก: บางไคลเอนต์ต้องการให้ส่งเครื่องหมาย : กลับไปด้วย เช่น :multi-prefix
+                std::string reply = ":ircserver CAP " + sender.getName() + " ACK :multi-prefix\r\n";
+                sendResponse(sender.getFd(), reply);
+            }
             else
-                sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() + " NAK :" + this->params[0][1] + "\r\n");
+            {
+                // ถ้าเป็นฟีเจอร์อื่นที่เราไม่รองรับ ให้ส่ง NAK
+                // โดยการส่งค่าที่เขาส่งมากลับไปปฏิเสธ
+                std::string requested = (this->params.size() > 1 && !this->params[1].empty()) ? this->params[1][0] : "unknown";
+                std::string reply = ":ircserver CAP " + sender.getName() + " NAK :" + requested + "\r\n";
+                sendResponse(sender.getFd(), reply);
+            }
+            // if (this->params[1].size() > 1 && this->params[2][0].find("multi-prefix") != std::string::npos)
+            //     sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() + " ACK :multi-prefix\r\n");
+            // else
+            //     sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() + " NAK :" + this->params[1][0] + "\r\n");
             break;
+        }
         case END:
-            // add flag client end cap on client + set cap status negotiation R+ P'Jay
+            sender.setCap(true); // set a flag in client to indicate that CAP negotiation is complete and the client can now use the enabled capabilities
+            sender.setCapNegotiating(false); // reset the negotiating flag
+            sendWelcomeMessage(server, sender);
             std::cout << "Client FD " << sender.getFd() << "end CAP negotiations" << std::endl;
             break;
         
@@ -763,5 +831,31 @@ void Command::handleKICK(Client &sender, Server &server)
     {
         std::cout << "Deleting the channel " << channelName << " as it is now empty after kick." << std::endl;
         server.deleteChannel(channelName);
+    }
+}
+
+
+void sendWelcomeMessage(Server &server, Client &sender)
+{
+    if (sender.isNickSet() && sender.isUserSet() && sender.isPassSet() && !sender.isAuthenticated())
+    {
+        sender.setAuthenticated(true);
+        std::cout << "Client FD " << sender.getFd() << " has successfully registered." << std::endl;
+        
+        std::string clientNick = sender.getName();
+        
+        // 001: RPL_WELCOME
+        std::string welcomeMsg = ":ircserver 001 " + clientNick + " :Welcome to the IRC server, " + clientNick + "!\r\n";
+        
+        // 002: RPL_YOURHOST
+        welcomeMsg += ":ircserver 002 " + clientNick + " :Your host is ircserver, running version 1.0\r\n";
+        
+        // 003: RPL_CREATED (เพิ่มเว้นวรรคหลังคำว่า on ป้องกันข้อความติดกันเป็นพืด)
+        welcomeMsg += ":ircserver 003 " + clientNick + " :This server was created on " + server.get_creation_date() + "\r\n";
+        
+        // 004: RPL_MYINFO 🚨 (จุดตายสุดท้ายของ Irssi! ต้องมีบรรทัดนี้ตอบกลับไปปิด Handshake เสมอ)
+        welcomeMsg += ":ircserver 004 " + clientNick + " ircserver 1.0 i tkolk\r\n";
+        
+        sendResponse(sender.getFd(), welcomeMsg);
     }
 }

@@ -17,7 +17,7 @@ SRC = srcs/main.cpp srcs/Server.cpp srcs/Client.cpp command.cpp parser.cpp lexer
 
 HEADER = include/Server.hpp include/Client.hpp include/Channel.hpp
 
-CC = c++ -Wall -Wextra -Werror -std=c++98
+CC = c++ -Wall -Wextra -Werror -std=c++98 -g3
 
 OBJ_DIR = obj/
 
