@@ -20,6 +20,7 @@ void sendResponse(int fd, const std::string &message)
 {
 	if (fd <= 0)
 		return;
+    std::cout << "Sending to FD " << fd << ": " << message << std::endl;
 	ssize_t sent = send(fd, message.c_str(), message.length(), MSG_NOSIGNAL);
 	if (sent < 0)
 	{
@@ -60,15 +61,12 @@ void Command::execute_command(Server &server, Client &sender)
         case CAP:
             std::cout << "Executing CAP..." << std::endl;
             handleCAP(sender, server);
-            // sendResponse(sender.getFd(), "CAP * LS :\r\n");
             break;
         case USER:
             std::cout <<  "Executing USER..." << std::endl;
             handleUSER(sender);
             if (sender.isCapNegotiating() == false)
-            {
-              sendWelcomeMessage(server, sender);
-            }
+                sendWelcomeMessage(server, sender);
             break;
         case RESTART:
             std::cout << "Executing RESTART..." << std::endl;
@@ -124,38 +122,26 @@ void Command::execute_command(Server &server, Client &sender)
             handleKICK(sender, server);
             break;
         }
-        // case PRIVMSG:
-        // {
-        //     // if (this->params.empty() || this->params[0].empty() || this->params[1].empty())
-        //     //     return;
-        //     // std::string target = this->params[0][0]; // first parameter is the target (user or channel)
-        //     // std::string message = this->params[1][0]; // second parameter is the message
-        //     // server.sendMessageToTarget(target, message);
-        //     break;
-        // }
         case TOPIC:
         {
-            // handleTOPIC(sender, server);
+            handleTOPIC(sender, server);
             break;
         }
         default:
             // std::cout << "Command " << this->params[0][0] << " not implementes" << std::endl;
             break;
     }
-    // if (sender.isNickSet() == true && sender.isUserSet() == true && sender.isPassSet() == true && sender.isAuthenticated() == false)
-    // {
-    //     if (sender.isCapNegotiating() == false)
-    //     {
-    //         sender.setAuthenticated(true);
-    //         std::cout << "Client FD " << sender.getFd() << " has successfully registered." << std::endl;
-    //         if (sender.getName().empty())
-    //             sender.setNick("user" + intToString(sender.getFd()));
-    //         std::string welcomeMsg = ":ircserver " + intToString(RPL_WELCOME) + " " + sender.getName() + " :Welcome to the IRC server!\r\n";
-    //         welcomeMsg += ":ircserver " + intToString(RPL_YOURHOST) + " " + sender.getName() + " :Your host is ircserver, running version 1.0\r\n";
-    //         welcomeMsg += ":ircserver " + intToString(RPL_CREATED) + " " + sender.getName() + " :This server was created on" + server.get_creation_date() + "\r\n";
-    //         sendResponse(sender.getFd(), welcomeMsg);
-    //     }
-    // }
+    if (sender.isNickSet() == true && sender.isUserSet() == true && sender.isPassSet() == true && sender.isAuthenticated() == false)
+    {
+        if (sender.isCapNegotiating() == false)
+        {
+            sender.setAuthenticated(true);
+            std::cout << "Client FD " << sender.getFd() << " has successfully registered." << std::endl;
+            if (sender.getName().empty())
+                sender.setNick("user" + intToString(sender.getFd()));
+            sendWelcomeMessage(server, sender);
+        }
+    }
     if (this->type == 0)
     {
     //     // std::string err = ":ircserver" + std::to_string(UNKNOWN_CMD) + " " + sender.getNick() + " :Unknown command\r\n";
@@ -168,7 +154,20 @@ void Command::execute_command(Server &server, Client &sender)
 void Command::handleNick(Client &sender)
 {
     if (this->params.empty() || this->params[0].empty())
+    {
+        std::string err = ":ircserver " + intToString(ERR_NONICKNAMEGIVEN) + " " + sender.getName() + " :No nickname given\r\n";
+        sendResponse(sender.getFd(), err);
         return;
+    }
+    if (this->params[0][0][0] == '#' || this->params[0][0][0] == '&' || this->params[0][0][0] == '!' || this->params[0][0][0] == '+'
+        || this->params[0][0][0] == "@" || this->params[0][0][0] == ":"  || this->params[0][0][0] == ' '
+        || this->params[0][0][0] == "\r" || this->params[0][0][0] == "\n" || this->params[0][0][0] == "\0" || this->params[0][0][0] == "\t"
+        || this->params[0][0][0] == "0" || this->params[0][0][0] == "1" || this->params[0][0][0] == "2" || this->params[0][0][0] == "3" || this->params[0][0][0] == "4" || this->params[0][0][0] == "5" || this->params[0][0][0] == "6" || this->params[0][0][0] == "7" || this->params[0][0][0] == "8" || this->params[0][0][0] == "9")
+    {
+        std::string err = ":ircserver " + intToString(ERR_ERRONEUSNICKNAME) + " " + sender.getName() + " " + this->params[0][0] + " :Erroneous nickname\r\n";
+        sendResponse(sender.getFd(), err);
+        return;
+    }
     std::string newNick = this->params[0][0];
     sender.setNick(newNick);
     sender.setNickSet(true);
@@ -179,20 +178,20 @@ void Command::handlePass(Client &sender, Server &server)
 {
     if (this->params.empty() || this->params[0].empty())
         return;
-    if (this->params[0][0] == server.get_password())
+    if (sender.isAuthenticated())
+    {
+        std::string err = ":ircserver " + intToString(ERR_ALREADYREGISTRED) + " " + sender.getName() + " :You may not register again\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to re-authenticate." << std::endl;
+    }
+    else if (this->params[0][0] == server.get_password())
     {
         sender.setPassSet(true);
         std::cout << "Client FD " << sender.getFd() << " authenticated successfully." << std::endl;
     }
-    else if (sender.isAuthenticated())
-    {
-        std::string err = ":ircserver" + intToString(ERR_ALREADYREGISTRED) + " " + sender.getName() + " :You may not register again\r\n";
-        sendResponse(sender.getFd(), err);
-        std::cout << "Client FD " << sender.getFd() << " attempted to re-authenticate." << std::endl;
-    }
     else
     {
-        std::string err = ":ircserver" + intToString(ERR_PASSWDMISMATCH) + " " + sender.getName() + " :Password incorrect\r\n";  
+        std::string err = ":ircserver " + intToString(ERR_PASSWDMISMATCH) + " " + sender.getName() + " :Password incorrect\r\n";  
         sendResponse(sender.getFd(), err);  
         sender.setPassSet(false);
     }
@@ -254,39 +253,39 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
     // server.sendMessageToTarget(target, message);
 }
 
-void Command::handleJOIN(Server &server, Client &sender)
-{
-    if (this->params.empty() || this->params[0].empty())
-        return;
-        
-    std::string channel_name = this->params[0][0];
-    std::string key = "";
-    
-    if (!channel_name.empty() && channel_name[0] == ':')
-    {
-        channel_name.erase(0, 1);
-    }
-    if (channel_name.empty())
-        return;
-
-    if (this->params.size() > 1 && !this->params[1].empty())
-        key = this->params[1][0];
-        
-    std::cout << "Channel name is: " << "\"" << channel_name << "\"" << " key is " << "\"" << key << "\"" << std::endl;
-    server.findOrCreateChannel(channel_name, key, &sender);
-}
-
 // void Command::handleJOIN(Server &server, Client &sender)
 // {
-//     if (this->params.empty())
+//     if (this->params.empty() || this->params[0].empty())
 //         return;
-//     std::string key = "";
+        
 //     std::string channel_name = this->params[0][0];
+//     std::string key = "";
+    
+//     if (!channel_name.empty() && channel_name[0] == ':')
+//     {
+//         channel_name.erase(0, 1);
+//     }
+//     if (channel_name.empty())
+//         return;
+
 //     if (this->params.size() > 1 && !this->params[1].empty())
 //         key = this->params[1][0];
+        
 //     std::cout << "Channel name is: " << "\"" << channel_name << "\"" << " key is " << "\"" << key << "\"" << std::endl;
 //     server.findOrCreateChannel(channel_name, key, &sender);
 // }
+
+void Command::handleJOIN(Server &server, Client &sender)
+{
+    if (this->params.empty())
+        return;
+    std::string key = "";
+    std::string channel_name = this->params[0][0];
+    if (this->params.size() > 1 && !this->params[1].empty())
+        key = this->params[1][0];
+    std::cout << "Channel name is: " << "\"" << channel_name << "\"" << " key is " << "\"" << key << "\"" << std::endl;
+    server.findOrCreateChannel(channel_name, key, &sender);
+}
 
 void    Command::handlePart(Server &server, Client &sender)
 {
@@ -306,6 +305,7 @@ void    Command::handlePart(Server &server, Client &sender)
     }
     std::string message = ":" + sender.getName() + " PART " + channel_name + "\r\n";
     channel->broadcast(&sender, message);
+    sendResponse(sender.getFd(), message);
     channel->removeClient(&sender);
     channel->removeOperator(&sender);
     std::cout << sender.getName() << " left channel " << channel_name << std::endl;
@@ -346,17 +346,14 @@ void Command::handleMODE(Client &sender, Server &server)
                 case 'k': // Channel key
                     std::cout << "Handling channel key mode change for channel: " << modeTarget << std::endl;
                     channel->handleKeyMode(sender, modeChanges, this->params[2][0]); //third argument
-                    // Implement logic to set or remove channel key
                     break;
                 case 'l': // User limit
                     std::cout << "Handling user limit mode change for channel: " << modeTarget << std::endl;
                     channel->handleLimitMode(sender, modeChanges, this->params[2][0]);
-                    // Implement logic to set or remove user limit
                     break;
                 case 't': // restrictions of the TOPIC channel
                     std::cout << "Handling t channel mode change for channel: " << modeTarget << std::endl;
                     server.findChannel(modeTarget)->handleTopicMode(sender, modeChanges);
-                    // Implement logic to set or remove moderated channel mode
                     break;
 				case 'o': // operator given mode
 					std::cout << "Handling operator given mode change for channel: " << modeTarget << std::endl;
@@ -654,7 +651,7 @@ void Command::handleCAP(Client &sender, Server &server)
     {
         case LS:
             sender.setCapNegotiating(true); // set a flag in client to indicate that CAP negotiation is in progress
-            if (this->params[1].size() > 1 && !this->params[1].empty())
+            if (this->params.size() > 1 && !this->params[1].empty()) // leak solved checked
                 sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() +  " LS "  + this->params[1][0] + " " + ":multi-prefix\r\n");
             else
                 sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() + " LS :multi-prefix\r\n");
@@ -767,11 +764,6 @@ void Command::handleINVITE(Client &sender, Server &server)
 }
 
 
-// ERR_NEEDMOREPARAMS checked
-// ERR_NOSUCHNICK checked
-// ERR_NOSUCHCHANNEL checked
-// ERR_NOTONCHANNEL checked
-// ERR_USERNOTONCHANNEL checked
 void Command::handleKICK(Client &sender, Server &server)
 {
     if (this->params.empty() || this->params[0].empty() || this->params.size() < 2 || this->params[1].empty())
@@ -831,19 +823,10 @@ void sendWelcomeMessage(Server &server, Client &sender)
     {
         sender.setAuthenticated(true);
         std::cout << "Client FD " << sender.getFd() << " has successfully registered." << std::endl;
-        
         std::string clientNick = sender.getName();
-        
-        // 001: RPL_WELCOME
         std::string welcomeMsg = ":ircserver 001 " + clientNick + " :Welcome to the IRC server, " + clientNick + "!\r\n";
-        
-        // 002: RPL_YOURHOST
         welcomeMsg += ":ircserver 002 " + clientNick + " :Your host is ircserver, running version 1.0\r\n";
-        
-        // 003: RPL_CREATED (เพิ่มเว้นวรรคหลังคำว่า on ป้องกันข้อความติดกันเป็นพืด)
         welcomeMsg += ":ircserver 003 " + clientNick + " :This server was created on " + server.get_creation_date() + "\r\n";
-        
-        // 004: RPL_MYINFO 🚨 (จุดตายสุดท้ายของ Irssi! ต้องมีบรรทัดนี้ตอบกลับไปปิด Handshake เสมอ)
         welcomeMsg += ":ircserver 004 " + clientNick + " ircserver 1.0 i tkolk\r\n";
         
         sendResponse(sender.getFd(), welcomeMsg);
