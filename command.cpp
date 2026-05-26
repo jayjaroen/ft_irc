@@ -76,7 +76,7 @@ void Command::execute_command(Server &server, Client &sender)
             handlePass(sender, server);
             break;
         case NICK:
-            handleNick(sender);
+            handleNick(sender, server);
             std::cout << "Executing NICK..." << std::endl;
             break;
         case JOIN:
@@ -151,7 +151,7 @@ void Command::execute_command(Server &server, Client &sender)
     }
 }
 
-void Command::handleNick(Client &sender)
+void Command::handleNick(Client &sender, Server &server)
 {
     if (this->params.empty() || this->params[0].empty())
     {
@@ -159,16 +159,22 @@ void Command::handleNick(Client &sender)
         sendResponse(sender.getFd(), err);
         return;
     }
+    if ((sender.isNickSet() && sender.getName() == this->params[0][0]) || server.findClient(this->params[0][0]) != NULL)
+    {
+        std::string err = ":ircserver " + intToString(ERR_NICKNAMEINUSE) + " " + sender.getName() + " :Nickname is already in use\r\n";
+        sendResponse(sender.getFd(), err);
+        return;
+    }
+    std::string newNick = this->params[0][0];
     if (this->params[0][0][0] == '#' || this->params[0][0][0] == '&' || this->params[0][0][0] == '!' || this->params[0][0][0] == '+'
-        || this->params[0][0][0] == "@" || this->params[0][0][0] == ":"  || this->params[0][0][0] == ' '
-        || this->params[0][0][0] == "\r" || this->params[0][0][0] == "\n" || this->params[0][0][0] == "\0" || this->params[0][0][0] == "\t"
-        || this->params[0][0][0] == "0" || this->params[0][0][0] == "1" || this->params[0][0][0] == "2" || this->params[0][0][0] == "3" || this->params[0][0][0] == "4" || this->params[0][0][0] == "5" || this->params[0][0][0] == "6" || this->params[0][0][0] == "7" || this->params[0][0][0] == "8" || this->params[0][0][0] == "9")
+        || this->params[0][0][0] == '@' || this->params[0][0][0] == ':'  || this->params[0][0][0] == ' '
+        || newNick.find(' ') != std::string::npos || newNick.find('\t') != std::string::npos || newNick.find('\r') != std::string::npos || newNick.find('\n') != std::string::npos
+        || (this->params[0][0][0] >= '0' && this->params[0][0][0] <= '9') || this->params.size() > 1)
     {
         std::string err = ":ircserver " + intToString(ERR_ERRONEUSNICKNAME) + " " + sender.getName() + " " + this->params[0][0] + " :Erroneous nickname\r\n";
         sendResponse(sender.getFd(), err);
         return;
     }
-    std::string newNick = this->params[0][0];
     sender.setNick(newNick);
     sender.setNickSet(true);
     std::cout << "Client FD " << sender.getFd() << " changed nick to " << newNick << std::endl;
@@ -204,14 +210,31 @@ void Command::handleQuit(Client &sender, Server &server)
     server.disconnectClient(sender.getFd());
 }
 
-void Command::handleUSER(Client &sender)
+void Command::handleUSER(Client &sender, Server &server)
 {
-    if (this->params.empty() || this->params.size() != 4)
+    const size_t userlen = 9; // <username> length limit (RFC 2812 recommends 9 characters for the username)
+    if (this->params.empty() || this->params.size() != 4 || this->params[0].empty() || this->params[1].empty() || this->params[2].empty() || this->params[3].empty())
+    {
+        std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " USER :Not enough parameters\r\n";
+        sendResponse(sender.getFd(), err);
         return;
+    }
+    if (sender.isAuthenticated() || sender.isUserSet())
+    {
+        std::string err = ":ircserver " + intToString(ERR_ALREADYREGISTRED) + " " + sender.getName() + " :You may not register again\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to re-register." << std::endl;
+        return;
+    }
     std::string username = this->params[0][0];
     std::string hostname = this->params[1][0];
     std::string servername = this->params[2][0];
     std::string realname = this->params[3][0];
+    if (username.length() > userlen)
+    {
+        username = username.substr(0, userlen);
+    }
+    if ()
     sender.setUsername(username);
     std::cout << "Client FD " << sender.getFd() << " set username to " << username << std::endl;
     sender.setUserSet(true);
