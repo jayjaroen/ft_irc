@@ -300,10 +300,76 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
 
 void Command::handleJOIN(Server &server, Client &sender)
 {
+    const size_t channel_per_user = 10; // Maximum number of channels a user can join (this is an example limit, you can adjust it as needed)
     if (this->params.empty())
+    {
+        std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " JOIN :Not enough parameters\r\n";
+        sendResponse(sender.getFd(), err);
         return;
+    }
+    size_t joined_count = 0;
     std::string key = "";
     std::string channel_name = this->params[0][0];
+    if (server.findChannel(channel_name) == NULL )
+    {
+        if (channel_name.empty() || channel_name[0] != '#')
+        {
+            std::string err = ":ircserver " + intToString(ERR_NOSUCHCHANNEL) + " " + sender.getName() + " " + channel_name + " :No such channel\r\n";
+            sendResponse(sender.getFd(), err);
+            std::cout << "Client FD " << sender.getFd() << " attempted to join non-existent channel: " << channel_name << std::endl;
+            return;
+        }
+    }
+    // get channel all from user ERR_TOOMANYCHANNELS
+    std::vector<Channel*> all_channels = server.getAllChannels();
+    for (size_t i = 0; i < all_channels.size(); ++i)
+    {
+        if (all_channels[i]->hasClient(&sender))
+            joined_count++;
+    }
+    //ERR_BADCHANNELKEY
+    if (server.findChannel(channel_name) != NULL && server.findChannel(channel_name)->getKey() != "" && (this->params.size() <= 1 || this->params[1].empty() || !server.findChannel(channel_name)->checkKey(this->params[1][0])))
+    {
+        std::string err = ":ircserver " + intToString(ERR_BADCHANNELKEY) + " " + sender.getName() + " " + channel_name + " :Cannot join channel (+k)\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to join channel with incorrect key: " << channel_name << std::endl;
+        return;
+    }
+    //ERR_BANNEDFROMCHAN // require function check user banned from channel?
+    if (server.findChannel(channel_name) != NULL && server.findChannel(channel_name)->isBanned(&sender))
+    {
+        std::string err = ":ircserver " + intToString(ERR_BANNEDFROMCHAN) + " " + sender.getName() + " " + channel_name + " :Cannot join channel (+b)\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to join channel they are banned from: " << channel_name << std::endl;
+        return;
+    }
+    //ERR_CHANNELISFULL
+    if (server.findChannel(channel_name) != NULL && server.findChannel(channel_name)->getLimit() > 0 && server.findChannel(channel_name)->getChannelSize() >= server.findChannel(channel_name)->getLimit())
+    {
+        std::string err = ":ircserver " + intToString(ERR_CHANNELISFULL) + " " + sender.getName() + " " + channel_name + " :Cannot join channel (+l)\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to join full channel: " << channel_name << std::endl;
+        return;
+    }
+    //ERR_INVITEONLYCHAN
+    if (server.findChannel(channel_name) != NULL && server.findChannel(channel_name)->isInviteOnly() && !server.findChannel(channel_name)->isInvited(&sender))
+    {
+        std::string err = ":ircserver " + intToString(ERR_INVITEONLYCHAN) + " " + sender.getName() + " " + channel_name + " :Cannot join channel (+i)\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to join invite-only channel without an invitation: " << channel_name << std::endl;
+        return;
+    }
+    //ERR_BADCHANMASK
+    //RPL_TOPIC
+    //RPL_TPOICWHOTIME
+    //RPL_NAMREPLY
+    //RPL_ENDOFNAMES
+    if (joined_count >= channel_per_user)
+    {
+        std::string err = ":ircserver " + intToString(ERR_TOOMANYCHANNELS) + " " + sender.getName() + " " + channel_name + " :You have joined too many channels\r\n";
+        sendResponse(sender.getFd(), err);
+        return;
+    }
     if (this->params.size() > 1 && !this->params[1].empty())
         key = this->params[1][0];
     std::cout << "Channel name is: " << "\"" << channel_name << "\"" << " key is " << "\"" << key << "\"" << std::endl;
