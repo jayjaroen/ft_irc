@@ -309,9 +309,10 @@ void    Channel::handleOperatorMode(Client &sender, const std::string &modeChang
 }
 
 
-void    Channel::setTopic(const std::string &topic)
+void    Channel::setTopic(const std::string &topic, const std::string &setter)
 {
     _topic = topic;
+    _setter_topic = setter;
 }
 
 std::string    Channel::getTopic() const
@@ -326,4 +327,30 @@ bool    Channel::getTopic_mode() const
         return true;
     else
         return false;
+}
+
+
+void    Channel::setInviteOnly(bool inviteOnly)
+{
+    _inviteOnly = inviteOnly;
+}
+
+bool    Channel::isInviteOnly() const
+{
+    return _inviteOnly;
+}
+
+bool    Channel::isInvited(Client *client) const
+{
+    for (std::vector<Client*>::const_iterator it = _clients.begin(); it != _clients.end(); it++)
+    {
+        if (*it == client)
+            return true;
+    }
+    return false;
+}
+
+std::string    Channel::getsetter_topic() const
+{
+    return _setter_topic;
 }

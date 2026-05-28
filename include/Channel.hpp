@@ -23,6 +23,7 @@ class Channel
     private:
 		std::string				_name;
 		std::string				_topic;
+		std::string				_setter_topic;
 		Client*					_admin;
 		std::vector<Client *>	_clients;
 		std::vector<int>		_operators;
@@ -57,8 +58,12 @@ class Channel
 		void					setName(std::string name);
 		void					setLimit(size_t limit);
 		bool					getTopic_mode() const;
-		void					setTopic(const std::string &topic);
+		void					setTopic(const std::string &topic, const std::string &setter);
 		std::string				getTopic() const;
+		void					setInviteOnly(bool inviteOnly);
+		bool					isInviteOnly() const;
+		bool					isInvited(Client *client) const;
+		std::string 			getsetter_topic() const;
 		// void					setExtMsg(bool flag);
 		
 		bool					checkKey(const std::string &key);

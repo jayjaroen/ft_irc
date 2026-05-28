@@ -64,12 +64,9 @@ void Command::execute_command(Server &server, Client &sender)
             break;
         case USER:
             std::cout <<  "Executing USER..." << std::endl;
-            handleUSER(sender);
+            handleUSER(sender, server);
             if (sender.isCapNegotiating() == false)
                 sendWelcomeMessage(server, sender);
-            break;
-        case RESTART:
-            std::cout << "Executing RESTART..." << std::endl;
             break;
         case PASS:
             std::cout << "Executing PASS..." << std::endl;
@@ -98,7 +95,6 @@ void Command::execute_command(Server &server, Client &sender)
             handleHELP(sender, server);
             break;
         }
-        
         case PING:
         {
             if (this->params.empty() || this->params[0].empty()) return;
@@ -231,10 +227,13 @@ void Command::handleUSER(Client &sender, Server &server)
     std::string servername = this->params[2][0];
     std::string realname = this->params[3][0];
     if (username.length() > userlen)
-    {
         username = username.substr(0, userlen);
-    }
-    if ()
+    if (hostname.length() > 63)
+        hostname = hostname.substr(0, 63);
+    if (servername.length() > 63)
+        servername = servername.substr(0, 63);
+    if (realname.length() > 128)
+        realname = realname.substr(0, 128);
     sender.setUsername(username);
     std::cout << "Client FD " << sender.getFd() << " set username to " << username << std::endl;
     sender.setUserSet(true);
@@ -243,8 +242,12 @@ void Command::handleUSER(Client &sender, Server &server)
 void Command::handlePRIVMSG(Server &server, Client &sender)
 {
     std::cout << "I'm in private message function" << std::endl;
-    if (this->params.empty())
+    if (this->params.empty() || this->params[0].empty())
+    {
+        std::string err = ":ircserver " + intToString(ERR_NORECIPIENT) + " " + sender.getName() + " PRIVMSG :No recipient given\r\n";
+        sendResponse(sender.getFd(), err);
         return;
+    }
     std::string target = this->params[0][0]; // first parameter is the target (user or channel)
     std::string message = this->params[1][0]; // second parameter is the message
     // in case channel
@@ -255,11 +258,21 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
         if (!channel)
         {
             std::cout << "Channel not found" << std::endl;
+            std::string err = ":ircserver " + intToString(ERR_NOSUCHCHANNEL) + " " + sender.getName() + " " + target + " :No such channel\r\n";
+            sendResponse(sender.getFd(), err);
             return;
         }
         if (!channel->hasClient(&sender))
         {
             std::cout << "Sender does not belong to " << target << std::endl;
+            std::string err = ":ircserver " + intToString(ERR_CANNOTSENDTOCHAN) + " " + sender.getName() + " " + target + " :Cannot send to channel\r\n";
+            sendResponse(sender.getFd(), err);
+            return;
+        }
+        if (message == "")
+        {
+            std::string err = ":ircserver " + intToString(ERR_NOTEXTTOSEND) + " " + sender.getName() + " PRIVMSG :No text to send\r\n";
+            sendResponse(sender.getFd(), err);
             return;
         }
         std::string text = ":" + sender.getName() + " PRIVMSG " + target + " : " + message + "\r\n";
@@ -269,7 +282,17 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
     {
         Client *target_client = server.findClient(target);
         if (!target_client)
+        {
+            std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " " + target + " :No such nick/channel\r\n";
+            sendResponse(sender.getFd(), err);
             return;
+        }
+        if (message == "")
+        {
+            std::string err = ":ircserver " + intToString(ERR_NOTEXTTOSEND) + " " + sender.getName() + " PRIVMSG :No text to send\r\n";
+            sendResponse(sender.getFd(), err);
+            return;
+        }
         std::string text = ":" + sender.getName() + " PRIVMSG " + target + " : " + message + "\r\n";
         send(target_client->getFd(), text.c_str(), text.size(), 0);
     }
@@ -360,10 +383,15 @@ void Command::handleJOIN(Server &server, Client &sender)
         return;
     }
     //ERR_BADCHANMASK
-    //RPL_TOPIC
-    //RPL_TPOICWHOTIME
-    //RPL_NAMREPLY
-    //RPL_ENDOFNAMES
+    if (channel_name.find_first_not_of('#') != std::string::npos || channel_name.find_first_not_of('&') != std::string::npos || channel_name.find(' ') != std::string::npos || channel_name.find(',') != std::string::npos || channel_name.find('\a') != std::string::npos
+        || channel_name.find('\r') != std::string::npos || channel_name.find('\n') != std::string::npos\
+        || channel_name.length() > 50) // Example: Channel names must start with # or & and cannot contain spaces, commas, or control characters, and must be less than 50 characters long
+    {
+        std::string err = ":ircserver " + intToString(ERR_BADCHANMASK) + " " + sender.getName() + " " + channel_name + " :Bad channel mask\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to join channel with invalid name: " << channel_name << std::endl;
+        return;
+    }
     if (joined_count >= channel_per_user)
     {
         std::string err = ":ircserver " + intToString(ERR_TOOMANYCHANNELS) + " " + sender.getName() + " " + channel_name + " :You have joined too many channels\r\n";
@@ -374,6 +402,37 @@ void Command::handleJOIN(Server &server, Client &sender)
         key = this->params[1][0];
     std::cout << "Channel name is: " << "\"" << channel_name << "\"" << " key is " << "\"" << key << "\"" << std::endl;
     server.findOrCreateChannel(channel_name, key, &sender);
+    
+    if (!server.findChannel(channel_name)->getTopic().empty())
+    {
+        std::string topic_msg = ":ircserver " + intToString(RPL_TOPIC) + " " + sender.getName() + " " + channel_name + " :" + server.findChannel(channel_name)->getTopic() + "\r\n";
+        sendResponse(sender.getFd(), topic_msg);
+        std::string topic_setter = server.findChannel(channel_name)->getTopicSetter();
+        if (!topic_setter.empty())
+        {
+            std::string topic_setter_msg = ":ircserver " + intToString(RPL_TOPICWHOTIME) + " " + sender.getName() + " " + channel_name + " " + topic_setter + " :Topic set by " + topic_setter + "\r\n";
+            sendResponse(sender.getFd(), topic_setter_msg);
+        }
+        std::string list_name = ":ircserver " + intToString(RPL_NAMREPLY) + " " + sender.getName() + " = " + channel_name + " :";
+        std::vector<Client*> clients = server.findChannel(channel_name)->getClients(); // require extract all clients on channel
+        std::string end_of_name = ":ircserver " + intToString(RPL_ENDOFNAMES) + " " + sender.getName() + " " + channel_name + " :End of NAMES list\r\n";
+        for (size_t i = 0; i < clients.size(); ++i)
+        {
+            std::string prefix = "";
+            if (server.findChannel(channel_name)->isOperator(clients[i]))
+                prefix += "@";
+            if (server.findChannel(channel_name)->isVoiced(clients[i]))
+                prefix += "+";
+            list_name += prefix + clients[i]->getName() + " ";
+        }
+        sendResponse(sender.getFd(), list_name);
+        sendResponse(sender.getFd(), end_of_name);
+    }
+    else
+    {
+        std::string no_topic_msg = ":ircserver " + intToString(RPL_NOTOPIC) + " " + sender.getName() + " " + channel_name + " :No topic is set\r\n";
+        sendResponse(sender.getFd(), no_topic_msg);
+    }
 }
 
 void    Command::handlePart(Server &server, Client &sender)
@@ -384,11 +443,15 @@ void    Command::handlePart(Server &server, Client &sender)
     Channel* channel = server.findChannel(channel_name);
     if (!channel)
     {
+        std::string err = ":ircserver " + intToString(ERR_NOSUCHCHANNEL) + " " + sender.getName() + " " + channel_name + " :No such channel\r\n";
+        sendResponse(sender.getFd(), err);
         std::cout << "The channel is not found" << std::endl;
         return;
     }
     if (!channel->hasClient(&sender))
     {
+        std::string err = ":ircserver " + intToString(ERR_NOTONCHANNEL) + " " + sender.getName() + " " + channel_name + " :You're not on that channel\r\n";
+        sendResponse(sender.getFd(), err);
         std::cout << "Client does not belong to the channel " << channel_name << std::endl;
         return;
     }
@@ -669,7 +732,7 @@ void Command::handleTOPIC(Client &sender, Server &server)
     {
         if (server.findChannel(channelName)->isOperator(sender.getFd()) == true)
         {
-            server.findChannel(channelName)->setTopic(newTopic);
+            server.findChannel(channelName)->setTopic(newTopic, sender.getName()); // Set the new topic with the name of the user who set it
             server.findChannel(channelName)->handleTopicMode(sender, newTopic); // Broadcast the topic change to all channel members
             std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n";
             sendResponse(sender.getFd(), topicMsg);
@@ -685,7 +748,7 @@ void Command::handleTOPIC(Client &sender, Server &server)
     }
     else
     {
-        server.findChannel(channelName)->setTopic(newTopic);
+        server.findChannel(channelName)->setTopic(newTopic, sender.getName()); // Set the new topic with the name of the user who set it
         std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n";
         sendResponse(sender.getFd(), topicMsg);
         std::cout << "Client FD " << sender.getFd() << " set topic for channel " << channelName << " to: " << newTopic << std::endl;
@@ -864,8 +927,23 @@ void Command::handleKICK(Client &sender, Server &server)
     }
     std::string targetNick = this->params[0][0];
     std::string channelName = this->params[1][0];
+    // check error ERR_BADCHANMASK
+    if (channelName[0] != '#' && channelName[0] != '&') // check if the channel name starts with # or & which are valid channel prefixes in IRC
+    {
+        std::string err = ":ircserver " + intToString(ERR_BADCHANMASK) + " " + sender.getName() + " KICK :Bad channel mask\r\n";    
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to kick with invalid parameters: targetNick: " << targetNick << ", channelName: " << channelName << std::endl;
+        return;
+    }
     Client* targetClient = server.findClient(targetNick);
     Channel* targetChannel = server.findChannel(channelName);
+    if (targetChannel->isOperator(sender.getFd()) == false)
+    {
+        std::string err = ":ircserver 482 " + sender.getName() + " " + channelName + " :You're not channel operator\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to kick user from channel without operator privileges: " << channelName << std::endl;
+        return;
+    }
     if (!targetClient)
     {
         std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " " + targetNick + " :No such nick\r\n";
