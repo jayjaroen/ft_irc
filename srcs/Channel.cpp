@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:39 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/05/23 17:19:44 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/05/30 15:32:14 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -93,8 +93,19 @@ bool    Channel::checkKey(const std::string &key)
 
 void	Channel::addClient(Client *client)
 {
-	_clients.push_back(client);
+	if (!client)
+        return;
+    if (hasClient(client))
+        return;
+    _clients.push_back(client);
+    client->addChannel(this);
     std::cout << "In addClient function, client fd: " << client->getFd() << std::endl;
+    // if (client->getNumChan() > client->getLimitChan())
+    // {
+    //     std::string err = ":ircserver " + intToString(ERR_TOOMANYCHANNELS) + " " + client->getName() + " " + ":You have joined too many channels\r\n";
+    //     send(client->getFd(), err.c_str(), err.size(), 0);
+    //     return;
+    // }
 }
 
 bool    Channel::hasClient(Client *client) const
