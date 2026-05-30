@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/05/23 16:27:39 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/05/30 15:37:42 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -297,41 +297,17 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
         std::string text = ":" + sender.getName() + " PRIVMSG " + target + " : " + message + "\r\n";
         send(target_client->getFd(), text.c_str(), text.size(), 0);
     }
-    // server.sendMessageToTarget(target, message);
 }
-
-// void Command::handleJOIN(Server &server, Client &sender)
-// {
-//     if (this->params.empty() || this->params[0].empty())
-//         return;
-        
-//     std::string channel_name = this->params[0][0];
-//     std::string key = "";
-    
-//     if (!channel_name.empty() && channel_name[0] == ':')
-//     {
-//         channel_name.erase(0, 1);
-//     }
-//     if (channel_name.empty())
-//         return;
-
-//     if (this->params.size() > 1 && !this->params[1].empty())
-//         key = this->params[1][0];
-        
-//     std::cout << "Channel name is: " << "\"" << channel_name << "\"" << " key is " << "\"" << key << "\"" << std::endl;
-//     server.findOrCreateChannel(channel_name, key, &sender);
-// }
 
 void Command::handleJOIN(Server &server, Client &sender)
 {
-    const size_t channel_per_user = 10; // Maximum number of channels a user can join (this is an example limit, you can adjust it as needed)
     if (this->params.empty())
     {
         std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " JOIN :Not enough parameters\r\n";
         sendResponse(sender.getFd(), err);
         return;
     }
-    size_t joined_count = 0;
+    // size_t joined_count = 0;
     std::string key = "";
     std::string channel_name = this->params[0][0];
     //ERR_BADCHANMASK
@@ -358,14 +334,14 @@ void Command::handleJOIN(Server &server, Client &sender)
             std::cout << "Client FD " << sender.getFd() << " attempted to join non-existent channel: " << channel_name << std::endl;
             return;
         }
-    }
-    // get channel all from user ERR_TOOMANYCHANNELS
-    std::vector<Channel*> all_channels = sender.getChannels();
-    for (size_t i = 0; i < all_channels.size(); ++i)
+    }   
+    if (sender.getNumChan() >= sender.getLimitChan())
     {
-        if (all_channels[i]->hasClient(&sender))
-            joined_count++;
+        std::string err = ":ircserver " + intToString(ERR_TOOMANYCHANNELS) + " " + sender.getName() + " " + channel_name + " :You have joined too many channels\r\n";
+        sendResponse(sender.getFd(), err);
+        return;
     }
+    
     //ERR_BADCHANNELKEY
     if (server.findChannel(channel_name) != NULL && server.findChannel(channel_name)->getKey() != "" && (this->params.size() <= 1 || this->params[1].empty() || !server.findChannel(channel_name)->checkKey(this->params[1][0])))
     {
@@ -374,14 +350,6 @@ void Command::handleJOIN(Server &server, Client &sender)
         std::cout << "Client FD " << sender.getFd() << " attempted to join channel with incorrect key: " << channel_name << std::endl;
         return;
     }
-    //ERR_BANNEDFROMCHAN // require function check user banned from channel?
-    // if (server.findChannel(channel_name) != NULL && server.findChannel(channel_name)->isBanned(&sender))
-    // {
-    //     std::string err = ":ircserver " + intToString(ERR_BANNEDFROMCHAN) + " " + sender.getName() + " " + channel_name + " :Cannot join channel (+b)\r\n";
-    //     sendResponse(sender.getFd(), err);
-    //     std::cout << "Client FD " << sender.getFd() << " attempted to join channel they are banned from: " << channel_name << std::endl;
-    //     return;
-    // }
     //ERR_CHANNELISFULL
     if (server.findChannel(channel_name) != NULL && server.findChannel(channel_name)->getLimit() > 0 && server.findChannel(channel_name)->getChannelSize() >= server.findChannel(channel_name)->getLimit())
     {
@@ -396,12 +364,6 @@ void Command::handleJOIN(Server &server, Client &sender)
         std::string err = ":ircserver " + intToString(ERR_INVITEONLYCHAN) + " " + sender.getName() + " " + channel_name + " :Cannot join channel (+i)\r\n";
         sendResponse(sender.getFd(), err);
         std::cout << "Client FD " << sender.getFd() << " attempted to join invite-only channel without an invitation: " << channel_name << std::endl;
-        return;
-    }
-    if (joined_count >= channel_per_user)
-    {
-        std::string err = ":ircserver " + intToString(ERR_TOOMANYCHANNELS) + " " + sender.getName() + " " + channel_name + " :You have joined too many channels\r\n";
-        sendResponse(sender.getFd(), err);
         return;
     }
     if (this->params.size() > 1 && !this->params[1].empty())
@@ -531,35 +493,7 @@ void Command::handleMODE(Client &sender, Server &server)
         }
     }
     else
-    {
 		return ;
-        // // Handle user mode changes
-        // Client* targetClient = server.findUser(modeTarget);
-        // if (targetClient)
-        // {
-        //     switch (modeChanges[1])
-        //     {
-        //         case 'o':
-        //             std::cout << "Handling operator status mode change for user: " << modeTarget << std::endl;
-        //             break;
-        //         case 'i': // Invisible mode
-        //             std::cout << "Handling invisible mode change for user: " << modeTarget << std::endl;
-        //             break;
-        //         default:
-        //             std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :Unknown MODE flag\r\n";
-        //             sendResponse(sender.getFd(), err);
-        //             std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
-        //             return;
-        //     }
-        // }
-        // else
-        // {
-        //     std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " " + modeTarget + " :No such nick\r\n";
-        //     sendResponse(sender.getFd(), err);
-        //     std::cout << "Client FD " << sender.getFd() << " attempted to change modes for non-existent user: " << modeTarget << std::endl;
-        // }
-    }
-    // std::cout << "Handling MODE command for client fd " << sender.getFd() << std::endl;
 }
 
 // These are function not testing yet, so I will implement them later after I finish the main functions of the server and client
@@ -748,11 +682,11 @@ void Command::handleTOPIC(Client &sender, Server &server)
     }
     else
     {
-            server.findChannel(channelName)->setTopic(newTopic, sender.getName()); // Set the new topic with the name of the user who set it
-            server.findChannel(channelName)->broadcast(&sender, ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n");
-            std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n";
-            sendResponse(sender.getFd(), topicMsg);
-            std::cout << "Client FD " << sender.getFd() << " set topic for channel " << channelName << " to: " << newTopic << std::endl;
+        server.findChannel(channelName)->setTopic(newTopic, sender.getName()); // Set the new topic with the name of the user who set it
+        server.findChannel(channelName)->broadcast(&sender, ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n");
+        std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n";
+        sendResponse(sender.getFd(), topicMsg);
+        std::cout << "Client FD " << sender.getFd() << " set topic for channel " << channelName << " to: " << newTopic << std::endl;
     }
 }
 
@@ -926,8 +860,8 @@ void Command::handleKICK(Client &sender, Server &server)
         std::cout << "Client FD " << sender.getFd() << " attempted to kick without providing necessary parameters." << std::endl;        
         return;
     }
-    std::string targetNick = this->params[0][0];
-    std::string channelName = this->params[1][0];
+    std::string channelName = this->params[0][0];
+    std::string targetNick = this->params[1][0];
     // check error ERR_BADCHANMASK
     if (channelName[0] != '#' && channelName[0] != '&') // check if the channel name starts with # or & which are valid channel prefixes in IRC
     {
@@ -938,11 +872,11 @@ void Command::handleKICK(Client &sender, Server &server)
     }
     Client* targetClient = server.findClient(targetNick);
     Channel* targetChannel = server.findChannel(channelName);
-    if (targetChannel->isOperator(sender.getFd()) == false)
+    // Check first if Channel exit
+    if (!targetChannel)
     {
-        std::string err = ":ircserver 482 " + sender.getName() + " " + channelName + " :You're not channel operator\r\n";
+        std::string err = ":ircserver " + intToString(ERR_NOSUCHCHANNEL) + " " + sender.getName() + " " + channelName + " : no such channel\r\n";
         sendResponse(sender.getFd(), err);
-        std::cout << "Client FD " << sender.getFd() << " attempted to kick user from channel without operator privileges: " << channelName << std::endl;
         return;
     }
     if (!targetClient)
@@ -952,25 +886,25 @@ void Command::handleKICK(Client &sender, Server &server)
         std::cout << "Client FD " << sender.getFd() << " attempted to kick non-existent user: " << targetNick << std::endl;
         return;
     }
-    if (!targetChannel)
-    {
-        std::string err = ":ircserver " + intToString(ERR_NOSUCHCHANNEL) + " " + sender.getName() + " " + channelName + " :No such channel\r\n";
-        sendResponse(sender.getFd(), err);
-        std::cout << "Client FD " << sender.getFd() << " attempted to kick from non-existent channel: " << channelName << std::endl;
-        return;
-    }
     if (!targetChannel->hasClient(&sender))
     {
-        std::string err = ":ircserver 442 " + sender.getName() + " " + channelName + " :You're not on that channel\r\n";
+        std::string err = ":ircserver " + intToString(ERR_NOTONCHANNEL) + sender.getName() + " " + channelName + " :You're not on that channel\r\n";
         sendResponse(sender.getFd(), err);
         std::cout << "Client FD " << sender.getFd() << " attempted to kick user from channel they are not part of: " << channelName << std::endl;
         return;
     }
     if (!targetChannel->hasClient(targetClient))
     {
-        std::string err = ":ircserver " + intToString(ERR_NOTONCHANNEL) + " " + sender.getName() + " " + targetNick + " " + channelName + " :is not on channel\r\n";
+        std::string err = ":ircserver " + intToString(ERR_USERNOTINCHANNEL) + " " + sender.getName() + " " + targetNick + " " + channelName + " :is not on channel\r\n";
         sendResponse(sender.getFd(), err);
         std::cout << "Client FD " << sender.getFd() << " attempted to kick user who is not on the channel: " << targetNick << " from channel: " << channelName << std::endl;
+        return;
+    }
+    if (targetChannel->isOperator(sender.getFd()) == false)
+    {
+        std::string err = ":ircserver " + intToString(ERR_CHANOPRIVSNEEDED) + sender.getName() + " " + channelName + " :You're not channel operator\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to kick user from channel without operator privileges: " << channelName << std::endl;
         return;
     }
     std::string kickMsg = ":ircserver KICK " + channelName + " " + targetNick + " :Kicked by " + sender.getName() + "\r\n";
@@ -983,7 +917,6 @@ void Command::handleKICK(Client &sender, Server &server)
         server.deleteChannel(channelName);
     }
 }
-
 
 void sendWelcomeMessage(Server &server, Client &sender)
 {

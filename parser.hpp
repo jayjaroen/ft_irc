@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:03:17 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/05/09 16:05:24 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/05/30 14:19:51 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -148,12 +148,13 @@ enum NumRpl
 	ERR_ERRONEUSNICKNAME = 432,
 	ERR_NICKNAMEINUSE = 433,
 	ERR_NICKCOLLISION = 436,
+	ERR_USERNOTINCHANNEL = 441,
 	ERR_NOTONCHANNEL = 442,
 	ERR_USERONCHANNEL = 443,
 	ERR_NEEDMOREPARAMS = 461,
 	ERR_ALREADYREGISTERED = 462,
 	ERR_PASSWDMISMATCH = 464,
-	ERR_CHANNELISFULL = 471,
+	 ERR_CHANNELISFULL = 471,
 	ERR_INVITEONLYCHAN = 473,
 	ERR_BANNEDFROMCHAN = 474,
 	ERR_BADCHANNELKEY = 475,

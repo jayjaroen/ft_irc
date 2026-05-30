@@ -1,8 +1,8 @@
 #include "../include/Client.hpp"
 
 Client::Client(int fd, int port, const std::string &ip): _fd(fd), _port(port),\
-    _ip(ip), _nickname(""), _username(""), _buffer(""), _channel(NULL), \
-    _isAuthenticated(false), _isOperator(false), _issetNick(false),\
+    _ip(ip), _nickname(""), _username(""), _buffer(""), _channels(0), \
+    _limitChannel(10), _isAuthenticated(false), _isOperator(false), _issetNick(false),\
     _issetUser(false), _issetPass(false), _iscap(false), _isCapNegotiating(false)
 {
     
@@ -27,7 +27,7 @@ Client& Client::operator=(Client const &other)
         _nickname = other._nickname;
         _username = other._username;
         _buffer = other._buffer;
-        _channel = other._channel;
+        _channels = other._channels;
         _isAuthenticated = other._isAuthenticated;
         _isOperator = other._isOperator;
         _issetNick = other._issetNick;
@@ -59,11 +59,6 @@ std::string& Client::getBuffer()
 	return _buffer;
 }
 
-Channel*	Client::getChannel() const
-{
-	return _channel;
-}
-
 void Client::setNick(const std::string &nickname)
 {
 	_nickname = nickname;
@@ -72,11 +67,6 @@ void Client::setNick(const std::string &nickname)
 void Client::setUsername(const std::string &username)
 {
     _username = username;
-}
-
-void	Client::setChannel(Channel *channel)
-{
-	_channel = channel;
 }
 
 void Client::appendBuffer(const std::string &data)
@@ -149,12 +139,11 @@ bool Client::isPassSet() const
 }
 
 
-// void	Client::join(Channel *channel)
-// {
-// 	_channel = channel;//multiple channel?
-// 	channel->addClient(this);
+void	Client::addChannel(Channel *channel)
+{
+	_channels.push_back(channel);
 
-// }
+}
 
 bool Client::setCap(bool cap)
 {
@@ -180,8 +169,15 @@ bool Client::isCapNegotiating() const
 
 std::vector<Channel*>   Client::getChannels() const
 {
-    std::vector<Channel*> channels;
-    if (_channel != NULL)
-        channels.push_back(_channel);
-    return channels;
+    return _channels;
+}
+
+int Client::getNumChan() const
+{
+    return _channels.size();
+}
+
+int Client::getLimitChan() const
+{
+    return _limitChannel;
 }

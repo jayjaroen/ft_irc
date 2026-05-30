@@ -18,9 +18,10 @@ class Client
         std::string _nickname;
         std::string _username;
         std::string _buffer;
-        Channel*    _channel;
+        // Channel*    _channel;
         //client join many channels?
-        // std::vector<Channel*>   _channels;
+        std::vector<Channel*>   _channels;
+        int _limitChannel;
   
         
         bool    _isAuthenticated;
@@ -65,14 +66,16 @@ class Client
 
         //setter
         void    setNick(const std::string &nickname);
-        void    setChannel(Channel *channel);
         
         // Responses
         // std::string sendResponse(std::string message);
         
         void    appendBuffer(const std::string &data);
         void    write(const std::string &message);
-        // void    join(Channel *channel);
+        void    addChannel(Channel *channel);
+
+        int     getNumChan() const;
+        int     getLimitChan() const;
 
 };
 
