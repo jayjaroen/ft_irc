@@ -61,6 +61,7 @@ class Client
         bool    isCapNegotiating() const;
         std::string& getBuffer();
         Channel*    getChannel() const;
+        std::vector<Channel*>   getChannels() const;
 
         //setter
         void    setNick(const std::string &nickname);

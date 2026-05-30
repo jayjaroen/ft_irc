@@ -354,3 +354,8 @@ std::string    Channel::getsetter_topic() const
 {
     return _setter_topic;
 }
+
+std::vector<Client *>	Channel::getClients()
+{
+    return _clients;
+}

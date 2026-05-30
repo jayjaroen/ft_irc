@@ -52,6 +52,7 @@ class Channel
 		size_t					getLimit();
 		// bool					getExtMsg();
 		size_t					getChannelSize();
+		std::vector<Client *>	getClients();
 
 		void					setKey(std::string key);
 		void					setAdmin(Client *admin);

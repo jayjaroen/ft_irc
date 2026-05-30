@@ -50,11 +50,11 @@ void	Command::msgparser(const std::string input)
             }
         }
         
-        std::string intToString(int n)
-        {
-            std::stringstream ss;
-            ss << n;
-            return ss.str();
+std::string intToString(int n)
+{
+    std::stringstream ss;
+    ss << n;
+    return ss.str();
 }
 
         // void Command::msgparser(const std::string input, Server &server, Client &sender)

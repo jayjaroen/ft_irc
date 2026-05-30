@@ -177,3 +177,11 @@ bool Client::isCapNegotiating() const
 {
     return _isCapNegotiating;
 }
+
+std::vector<Channel*>   Client::getChannels() const
+{
+    std::vector<Channel*> channels;
+    if (_channel != NULL)
+        channels.push_back(_channel);
+    return channels;
+}

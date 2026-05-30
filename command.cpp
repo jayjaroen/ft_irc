@@ -360,12 +360,12 @@ void Command::handleJOIN(Server &server, Client &sender)
         }
     }
     // get channel all from user ERR_TOOMANYCHANNELS
-    // std::vector<Channel*> all_channels = server.getAllChannels();
-    // for (size_t i = 0; i < all_channels.size(); ++i)
-    // {
-    //     if (all_channels[i]->hasClient(&sender))
-    //         joined_count++;
-    // }
+    std::vector<Channel*> all_channels = sender.getChannels();
+    for (size_t i = 0; i < all_channels.size(); ++i)
+    {
+        if (all_channels[i]->hasClient(&sender))
+            joined_count++;
+    }
     //ERR_BADCHANNELKEY
     if (server.findChannel(channel_name) != NULL && server.findChannel(channel_name)->getKey() != "" && (this->params.size() <= 1 || this->params[1].empty() || !server.findChannel(channel_name)->checkKey(this->params[1][0])))
     {
@@ -408,37 +408,31 @@ void Command::handleJOIN(Server &server, Client &sender)
         key = this->params[1][0];
     std::cout << "Channel name is: " << "\"" << channel_name << "\"" << " key is " << "\"" << key << "\"" << std::endl;
     server.findOrCreateChannel(channel_name, key, &sender);
-    
-    // if (!server.findChannel(channel_name)->getTopic().empty())
-    // {
-    //     std::string topic_msg = ":ircserver " + intToString(RPL_TOPIC) + " " + sender.getName() + " " + channel_name + " :" + server.findChannel(channel_name)->getTopic() + "\r\n";
-    //     sendResponse(sender.getFd(), topic_msg);
-    //     std::string topic_setter = server.findChannel(channel_name)->getTopicSetter();
-    //     if (!topic_setter.empty())
-    //     {
-    //         std::string topic_setter_msg = ":ircserver " + intToString(RPL_TOPICWHOTIME) + " " + sender.getName() + " " + channel_name + " " + topic_setter + " :Topic set by " + topic_setter + "\r\n";
-    //         sendResponse(sender.getFd(), topic_setter_msg);
-    //     }
-    //     std::string list_name = ":ircserver " + intToString(RPL_NAMREPLY) + " " + sender.getName() + " = " + channel_name + " :";
-    //     std::vector<Client*> clients = server.findChannel(channel_name)->getClients(); // require extract all clients on channel
-    //     std::string end_of_name = ":ircserver " + intToString(RPL_ENDOFNAMES) + " " + sender.getName() + " " + channel_name + " :End of NAMES list\r\n";
-    //     for (size_t i = 0; i < clients.size(); ++i)
-    //     {
-    //         std::string prefix = "";
-    //         if (server.findChannel(channel_name)->isOperator(clients[i]))
-    //             prefix += "@";
-    //         if (server.findChannel(channel_name)->isVoiced(clients[i]))
-    //             prefix += "+";
-    //         list_name += prefix + clients[i]->getName() + " ";
-    //     }
-    //     sendResponse(sender.getFd(), list_name);
-    //     sendResponse(sender.getFd(), end_of_name);
-    // }
-    // else
-    // {
-    //     std::string no_topic_msg = ":ircserver " + intToString(RPL_NOTOPIC) + " " + sender.getName() + " " + channel_name + " :No topic is set\r\n";
-    //     sendResponse(sender.getFd(), no_topic_msg);
-    // }
+    // RPL_TOPIC, RPL_TOPICWHOTIME, RPL_NAMREPLY, RPL_ENDOFNAMES
+    // RPL_TOPIC :ircserver 332 <nick> <channel> :<topic>
+    std::string topic = server.findChannel(channel_name)->getTopic();
+    if (!topic.empty())
+    {
+        std::string topic_msg = ":ircserver " + intToString(RPL_TOPIC) + " " + sender.getName() + " " + channel_name + " :" + topic + "\r\n";
+        sendResponse(sender.getFd(), topic_msg);
+        std::string setter = server.findChannel(channel_name)->getsetter_topic();
+        std::string topic_time_msg = ":ircserver " + intToString(RPL_TOPICWHOTIME) + " " + sender.getName() + " " + channel_name + " " + setter + " :Topic set time\r\n";
+        sendResponse(sender.getFd(), topic_time_msg);
+    }
+    std::string names_msg = ":ircserver " + intToString(RPL_NAMREPLY) + " " + sender.getName() + " = " + channel_name + " :";
+    Channel* channel = server.findChannel(channel_name);
+    std::vector<Client*> clients = channel->getClients();
+    for (size_t i = 0; i < clients.size(); ++i)
+    {
+        if (channel->isOperator(clients[i]->getFd()))
+            names_msg += "@" + clients[i]->getName() + " ";
+        else
+            names_msg += clients[i]->getName() + " ";
+    }
+    names_msg += "\r\n";
+    sendResponse(sender.getFd(), names_msg);
+    std::string end_of_names_msg = ":ircserver " + intToString(RPL_ENDOFNAMES) + " " + sender.getName() + " " + channel_name + " :End of NAMES list\r\n";
+    sendResponse(sender.getFd(), end_of_names_msg);
 }
 
 void    Command::handlePart(Server &server, Client &sender)
@@ -709,7 +703,7 @@ void Command::handleTOPIC(Client &sender, Server &server)
 {
     std::string channelName = this->params[0][0];
     std::string newTopic = this->params[1][0];
-    if (this->params.empty() || this->params[0].empty())
+    if (this->params.empty() || this->params[0].empty() || this->params[1].empty())
     {
         std::string err = ":ircserver "+ intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " TOPIC :Not enough parameters\r\n";
         sendResponse(sender.getFd(), err);
@@ -739,25 +733,26 @@ void Command::handleTOPIC(Client &sender, Server &server)
         if (server.findChannel(channelName)->isOperator(sender.getFd()) == true)
         {
             server.findChannel(channelName)->setTopic(newTopic, sender.getName()); // Set the new topic with the name of the user who set it
-            server.findChannel(channelName)->handleTopicMode(sender, newTopic); // Broadcast the topic change to all channel members
+            server.findChannel(channelName)->broadcast(&sender, ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n");
             std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n";
             sendResponse(sender.getFd(), topicMsg);
             std::cout << "Client FD " << sender.getFd() << " set topic for channel " << channelName << " to: " << newTopic << std::endl;
         }
         else
-        {
-            server.findChannel(channelName)->handleTopicMode(sender, newTopic); // Broadcast the topic change to all channel members
-            std::string err = ":ircserver 482 " + sender.getName() + " " + channelName + " :You're not channel operator\r\n";
+        {   std::string err = ":ircserver " + intToString(ERR_CHANOPRIVSNEEDED) + " " + sender.getName() + " " + channelName +
+            " :You're not channel operator\r\n";
             sendResponse(sender.getFd(), err);
             std::cout << "Client FD " << sender.getFd() << " attempted to set topic for channel " << channelName << " without operator privileges." << std::endl;
+            return;
         }
     }
     else
     {
-        server.findChannel(channelName)->setTopic(newTopic, sender.getName()); // Set the new topic with the name of the user who set it
-        std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n";
-        sendResponse(sender.getFd(), topicMsg);
-        std::cout << "Client FD " << sender.getFd() << " set topic for channel " << channelName << " to: " << newTopic << std::endl;
+            server.findChannel(channelName)->setTopic(newTopic, sender.getName()); // Set the new topic with the name of the user who set it
+            server.findChannel(channelName)->broadcast(&sender, ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n");
+            std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n";
+            sendResponse(sender.getFd(), topicMsg);
+            std::cout << "Client FD " << sender.getFd() << " set topic for channel " << channelName << " to: " << newTopic << std::endl;
     }
 }
 
