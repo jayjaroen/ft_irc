@@ -59,7 +59,7 @@ When port and password number is typed in correctly, irssi would established con
 Below is the table listing all available commands implemented in this project and how it is supposed to be used:
 | Command | Function | Usage |
 | ------- | -------- | ----- |
-| CONNECT | For connecting to the server | CONNECT localhost [port] [pass] |
+| CONNECT | For connecting to the server | CONNECT [host] [port] [pass] |
 | PASS    | Authenticate connection via server password | PASS [pass] |
 | USER    | Set up username of the client | USER [username] 0 * [realname] |
 | NICK    | Set up display name of the client | NICK [nickname] |
@@ -73,7 +73,7 @@ Below is the table listing all available commands implemented in this project an
 | JOIN    | For joining the specified channel, or create a new one if the channel doesn't exist. Can add keys as a password to the private channel. Can join/create multiple channels and keys by separating each with comma ",". | JOIN [#channel1,#channel2,...] [key1,key2,...(optional)] |
 | PART    | For leaving the specified channel | PART |
 | PRIVMSG | For sending message to the specified target, which can be client or channel | PRIVMSG [target] : [text] |
-| MODE    | For channel operator to modify the channel. This project supports k, l, t, o, i mode flags | MODE [channel] [+/-][flag] |
+| MODE    | For channel operator to modify the channel. This project supports k, l, t, o, i mode flags | MODE [channel] [+/-][flag] [input(conditional)] |
 | TOPIC   | Set up the topic of conversation for the channel | TOPIC [channel] [topic] |
 | INVITE  | For inviting target client(s) not in the channel to join | INVITE [nickname] [channel] |
 | KICK    | For channel operator to kick the specified client out of the channel | KICK [channel] [nickname] |
