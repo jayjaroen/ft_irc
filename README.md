@@ -15,12 +15,11 @@ According to the subject provided by 42 for this project, this iteration of IRC 
 - Once joined the channel, clients can also leave at their discretion. The same also applies for disconnecting from the IRC server.
 - Users can connect to this server and able to use all of its capabilities mentioned above through **at least** one IRC client program of choice.
 - Only the expected errors and procedures of a typical IRC protocols are allowed, and the protocol numbers of said error reports **must** align with the universal IRC protocol rules.
-___
 
 ### PROJECT RESULTS
 ___
 Our program is an IRC server that is compatible with **irssi** client program that allows up to 10 clients to join while still performing smoothly at its peak.
-#### Server Side
+### Server Side
 Our Makefile is used to compile the server program "ft_irc" under the bash command:
 > c++ -Wall -Wextra -Werror -std=c++98 -g3
 
@@ -33,7 +32,7 @@ Once properly executed, the terminal used will be dedicated to the server as the
 > Server: listening on port: [port]
 
 while any activity the server receives and acknowledges during the server runtime will be displayed after the line above.
-#### Client Side
+### Client Side
 Clients can connect to the server via two commands; netcat (nc) or irssi. For project evaluation, both methods must be used for testing. Below is the commands for netcat method:
 > nc -C localhost [port]
 
@@ -55,7 +54,7 @@ For irssi, clients can directly launch it if irssi has already been installed. O
 
 When port and password number is typed in correctly, irssi would established connection to the server and automatically authenticates the client.
 
-#### IMPLEMENTED COMMANDS
+### IMPLEMENTED COMMANDS
 Below is the table listing all available commands implemented in this project and how it is supposed to be used:
 | Command | Function | Usage |
 | ------- | -------- | ----- |
