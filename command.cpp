@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/05/30 17:44:56 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/06/06 10:45:41 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -249,23 +249,6 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
         sendResponse(sender.getFd(), err);
         return;
     }
-    //ERR 401
-    std::string target = this->params[0][0]; // first parameter is the target (user or channel)
-    if (params.size() == 1)
-    {
-        if (target[0] != '#' && !server.findClient(target))
-        {
-            std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " PRIVMSG :No such nick\r\n";
-            sendResponse(sender.getFd(), err);
-            return;
-        }
-        if  (target[0] == '#' && !server.findChannel(target)) 
-        {
-            std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " PRIVMSG :No such channel\r\n";
-            sendResponse(sender.getFd(), err);
-            return;
-        }
-    }
     //ERR 412
     if (params.size() < 2 || params[1].empty())
     {
@@ -273,6 +256,7 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
         sendResponse(sender.getFd(), err);
         return;
     }
+    std::string target = this->params[0][0];
     std::string message = this->params[1][0]; // second parameter is the message
     //channel message
     std::cout << "The channel name is " << target << std::endl;
@@ -293,12 +277,6 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
             sendResponse(sender.getFd(), err);
             return;
         }
-        if (message == "")
-        {
-            std::string err = ":ircserver " + intToString(ERR_NOTEXTTOSEND) + " " + sender.getName() + " PRIVMSG :No text to send\r\n";
-            sendResponse(sender.getFd(), err);
-            return;
-        }
         std::string text = ":" + sender.getName() + " PRIVMSG " + target + " : " + message + "\r\n";
         channel->broadcast(&sender, text);
     }
@@ -312,15 +290,8 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
             sendResponse(sender.getFd(), err);
             return;
         }
-        if (message == "") //404
-        {
-            std::string err = ":ircserver " + intToString(ERR_NOTEXTTOSEND) + " " + sender.getName() + " PRIVMSG :No text to send\r\n";
-            sendResponse(sender.getFd(), err);
-            return;
-        }
         std::string text = ":" + sender.getName() + " PRIVMSG " + target + " : " + message + "\r\n";
-        send(target_client->getFd(), text.c_str(), text.size(), 0);
-        
+        send(target_client->getFd(), text.c_str(), text.size(), 0);   
     }
 }
 
