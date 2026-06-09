@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/06/06 10:45:41 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/06/09 22:07:03 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -395,15 +395,20 @@ void Command::handleJOIN(Server &server, Client &sender)
 
 void    Command::handlePart(Server &server, Client &sender)
 {
-    if (this->params.empty())
+    if (this->params.empty() || this->params[0].empty())
+    {
+        std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + sender.getName() +
+            "PART :Not enough parameters\r\n";
+        
+        sendResponse(sender.getFd(), err);
         return;
+    }
     std::string channel_name = this->params[0][0];
     Channel* channel = server.findChannel(channel_name);
     if (!channel)
     {
         std::string err = ":ircserver " + intToString(ERR_NOSUCHCHANNEL) + " " + sender.getName() + " " + channel_name + " :No such channel\r\n";
         sendResponse(sender.getFd(), err);
-        std::cout << "The channel is not found" << std::endl;
         return;
     }
     if (!channel->hasClient(&sender))
