@@ -664,10 +664,9 @@ void Command::handleMODE(Client &sender, Server &server)
 void Command::handleHELP(Client &sender, Server &server)
 {
     (void) server;
-    std::string cmd = this->params[0][0];
-
     
-    if (this->params.empty() || this->params[0].empty())
+    
+    if (this->params.empty() || this->params[0][0].empty())
     {
         std::string helpMsg = ":ircserver 704" + sender.getName() + "* :** Help System **\r\n";
         helpMsg += ":ircserver 705 " + sender.getName() + "* :Available commands: JOIN, PART, PING, NICK, TOPIC, INVITE, KICK, PRIVMSG, MODE, CAP, USER, PASS\r\n";
@@ -676,6 +675,7 @@ void Command::handleHELP(Client &sender, Server &server)
         sendResponse(sender.getFd(), helpMsg);
         return;
     }
+    std::string cmd = this->params[0][0];
     if (cmd == "JOIN")
     {
         std::string helpMsg = ":ircserver 704" + sender.getName() + " JOIN :** The JOIN command **\r\n";
