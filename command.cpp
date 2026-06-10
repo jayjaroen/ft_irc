@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/06/09 22:07:03 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/06/10 21:18:40 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -397,7 +397,7 @@ void    Command::handlePart(Server &server, Client &sender)
 {
     if (this->params.empty() || this->params[0].empty())
     {
-        std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + sender.getName() +
+        std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() +
             "PART :Not enough parameters\r\n";
         
         sendResponse(sender.getFd(), err);
