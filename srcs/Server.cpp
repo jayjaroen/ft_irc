@@ -174,7 +174,7 @@ void Server::handleClientMessage(int client_fd)
     //get buffer
     std::string &buf = client->getBuffer();
     size_t pos;
-    std::cout << "Am here" << std::endl;
+    // std::cout << "Am here" << std::endl;
     while ((pos = buf.find("\r\n")) != std::string::npos)
     {
         std::string message = buf.substr(0, pos);//extract msg

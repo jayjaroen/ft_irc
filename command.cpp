@@ -36,7 +36,7 @@ void Command::execute_command(Server &server, Client &sender)
     // bool nick_check = sender.isNickSet();
     // bool user_check = sender.isUserSet();
     // sendResponse(sender.getFd(), "Your status: PASS=" + std::to_string(pass_check) + ", NICK=" + std::to_string(nick_check) + ", USER=" + std::to_string(user_check) + "\r\n");
-    std::cout << "Sending to FD: " << sender.getFd() << std::endl;
+    // std::cout << "Sending to FD: " << sender.getFd() << std::endl;
     ////////
 
     size_t cmdType = this->type;
@@ -59,35 +59,45 @@ void Command::execute_command(Server &server, Client &sender)
     switch (cmdType)
     {
         case CAP:
-            std::cout << "Executing CAP..." << std::endl;
+            // std::cout << "Executing CAP..." << std::endl;
             handleCAP(sender, server);
             break;
         case USER:
-            std::cout <<  "Executing USER..." << std::endl;
+            if (sender.isCapNegotiating() && cmdType != CAP)
+                return; 
+            // std::cout <<  "Executing USER..." << std::endl;
             handleUSER(sender, server);
             if (sender.isCapNegotiating() == false)
                 sendWelcomeMessage(server, sender);
             break;
         case PASS:
-            std::cout << "Executing PASS..." << std::endl;
+            if (sender.isCapNegotiating() && cmdType != CAP)
+                return; 
+            // std::cout << "Executing PASS..." << std::endl;
             handlePass(sender, server);
             break;
         case NICK:
+            if (sender.isCapNegotiating() && cmdType != CAP)
+                return; 
             handleNick(sender, server);
-            std::cout << "Executing NICK..." << std::endl;
+            // std::cout << "Executing NICK..." << std::endl;
             break;
         case JOIN:
+            if (sender.isCapNegotiating() && cmdType != CAP)
+                return; 
             handleJOIN(server, sender);
             break;
         case PRIVMSG:
             handlePRIVMSG(server,sender);
             break;
         case QUIT:
-            std::cout << "Client quitting..." << std::endl;
+            // std::cout << "Client quitting..." << std::endl;
             handleQuit(sender, server);
             break;
         case MODE:
-            std::cout << "Executing MODE..." << std::endl;
+            // std::cout << "Executing MODE..." << std::endl;
+            if (sender.isCapNegotiating() && cmdType != CAP)
+                return; 
             handleMODE(sender, server);
             break;
         case HELP:
@@ -907,9 +917,9 @@ void Command::handleCAP(Client &sender, Server &server)
         case LS:
             sender.setCapNegotiating(true); // set a flag in client to indicate that CAP negotiation is in progress
             if (this->params.size() > 1 && !this->params[1].empty()) // leak solved checked
-                sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() +  " LS "  + this->params[1][0] + " " + ":multi-prefix\r\n");
+                sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() +  " LS "  + this->params[1][0] + " " + " multi-prefix\r\n");
             else
-                sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() + " LS :multi-prefix\r\n");
+                sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() + " LS multi-prefix\r\n");
             break;
         case LIST:
             // if (sender.hasMultiPrefixEnabled() == true) // add more function in client to get enable cap feature R+ P'Jay
