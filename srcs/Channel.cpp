@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:39 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/05/30 15:32:14 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/06/10 21:14:55 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -147,7 +147,10 @@ void    Channel::removeOperator(Client *client)
         _admin = NULL;
         if (!_clients.empty())
             _admin = _clients[0]; //reset admin 
-    } 
+    }
+    //test
+    if (_admin) //delete later
+        std::cout << "The current admin is " << _admin->getName() << std::endl;
 }
 
 bool    Channel::isEmpty()
