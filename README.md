@@ -54,7 +54,7 @@ For irssi, clients can directly launch it if irssi has already been installed. O
 
 When port and password number is typed in correctly, irssi would established connection to the server and automatically authenticates the client.
 
-### IMPLEMENTED COMMANDS
+### Implemented Commands
 Below is the table listing all available commands implemented in this project and how it is supposed to be used:
 | Command | Function | Usage |
 | ------- | -------- | ----- |
@@ -77,4 +77,24 @@ Below is the table listing all available commands implemented in this project an
 | INVITE  | For inviting target client(s) not in the channel to join | INVITE [nickname] [channel] |
 | KICK    | For channel operator to kick the specified client out of the channel | KICK [channel] [nickname] |
 | HELP    | For displaying the function of specified command | HELP [command] |
-> *NOTE that in irssi, every command must instead be typed as /lowercase instead of typical UPPERCASE format*
+> *NOTE that in irssi, every command must type / at the start of the input line. This can be followed by either lowercase or UPPERCASE.*
+
+### RESOURCES
+___
+
+Below are the references used in research and development of this project, cited in APA7 format:
+
+**Protocols, Server Implementations, Commands and Numeric Replies In IRC**
+> Allnut, J., & Oaks, D. (n.d.). IRC Client Protocol Specifications. Modern IRC Client protocol. https://modern.ircdocs.horse/
+
+**Sophisticated Subcommands and Numeric Replies of CAP Command**
+> IRCv3 Working Group. (2017). Client capability negotiation. IRCv3. https://ircv3.net/specs/extensions/capability-negotiation.html
+
+**Research On Specific Behaviors of Irssi Client Program**
+> Irssi. (2024). Irssi.org. https://irssi.org/
+
+### AI Usage And Integration
+During this project development, we have implemented the use of AI as follows:
+- **Code Uniformity:** Generating the layout format of the code so that every contributor can read, understand, and follow through other's code more easily and efficiently, promoting team collaboration.
+- **Debugging:** Help identifying causes of bugs and errors so that contributors can assess and effectively fix issues faster.
+- **Edge Cases Tests:** For generating extra test cases beyond contributor's initial test cases, allowing contributors to further optimize the code and avoid convoluted program workflow.

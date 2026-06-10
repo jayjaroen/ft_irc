@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: psenalia <psenalia@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:03:17 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/05/30 14:19:51 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/06/10 14:03:59 by psenalia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,14 +39,6 @@ class Client;
 // 	std::string trailing;
 // };
 
-// enum tokentype
-// {
-// 	WORD,
-// 	COLON,
-// 	REFER,
-// 	HASH
-// };
-
 enum CommandPrompts
 {
 	UNKNOWN_CMD,
@@ -67,15 +59,6 @@ enum CommandPrompts
 	MODE,
 	RESTART,
 	PONG
-};
-
-enum CapSubCommands
-{
-	UNKNOWN_CMD_CAP,
-	LS,
-	LIST,
-	REQ,
-	END
 };
 
 class Command
