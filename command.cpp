@@ -879,36 +879,20 @@ void Command::handleTOPIC(Client &sender, Server &server)
 	std::string newTopic = this->params[1][0];
 	Channel *target_channel = server.findChannel(channelName);
 	bool mode = server.findChannel(channelName)->getTopic_mode(); // do this to check if the channel is moderated or not
-	if (mode == true)
+	if (mode == true && target_channel->isOperator(sender.getFd()) == false)
 	{
-		// if (target_channel->isOperator(sender.getFd()) == false)
-		// {
-		// 	std::string err = ":ircserver " + intToString(ERR_CHANOPRIVSNEEDED) + " " + sender.getName() + " " + channelName +
-		// 	" :You're not channel operator\r\n";
-		// 	sendResponse(sender.getFd(), err);
-		// 	std::cout << "Client FD " << sender.getFd() << " attempted to set topic for channel " << channelName << " without operator privileges." << std::endl;
-		// 	return;
-		// }
-		// else
-		// {
-			target_channel->setTopic(newTopic, sender.getName()); // Set the new topic with the name of the user who set it
-			target_channel->broadcast(&sender, ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n");
-			std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n";
-			sendResponse(sender.getFd(), topicMsg);
-			std::cout << "Client FD " << sender.getFd() << " set topic for channel " << channelName << " to: " << newTopic << std::endl;
-		// }
-	}
-	else
-	{
-		std::string err = ":ircserver " + intToString(ERR_CHANOPRIVSNEEDED) + " " + sender.getName() + " " + channelName + " :You're not channel operator\r\n";
-		sendResponse(sender.getFd(), err);
-		std::cout << "Client FD " << sender.getFd() << " attempted to set topic without operator privileges." << std::endl;
-		return;
-		// target_channel->setTopic(newTopic, sender.getName()); // Set the new topic with the name of the user who set it
-		// target_channel->broadcast(&sender, ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n");
-		// std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n";
-		// sendResponse(sender.getFd(), topicMsg);
-		// std::cout << "Client FD " << sender.getFd() << " set topic for channel " << channelName << " to: " << newTopic << std::endl;
+        std::string err = ":ircserver " + intToString(ERR_CHANOPRIVSNEEDED) + " " + sender.getName() + " " + channelName + " :You're not channel operator\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to set topic without operator privileges." << std::endl;
+        return;
+    }
+    else if  (mode == false)
+    {
+        target_channel->setTopic(newTopic, sender.getName()); // Set the new topic with the name of the user who set it
+        target_channel->broadcast(&sender, ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n");
+        std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n";
+        sendResponse(sender.getFd(), topicMsg);
+        std::cout << "Client FD " << sender.getFd() << " set topic for channel " << channelName << " to: " << newTopic << std::endl;
 	}
 }
 
