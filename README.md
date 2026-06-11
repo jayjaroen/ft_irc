@@ -97,4 +97,15 @@ Below are the references used in research and development of this project, cited
 During this project development, we have implemented the use of AI as follows:
 - **Code Uniformity:** Generating the layout format of the code so that every contributor can read, understand, and follow through other's code more easily and efficiently, promoting team collaboration.
 - **Debugging:** Help identifying causes of bugs and errors so that contributors can assess and effectively fix issues faster.
-- **Edge Cases Tests:** For generating extra test cases beyond contributor's initial test cases, allowing contributors to further optimize the code and avoid convoluted program workflow.
+- **Research Assist:** Help analyze resources and research materials for further and clearer understanding.
+
+<!--###FURTHER IN DEPTH DETAILS HERE FOR EXPLANATION ASSIST/PROMPT BELOW-->
+<!--###JJAROENS:
+	#### Multiplexing, Asynchronous I/O, Server Connection, Ports, etc.
+-->
+<!--###PSENALIA:
+	#### Parser, Numeric Replies, Netcat, Irssi, etc.
+-->
+<!--###GYEEPACH:
+	#### Commands, Client to Server Communications, etc.
+-->
