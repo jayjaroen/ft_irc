@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/06/11 16:25:52 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/06/11 16:32:43 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -200,22 +200,22 @@ void Command::handleNick(Client &sender, Server &server)
         return;
     }
 
-    // std::string oldNick = sender.getName().empty() ? "*" : sender.getName();
+    std::string oldNick = sender.getName().empty() ? "*" : sender.getName();
     
     sender.setNick(newNick);
     sender.setNickSet(true);
     std::cout << "Client FD " << sender.getFd() << " successfully set nick to " << newNick << std::endl;
 
-    // if (oldNick != newNick)
-    // {
-    //     std::string nick_change_msg = ":" + oldNick + " NICK " + newNick + "\r\n";
-    //     sendResponse(sender.getFd(), nick_change_msg);
-    // }
-    // if (!sender.isAuthenticated() && sender.isPassSet() && sender.isNickSet() && sender.isUserSet() && !sender.isCapNegotiating())
-    // {
-    //     sender.setAuthenticated(true);
-    //     sendWelcomeMessage(server, sender);
-    // }
+    if (oldNick != newNick)
+    {
+        std::string nick_change_msg = ":" + oldNick + " NICK " + newNick + "\r\n";
+        sendResponse(sender.getFd(), nick_change_msg);
+    }
+    if (!sender.isAuthenticated() && sender.isPassSet() && sender.isNickSet() && sender.isUserSet() && !sender.isCapNegotiating())
+    {
+        sender.setAuthenticated(true);
+        sendWelcomeMessage(server, sender);
+    }
 }
 
 // void Command::handleNick(Client &sender, Server &server)
