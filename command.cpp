@@ -859,9 +859,17 @@ void Command::handleTOPIC(Client &sender, Server &server)
 		sendResponse(sender.getFd(), err);
 		return;
 	}
+    Channel *target_channel = server.findChannel(channelName);
+    if (!target_channel->hasClient(&sender))
+    {
+        std::string err = ":ircserver " + intToString(ERR_NOTONCHANNEL) + " " + sender.getName() + " " + channelName + " :You're not on that channel\r\n";
+        sendResponse(sender.getFd(), err);
+        std::cout << "Client FD " << sender.getFd() << " attempted to set topic for channel " << channelName << " without being a member." << std::endl;
+        return;
+    }
 	if (this->params.size() < 2 || this->params[1].empty() || this->params[1][0] == "")
 	{
-		std::string topic = server.findChannel(channelName)->getTopic();
+		std::string topic = target_channel->getTopic();
 		if (!topic.empty())
 		{
 			std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + topic + "\r\n";
@@ -877,8 +885,7 @@ void Command::handleTOPIC(Client &sender, Server &server)
 		return;
 	}
 	std::string newTopic = this->params[1][0];
-	Channel *target_channel = server.findChannel(channelName);
-	bool mode = server.findChannel(channelName)->getTopic_mode(); // do this to check if the channel is moderated or not
+	bool mode = target_channel->getTopic_mode(); // do this to check if the channel is moderated or not
 	if (mode == true && target_channel->isOperator(sender.getFd()) == false)
 	{
         std::string err = ":ircserver " + intToString(ERR_CHANOPRIVSNEEDED) + " " + sender.getName() + " " + channelName + " :You're not channel operator\r\n";
