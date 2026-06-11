@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   command.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/06/10 21:18:40 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/06/11 16:25:52 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,6 @@ void Command::execute_command(Server &server, Client &sender)
     // sendResponse(sender.getFd(), "Your status: PASS=" + std::to_string(pass_check) + ", NICK=" + std::to_string(nick_check) + ", USER=" + std::to_string(user_check) + "\r\n");
     // std::cout << "Sending to FD: " << sender.getFd() << std::endl;
     ////////
-
     size_t cmdType = this->type;
 
     std::cout << cmdType << std::endl;
@@ -63,32 +62,24 @@ void Command::execute_command(Server &server, Client &sender)
             handleCAP(sender, server);
             break;
         case USER:
-            if (sender.isCapNegotiating() && cmdType != CAP)
-                return; 
             // std::cout <<  "Executing USER..." << std::endl;
             handleUSER(sender, server);
             if (sender.isCapNegotiating() == false)
                 sendWelcomeMessage(server, sender);
             break;
         case PASS:
-            if (sender.isCapNegotiating() && cmdType != CAP)
-                return; 
             // std::cout << "Executing PASS..." << std::endl;
             handlePass(sender, server);
             if (sender.isCapNegotiating() == false)
                 sendWelcomeMessage(server, sender);
             break;
         case NICK:
-            if (sender.isCapNegotiating() && cmdType != CAP)
-                return; 
             handleNick(sender, server);
             if (sender.isCapNegotiating() == false)
                 sendWelcomeMessage(server, sender);
             // std::cout << "Executing NICK..." << std::endl;
             break;
         case JOIN:
-            if (sender.isCapNegotiating() && cmdType != CAP)
-                return; 
             handleJOIN(server, sender);
             break;
         case PRIVMSG:
