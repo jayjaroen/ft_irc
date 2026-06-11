@@ -159,26 +159,52 @@ void Command::execute_command(Server &server, Client &sender)
 
 void Command::handleNick(Client &sender, Server &server)
 {
-    if (this->params.empty() || this->params[0].empty())
+    if (this->params.empty() || this->params[0].empty() || this->params[0][0] == "")
     {
-        std::string err = ":ircserver " + intToString(ERR_NONICKNAMEGIVEN) + " " + sender.getName() + " :No nickname given\r\n";
-        sendResponse(sender.getFd(), err);
-        return;
-    }
-    if ((sender.isNickSet() && sender.getName() == this->params[0][0]) || server.findClient(this->params[0][0]) != NULL)
-    {
-        std::string err = ":ircserver " + intToString(ERR_NICKNAMEINUSE) + " " + sender.getName() + " :Nickname is already in use\r\n";
+        std::string current_nick = sender.getName().empty() ? "unknown" : sender.getName();
+        std::string err = ":ircserver " + intToString(ERR_NONICKNAMEGIVEN) + " " + current_nick + " :No nickname given\r\n";
         sendResponse(sender.getFd(), err);
         return;
     }
     std::string newNick = this->params[0][0];
+    if (newNick.find("already") != std::string::npos || newNick.find("use") != std::string::npos)
+        newNick = this->params[0][0];
+    if (server.findClient(newNick) != NULL && server.findClient(newNick)->getFd() != sender.getFd())
+    {
+        if (!sender.isAuthenticated())
+        {
+            newNick = newNick + "_" + intToString(sender.getFd());
+        }
+        else 
+        {
+            std::string err = ":ircserver " + intToString(ERR_NICKNAMEINUSE) + " " + newNick + " :Nickname is already in use\r\n";
+            sendResponse(sender.getFd(), err);
+            return;
+        }
+    }
+    while (!newNick.empty() && (newNick[newNick.length() - 1] == '\r' || newNick[newNick.length() - 1] == '\n' || newNick[newNick.length() - 1] == ' ')) {
+        newNick.erase(newNick.length() - 1, 1);
+    }
+    if ((sender.isNickSet() && sender.getName() == newNick) || server.findClient(newNick) != NULL)
+    {
+        std::string err = ":ircserver " + intToString(ERR_NICKNAMEINUSE) + " " + newNick + " :Nickname is already in use\r\n";
+        sendResponse(sender.getFd(), err);
+        if (!sender.isAuthenticated()) {
+            sender.setUserSet(false); 
+        }
+        return;
+    }
     if (this->params[0][0][0] == '#' || this->params[0][0][0] == '&' || this->params[0][0][0] == '!' || this->params[0][0][0] == '+'
         || this->params[0][0][0] == '@' || this->params[0][0][0] == ':'  || this->params[0][0][0] == ' '
         || newNick.find(' ') != std::string::npos || newNick.find('\t') != std::string::npos || newNick.find('\r') != std::string::npos || newNick.find('\n') != std::string::npos
         || (this->params[0][0][0] >= '0' && this->params[0][0][0] <= '9') || this->params.size() > 1)
     {
-        std::string err = ":ircserver " + intToString(ERR_ERRONEUSNICKNAME) + " " + sender.getName() + " " + this->params[0][0] + " :Erroneous nickname\r\n";
+        std::string err = ":ircserver " + intToString(ERR_ERRONEUSNICKNAME) + " " + newNick + " :Erroneous nickname\r\n";
         sendResponse(sender.getFd(), err);
+        if (!sender.isAuthenticated()) {
+            sender.setUserSet(false);
+            sender.setNickSet(false);
+        }
         return;
     }
     sender.setNick(newNick);
