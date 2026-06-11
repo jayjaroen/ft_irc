@@ -478,28 +478,39 @@ void Command::handleMODE(Client &sender, Server &server)
     if (this->params.size() < 1 || this->params[0].empty())
     {
         std::string err = ":ircserver " +
-            intToString(ERR_NEEDMOREPARAMS) + " " +
-            sender.getName() +
-            " MODE :Not enough parameters\r\n";
-
+        intToString(ERR_NEEDMOREPARAMS) + " " +
+        sender.getName() +
+        " MODE :Not enough parameters\r\n";
+        
         sendResponse(sender.getFd(), err);
         return;
     }
-
+    
     std::string modeTarget = this->params[0][0];
-
+    
     // User mode handling not implemented
     if (modeTarget.empty() || modeTarget[0] != '#')
         return;
-
+    
     Channel *channel = server.findChannel(modeTarget);
     if (!channel)
     {
         std::string err = ":ircserver " +
-            intToString(ERR_NOSUCHCHANNEL) + " " +
+        intToString(ERR_NOSUCHCHANNEL) + " " +
+        sender.getName() + " " +
+        modeTarget +
+        " :No such channel\r\n";
+        
+        sendResponse(sender.getFd(), err);
+        return;
+    }
+    if (channel->isOperator(sender.getFd()) == false)
+    {
+        std::string err = ":ircserver " +
+            intToString(ERR_CHANOPRIVSNEEDED) + " " +
             sender.getName() + " " +
             modeTarget +
-            " :No such channel\r\n";
+            " :You're not channel operator\r\n";
 
         sendResponse(sender.getFd(), err);
         return;
@@ -508,12 +519,21 @@ void Command::handleMODE(Client &sender, Server &server)
     // MODE #channel
     if (this->params.size() < 2 || this->params[1].empty())
     {
-        std::string err = ":ircserver " +
-            intToString(ERR_NEEDMOREPARAMS) + " " +
-            sender.getName() +
-            " MODE :Not enough parameters\r\n";
+        std::string servername = "ircserver";
+        std::string nick = sender.getName();
+        std::string modestring = "+";
+        std::string mode_args = "";
 
-        sendResponse(sender.getFd(), err);
+        if (channel->isInviteOnly())
+            modestring += "i";
+        if (channel->getKey() != "")
+            modestring += "k";
+        if (channel->getLimit() > 0)
+            modestring += "l";
+        if (channel->getTopic() != "") // getTopice in boolean not string
+            modestring += "t";
+        std::string rpl_mode = ":ircserver " + intToString(RPL_CHANNELMODEIS) + " " + nick + " " + channel->getName() + " :" + modestring + mode_args + "\r\n";
+        sendResponse(sender.getFd(), rpl_mode);
         return;
     }
 
@@ -578,7 +598,7 @@ void Command::handleMODE(Client &sender, Server &server)
 
         case 'l':
         {
-            if (this->params.size() < 3 || this->params[2].empty())
+            if (this->params.size() < 2 || this->params[2].empty())
             {
                 std::string err = ":ircserver " +
                     intToString(ERR_NEEDMOREPARAMS) + " " +
@@ -588,11 +608,10 @@ void Command::handleMODE(Client &sender, Server &server)
                 sendResponse(sender.getFd(), err);
                 return;
             }
-
             channel->handleLimitMode(
-                sender,
-                modeChanges,
-                this->params[2][0]);
+            sender,
+            modeChanges,
+            this->params[2][0]);
             break;
         }
 
