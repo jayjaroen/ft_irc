@@ -893,6 +893,14 @@ void Command::handleTOPIC(Client &sender, Server &server)
         std::cout << "Client FD " << sender.getFd() << " attempted to set topic without operator privileges." << std::endl;
         return;
     }
+    else if (mode == true && target_channel->isOperator(sender.getFd()) == true)
+    {
+        target_channel->setTopic(newTopic, sender.getName()); // Set the new topic with the name of the user who set it
+        target_channel->broadcast(&sender, ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n");
+        std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n";
+        sendResponse(sender.getFd(), topicMsg);
+        std::cout << "Client FD " << sender.getFd() << " set topic for channel " << channelName << " to: " << newTopic << std::endl;
+    }
     else if  (mode == false)
     {
         target_channel->setTopic(newTopic, sender.getName()); // Set the new topic with the name of the user who set it
