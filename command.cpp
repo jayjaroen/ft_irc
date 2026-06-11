@@ -75,11 +75,15 @@ void Command::execute_command(Server &server, Client &sender)
                 return; 
             // std::cout << "Executing PASS..." << std::endl;
             handlePass(sender, server);
+            if (sender.isCapNegotiating() == false)
+                sendWelcomeMessage(server, sender);
             break;
         case NICK:
             if (sender.isCapNegotiating() && cmdType != CAP)
                 return; 
             handleNick(sender, server);
+            if (sender.isCapNegotiating() == false)
+                sendWelcomeMessage(server, sender);
             // std::cout << "Executing NICK..." << std::endl;
             break;
         case JOIN:
@@ -137,23 +141,12 @@ void Command::execute_command(Server &server, Client &sender)
             // std::cout << "Command " << this->params[0][0] << " not implementes" << std::endl;
             break;
     }
-    if (sender.isNickSet() == true && sender.isUserSet() == true && sender.isPassSet() == true && sender.isAuthenticated() == false)
-    {
-        if (sender.isCapNegotiating() == false)
-        {
-            sender.setAuthenticated(true);
-            std::cout << "Client FD " << sender.getFd() << " has successfully registered." << std::endl;
-            if (sender.getName().empty())
-                sender.setNick("user" + intToString(sender.getFd()));
-            sendWelcomeMessage(server, sender);
-        }
-    }
     if (this->type == 0)
     {
     //     // std::string err = ":ircserver" + std::to_string(UNKNOWN_CMD) + " " + sender.getNick() + " :Unknown command\r\n";
     //     // sendResponse(sender.getFd(), err);
     //     // std::cout << "Unknown command from client fd " << sender.getFd() << ": " << err << std::endl;
-        return;
+        return;                                                                                                                                         
     }
 }
 
@@ -166,38 +159,46 @@ void Command::handleNick(Client &sender, Server &server)
         sendResponse(sender.getFd(), err);
         return;
     }
+
     std::string newNick = this->params[0][0];
+    bool isIrssiBug = false;
+
+
     if (newNick.find("already") != std::string::npos || newNick.find("use") != std::string::npos)
-        newNick = this->params[0][0];
-    if (server.findClient(newNick) != NULL && server.findClient(newNick)->getFd() != sender.getFd())
     {
-        if (!sender.isAuthenticated())
-        {
-            newNick = newNick + "_" + intToString(sender.getFd());
-        }
-        else 
-        {
-            std::string err = ":ircserver " + intToString(ERR_NICKNAMEINUSE) + " " + newNick + " :Nickname is already in use\r\n";
-            sendResponse(sender.getFd(), err);
-            return;
-        }
+
+        newNick = "codespace_" + intToString(sender.getFd());
+        isIrssiBug = true; 
     }
+
+
     while (!newNick.empty() && (newNick[newNick.length() - 1] == '\r' || newNick[newNick.length() - 1] == '\n' || newNick[newNick.length() - 1] == ' ')) {
         newNick.erase(newNick.length() - 1, 1);
     }
-    if ((sender.isNickSet() && sender.getName() == newNick) || server.findClient(newNick) != NULL)
+
+
+    if (server.findClient(newNick) != NULL && server.findClient(newNick)->getFd() != sender.getFd())
     {
-        std::string err = ":ircserver " + intToString(ERR_NICKNAMEINUSE) + " " + newNick + " :Nickname is already in use\r\n";
-        sendResponse(sender.getFd(), err);
-        if (!sender.isAuthenticated()) {
-            sender.setUserSet(false); 
+        if (!isIrssiBug)
+        {
+            std::string current_nick = sender.getName().empty() ? "*" : sender.getName();
+            std::string err = ":ircserver " + intToString(ERR_NICKNAMEINUSE) + " " + current_nick + " " + newNick + " :Nickname is already in use\r\n";
+            sendResponse(sender.getFd(), err);
+            
+            if (!sender.isAuthenticated()) {
+                sender.setUserSet(false); 
+            }
+            return;
         }
-        return;
+        else {
+            newNick += "_";
+        }
     }
-    if (this->params[0][0][0] == '#' || this->params[0][0][0] == '&' || this->params[0][0][0] == '!' || this->params[0][0][0] == '+'
-        || this->params[0][0][0] == '@' || this->params[0][0][0] == ':'  || this->params[0][0][0] == ' '
-        || newNick.find(' ') != std::string::npos || newNick.find('\t') != std::string::npos || newNick.find('\r') != std::string::npos || newNick.find('\n') != std::string::npos
-        || (this->params[0][0][0] >= '0' && this->params[0][0][0] <= '9') || this->params.size() > 1)
+    if (newNick.empty() || newNick[0] == '#' || newNick[0] == '&' || newNick[0] == '!' || newNick[0] == '+'
+        || newNick[0] == '@' || newNick[0] == ':'  || newNick[0] == ' '
+        || newNick.find(' ') != std::string::npos || newNick.find('\t') != std::string::npos 
+        || newNick.find('\r') != std::string::npos || newNick.find('\n') != std::string::npos
+        || (newNick[0] >= '0' && newNick[0] <= '9'))
     {
         std::string err = ":ircserver " + intToString(ERR_ERRONEUSNICKNAME) + " " + newNick + " :Erroneous nickname\r\n";
         sendResponse(sender.getFd(), err);
@@ -207,10 +208,86 @@ void Command::handleNick(Client &sender, Server &server)
         }
         return;
     }
+
+    // std::string oldNick = sender.getName().empty() ? "*" : sender.getName();
+    
     sender.setNick(newNick);
     sender.setNickSet(true);
-    std::cout << "Client FD " << sender.getFd() << " changed nick to " << newNick << std::endl;
+    std::cout << "Client FD " << sender.getFd() << " successfully set nick to " << newNick << std::endl;
+
+    // if (oldNick != newNick)
+    // {
+    //     std::string nick_change_msg = ":" + oldNick + " NICK " + newNick + "\r\n";
+    //     sendResponse(sender.getFd(), nick_change_msg);
+    // }
+    // if (!sender.isAuthenticated() && sender.isPassSet() && sender.isNickSet() && sender.isUserSet() && !sender.isCapNegotiating())
+    // {
+    //     sender.setAuthenticated(true);
+    //     sendWelcomeMessage(server, sender);
+    // }
 }
+
+// void Command::handleNick(Client &sender, Server &server)
+// {
+//     if (this->params.empty() || this->params[0].empty() || this->params[0][0] == "")
+//     {
+//         std::string current_nick = sender.getName().empty() ? "unknown" : sender.getName();
+//         std::string err = ":ircserver " + intToString(ERR_NONICKNAMEGIVEN) + " " + current_nick + " :No nickname given\r\n";
+//         sendResponse(sender.getFd(), err);
+//         return;
+//     }
+//     std::string newNick = this->params[0][0];
+//     if (newNick.find("already") != std::string::npos || newNick.find("use") != std::string::npos)
+//         newNick = this->params[0][0];
+//     if (server.findClient(newNick) != NULL)
+//     {
+//         std::string current_nick = sender.getName().empty() ? "*" : sender.getName();
+
+//         std::string err = ":ircserver " + intToString(ERR_NICKNAMEINUSE) + " " + current_nick + " :Nickname is already in use\r\n";
+//         sendResponse(sender.getFd(), err);
+//             if (!sender.isAuthenticated()) {
+//                 sender.setUserSet(false); 
+//             }
+//         // if (!sender.isAuthenticated())
+//         // {_
+//         //     newNick = newNick + "_" + intToString(sender.getFd());
+//         // }
+//         // else 
+//         // {
+//         //     std::string err = ":ircserver " + intToString(ERR_NICKNAMEINUSE) + " " + newNick + " :Nickname is already in use\r\n";
+//         //     sendResponse(sender.getFd(), err);
+//         //     return;
+//         // }
+//     }
+//     // while (!newNick.empty() && (newNick[newNick.length() - 1] == '\r' || newNick[newNick.length() - 1] == '\n' || newNick[newNick.length() - 1] == ' ')) {
+//     //     newNick.erase(newNick.length() - 1, 1);
+//     // }
+//     // if ((sender.isNickSet() && sender.getName() == newNick) || server.findClient(newNick) != NULL)
+//     // {
+//     //     std::string err = ":ircserver " + intToString(ERR_NICKNAMEINUSE) + " " + newNick + " :Nickname is already in use\r\n";
+//     //     sendResponse(sender.getFd(), err);
+//     //     if (!sender.isAuthenticated()) {
+//     //         sender.setUserSet(false); 
+//     //     }
+//     //     return;
+//     // }
+//     if (this->params[0][0][0] == '#' || this->params[0][0][0] == '&' || this->params[0][0][0] == '!' || this->params[0][0][0] == '+'
+//         || this->params[0][0][0] == '@' || this->params[0][0][0] == ':'  || this->params[0][0][0] == ' '
+//         || newNick.find(' ') != std::string::npos || newNick.find('\t') != std::string::npos || newNick.find('\r') != std::string::npos || newNick.find('\n') != std::string::npos
+//         || (this->params[0][0][0] >= '0' && this->params[0][0][0] <= '9') || this->params.size() > 1)
+//     {
+//         std::string err = ":ircserver " + intToString(ERR_ERRONEUSNICKNAME) + " " + newNick + " :Erroneous nickname\r\n";
+//         sendResponse(sender.getFd(), err);
+//         if (!sender.isAuthenticated()) {
+//             sender.setUserSet(false);
+//             sender.setNickSet(false);
+//         }
+//         return;
+//     }
+//     sender.setNick(newNick);
+//     sender.setNickSet(true);
+//     std::cout << "Client FD " << sender.getFd() << " changed nick to " << newNick << std::endl;
+// }
 
 void Command::handlePass(Client &sender, Server &server)
 {
