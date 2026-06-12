@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/06/12 11:12:42 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/06/12 13:10:17 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -213,8 +213,21 @@ void Command::handleNick(Client &sender, Server &server)
     std::cout << "Client FD " << sender.getFd() << " successfully set nick to " << newNick << std::endl;
 
 
-    if (sender.isAuthenticated() && !oldNick.empty() && oldNick != newNick)
-        std::string nick_change_msg = ":" + oldNick + " NICK " + newNick + "\r\n";
+
+	if (sender.isAuthenticated() && !oldNick.empty() && oldNick != newNick)
+    {
+        // 1. ปั้นสตริงเต็มยศบอกสถานะการเปลี่ยนชื่อ: :OldNick!User@Host NICK :NewNick
+        std::string nick_change_msg = ":" + oldNick + "!" + sender.getUsername() + "@127.0.0.1 NICK :" + newNick + "\r\n";
+        sendResponse(sender.getFd(), nick_change_msg);
+        
+   
+        std::vector<Channel*> my_channels = sender.getChannels();
+        for (size_t i = 0; i < my_channels.size(); ++i)
+        {
+            // สั่งให้ห้องนั้น ๆ บอร์ดแคสต์สาดข้อความแจ้งข่าวบอกเพื่อนร่วมห้องทุกคนทันที!
+            my_channels[i]->broadcast(&sender, nick_change_msg);
+        }
+    }
 }
 
 void Command::handlePass(Client &sender, Server &server)
