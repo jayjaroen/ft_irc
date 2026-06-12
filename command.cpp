@@ -480,8 +480,9 @@ void    Command::handlePart(Server &server, Client &sender)
     sendResponse(sender.getFd(), message);
     channel->removeClient(&sender);
     channel->removeOperator(&sender);
+    channel->removeOperator(sender.getFd());
     std::cout << "Remaining operators size: " << channel->get_operators_size() << std::endl;
-    if (channel->get_operators_size() == 1
+    if (channel->get_operators_size() == 0
         && channel->getChannelSize() > 0)
     {
         Client* new_admin = channel->getClients()[0];
