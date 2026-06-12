@@ -45,6 +45,7 @@ class Client
         int getFd() const;
         int getPort() const;
         std::string getName() const;
+		std::string getUsername() const;
         void    setUsername(const std::string &username);
         bool    setAuthenticated(bool auth);
         bool    setNickSet(bool isset);

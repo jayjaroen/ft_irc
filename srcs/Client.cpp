@@ -181,3 +181,8 @@ int Client::getLimitChan() const
 {
     return _limitChannel;
 }
+
+std::string Client::getUsername() const
+{
+	return _username;
+}

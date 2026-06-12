@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/06/11 21:27:21 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/06/12 11:12:42 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -407,9 +407,12 @@ void Command::handleJOIN(Server &server, Client &sender)
         key = this->params[1][0];
     std::cout << "Channel name is: " << "\"" << channel_name << "\"" << " key is " << "\"" << key << "\"" << std::endl;
     server.findOrCreateChannel(channel_name, key, &sender);
+	std::string join_announce = ":" + sender.getName() + "!" + sender.getUsername() + "@127.0.0.1 JOIN :" + channel_name + "\r\n";
     // RPL_TOPIC, RPL_TOPICWHOTIME, RPL_NAMREPLY, RPL_ENDOFNAMES
     // RPL_TOPIC :ircserver 332 <nick> <channel> :<topic>
     std::string topic = server.findChannel(channel_name)->getTopic();
+	sendResponse(sender.getFd(), join_announce);
+	server.findChannel(channel_name)->broadcast(&sender, join_announce);
     if (!topic.empty())
     {
         std::string topic_msg = ":ircserver " + intToString(RPL_TOPIC) + " " + sender.getName() + " " + channel_name + " :" + topic + "\r\n";
@@ -459,7 +462,7 @@ void    Command::handlePart(Server &server, Client &sender)
         std::cout << "Client does not belong to the channgetCreationDateel " << channel_name << std::endl;
         return;
     }
-    std::string message = ":" + sender.getName() + " PART " + channel_name + "\r\n";
+    std::string message = ":" + sender.getName() + "!" + sender.getUsername() + "@127.0.0.1 PART " + channel_name + "\r\n";
     channel->broadcast(&sender, message);
     sendResponse(sender.getFd(), message);
     channel->removeClient(&sender);
@@ -504,34 +507,23 @@ void Command::handleMODE(Client &sender, Server &server)
         sendResponse(sender.getFd(), err);
         return;
     }
-    if (channel->isOperator(sender.getFd()) == false)
-    {
-        std::string err = ":ircserver " +
-            intToString(ERR_CHANOPRIVSNEEDED) + " " +
-            sender.getName() + " " +
-            modeTarget +
-            " :You're not channel operator\r\n";
-
-        sendResponse(sender.getFd(), err);
-        return;
-    }
-
+	
     // MODE #channel
     if (this->params.size() < 2 || this->params[1].empty())
     {
-        std::string servername = "ircserver";
+		std::string servername = "ircserver";
         std::string nick = sender.getName();
         std::string modestring = "+";
         std::string mode_args = "";
-
+		
         if (channel->isInviteOnly())
-            modestring += "i";
+		modestring += "i";
         if (channel->getKey() != "")
-            modestring += "k";
+		modestring += "k";
         if (channel->getLimit() > 0)
-            modestring += "l";
+		modestring += "l";
         if (channel->getTopic() != "") // getTopice in boolean not string
-            modestring += "t";
+		modestring += "t";
         std::string rpl_mode_324 = ":ircserver " + intToString(RPL_CHANNELMODEIS) + " " + nick + " " + channel->getName() + " :" + modestring + mode_args + "\r\n";
         sendResponse(sender.getFd(), rpl_mode_324);
         std::string time = channel->getCreationTimestr();
@@ -539,6 +531,17 @@ void Command::handleMODE(Client &sender, Server &server)
         sendResponse(sender.getFd(), rpl_mode_329);
         return;
     }
+	if (channel->isOperator(sender.getFd()) == false)
+	{
+		std::string err = ":ircserver " +
+			intToString(ERR_CHANOPRIVSNEEDED) + " " +
+			sender.getName() + " " +
+			modeTarget +
+			" :You're not channel operator\r\n";
+
+		sendResponse(sender.getFd(), err);
+		return;
+	}
 
     std::string modeChanges = this->params[1][0];
 
@@ -610,7 +613,7 @@ void Command::handleMODE(Client &sender, Server &server)
                 sendResponse(sender.getFd(), err);
                 return;
             }
-            if (isnumeric(this->params[2][0]) == false)
+            if (modeChanges[0] == '+' && isnumeric(this->params[2][0]) == false)
             {
                 std::cout << "Invalid limit parameter: " << this->params[2][0] << " from " << sender.getName() << std::endl;
                 return;
