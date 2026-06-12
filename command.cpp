@@ -601,20 +601,19 @@ void Command::handleMODE(Client &sender, Server &server)
 
         case 'l':
         {
-            if (this->params.size() < 2 || this->params[2].empty())
+            if ((this->params.size() < 2 && modeChanges[0] == '-') || (this->params.size() < 3 && modeChanges[0] == '+'))
             {
                 std::string err = ":ircserver " +
                     intToString(ERR_NEEDMOREPARAMS) + " " +
                     sender.getName() +
                     " MODE :Not enough parameters\r\n";
-
                 sendResponse(sender.getFd(), err);
                 return;
             }
             channel->handleLimitMode(
-            sender,
-            modeChanges,
-            this->params[2][0]);
+                sender,
+                modeChanges,
+                this->params[2][0]);
             break;
         }
 
@@ -1174,4 +1173,14 @@ void sendWelcomeMessage(Server &server, Client &sender)
         
         sendResponse(sender.getFd(), welcomeMsg);
     }
+}
+
+bool isnumeric(const std::string& str)
+{
+    for (size_t i = 0; i < str.length(); ++i)
+    {
+        if (!std::isdigit(str[i]))
+            return false;
+    }
+    return true;
 }

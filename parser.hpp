@@ -229,5 +229,6 @@ enum NumRpl
 
 std::string intToString(int n);
 void sendWelcomeMessage(Server &server, Client &sender);
+bool isnumeric(const std::string& str);
 
 #endif
