@@ -73,6 +73,7 @@ class Channel
 		std::time_t				getCreationTime() const;
 		std::string				getCreationTimeStr_Topic() const;
 		std::time_t				getCreationTime_Topic() const;
+		size_t					get_operators_size() const;
 		// void					setExtMsg(bool flag);
 		
 		bool					checkKey(const std::string &key);

@@ -401,3 +401,8 @@ std::time_t	Channel::getCreationTime_Topic() const
 {
     return _creationTime;
 }
+
+size_t	Channel::get_operators_size() const
+{
+    return _operators.size();
+}

@@ -472,7 +472,7 @@ void    Command::handlePart(Server &server, Client &sender)
     {
         std::string err = ":ircserver " + intToString(ERR_NOTONCHANNEL) + " " + sender.getName() + " " + channel_name + " :You're not on that channel\r\n";
         sendResponse(sender.getFd(), err);
-        std::cout << "Client does not belong to the channgetCreationDateel " << channel_name << std::endl;
+        std::cout << "Client does not belong to the channel " << channel_name << std::endl;
         return;
     }
     std::string message = ":" + sender.getName() + "!" + sender.getUsername() + "@127.0.0.1 PART " + channel_name + "\r\n";
@@ -480,6 +480,19 @@ void    Command::handlePart(Server &server, Client &sender)
     sendResponse(sender.getFd(), message);
     channel->removeClient(&sender);
     channel->removeOperator(&sender);
+    std::cout << "Remaining operators size: " << channel->get_operators_size() << std::endl;
+    if (channel->get_operators_size() == 1
+        && channel->getChannelSize() > 0)
+    {
+        Client* new_admin = channel->getClients()[0];
+        std::string new_name = "@" + new_admin->getName();
+        channel->setAdmin(new_admin);
+        channel->addOperator(new_admin->getFd());
+        std::string admin_msg = ":ircserver " + intToString(RPL_YOUREOPER) + " " + new_admin->getName() + " :You are now the channel operator\r\n";
+        sendResponse(new_admin->getFd(), admin_msg);
+        channel->broadcastModeChange(*new_admin, "+o " + new_admin->getName());
+        std::cout << "New admin of channel " << channel_name << " is " << new_admin->getName() << std::endl;
+    }
     std::cout << sender.getName() << " left channel " << channel_name << std::endl;
     if (channel->isEmpty())
     {
@@ -607,7 +620,6 @@ void Command::handleMODE(Client &sender, Server &server)
                 sendResponse(sender.getFd(), err);
                 return;
             }
-
             channel->handleKeyMode(
                 sender,
                 modeChanges,
