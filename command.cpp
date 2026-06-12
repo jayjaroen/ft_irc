@@ -3,10 +3,11 @@
 /*                                                        :::      ::::::::   */
 /*   command.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
+/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
 /*   Updated: 2026/06/12 18:35:05 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/06/12 23:43:46 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -456,7 +457,7 @@ void    Command::handlePart(Server &server, Client &sender)
     {
         std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() +
             "PART :Not enough parameters\r\n";
-        
+         
         sendResponse(sender.getFd(), err);
         return;
     }
@@ -480,7 +481,6 @@ void    Command::handlePart(Server &server, Client &sender)
     sendResponse(sender.getFd(), message);
     channel->removeClient(&sender);
     channel->removeOperator(&sender);
-    channel->removeOperator(sender.getFd());
     sender.removechannel_from_client(channel);
     // std::cout << "Remaining operators size: " << channel->get_operators_size() << std::endl;
     if (channel->get_operators_size() == 0
@@ -694,74 +694,6 @@ void Command::handleMODE(Client &sender, Server &server)
         }
     }
 }
-
-// void Command::handleMODE(Client &sender, Server &server)
-// {
-//     std::string modeTarget = this->params[0][0]; // The target of the MODE command (channel or user)
-//     std::string modeChanges = this->params[1][0]; // The mode changes
-//     bool client_or_channel = (modeTarget[0] == '#'); // Determine if the target is a channel or a user based on the first character
-//     if (client_or_channel)
-//     {
-//         if (modeChanges.empty())
-//         {
-//             std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
-//             sendResponse(sender.getFd(), err);
-//             std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
-//             return;
-//         }
-//         if (modeChanges[0] != '+' && modeChanges[0] != '-')
-//         {
-//             std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[0] + " :Unknown MODE flag\r\n";
-//             sendResponse(sender.getFd(), err);
-//             std::cout << "Client FD " << sender.getFd() << " attempted to change modes with invalid mode string: " << modeChanges << std::endl;
-//             return;
-//         }
-//         // Handle channel mode changes
-//         Channel* channel = server.findChannel(modeTarget);
-//         if (channel)
-//         {
-//             switch (modeChanges[1]) // Example: Check the second character for specific mode flags
-//             {
-//                 case 'k': // Channel key
-//                     std::cout << "Handling channel key mode change for channel: " << modeTarget << std::endl;
-//                     channel->handleKeyMode(sender, modeChanges, this->params[2][0]); //third argument
-//                     break;
-//                 case 'l': // User limit
-//                     std::cout << "Handling user limit mode change for channel: " << modeTarget << std::endl;
-//                     channel->handleLimitMode(sender, modeChanges, this->params[2][0]);
-//                     break;
-//                 case 't': // restrictions of the TOPIC channel
-//                     std::cout << "Handling t channel mode change for channel: " << modeTarget << std::endl;
-//                     server.findChannel(modeTarget)->handleTopicMode(sender, modeChanges);
-//                     break;
-// 				case 'o': // operator given mode
-// 					std::cout << "Handling operator given mode change for channel: " << modeTarget << std::endl;
-//                     channel->handleOperatorMode(sender, modeChanges, this->params[2][0], server); //third argument is the nick of the user to be opped/deopped
-// 					break;
-// 				case 'i': // invite-only mode
-// 					std:: cout << "Handling Invite only channel mode change for channel: " << modeTarget << std::endl;
-//                     channel->handleInviteMode(sender, modeChanges);
-// 					break;
-//                 default:
-//                     std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
-//                     sendResponse(sender.getFd(), err);
-//                     std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
-//                     return;
-//             }
-//             // Here you would implement the logic to change the channel modes based on modeChanges
-//         }
-//         else
-//         {
-//             std::string err = ":ircserver " + intToString(ERR_NOSUCHCHANNEL) + " " + sender.getName() + " " + modeTarget + " :No such channel\r\n";
-//             sendResponse(sender.getFd(), err);
-//             std::cout << "Client FD " << sender.getFd() << " attempted to change modes for non-existent channel: " << modeTarget << std::endl;
-//         }
-//     }
-//     else
-// 		return ;
-// }
-
-// These are function not testing yet, so I will implement them later after I finish the main functions of the server and client
 
 void Command::handleHELP(Client &sender, Server &server)
 {
@@ -1023,12 +955,6 @@ void Command::handleCAP(Client &sender, Server &server)
             else
                 sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() + " LS multi-prefix\r\n");
             break;
-        case LIST:
-            // if (sender.hasMultiPrefixEnabled() == true) // add more function in client to get enable cap feature R+ P'Jay
-            //     sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() + " LIST :multi-prefix\r\n");
-            // else
-            //     sendResponse(sender.getFd(), ":ircserver CAP " + sender.getName() + " LIST :\r\n");
-            // break;
         case REQ:
         {
             bool has_multi_prefix = false;
@@ -1108,9 +1034,15 @@ void Command::handleINVITE(Client &sender, Server &server)
     }
     if (!targetChannel->hasClient(&sender))
     {
-        std::string err = ":ircserver 442 " + sender.getName() + " " + channelName + " :You're not on that channel\r\n";
+        std::string err = ":ircserver " + intToString(ERR_NOTONCHANNEL) + " " + sender.getName() + " " + channelName + " :You're not on that channel\r\n";
         sendResponse(sender.getFd(), err);
         // std::cout << "Client FD " << sender.getFd() << " attempted to invite user to channel they are not part of: " << channelName << std::endl;
+        return;
+    }
+    if (targetChannel->isInviteOnly() && !targetChannel->isOperator(sender.getFd()))
+    {
+        std::string err = ":ircserver " + intToString(ERR_CHANOPRIVSNEEDED) + " " + sender.getName() + " " + channelName + " :You're not channel operator\r\n";
+        sendResponse(sender.getFd(), err);
         return;
     }
     if (targetChannel->hasClient(targetClient))
@@ -1120,8 +1052,11 @@ void Command::handleINVITE(Client &sender, Server &server)
         // std::cout << "Client FD " << sender.getFd() << " attempted to invite user who is already on the channel: " << targetNick << " to channel: " << channelName << std::endl;
         return;
     }
+    if (targetChannel->isInviteOnly())
+        targetChannel->addInviteClient(targetClient);
+    
     std::string inviteMsg = ":ircserver " + intToString(RPL_INVITING) + " " + sender.getName() + " " + targetNick + " :" + channelName + "\r\n";
-    targetChannel->removeClient(targetClient); // remove the client from the channel's invite list if they were previously invited
+    // targetChannel->removeClient(targetClient); // remove the client from the channel's invite list if they were previously invited
     sendResponse(targetClient->getFd(), inviteMsg);
     // std::cout << sender.getName() << " invited " << targetNick << " to join channel " << channelName << std::endl;
 }
