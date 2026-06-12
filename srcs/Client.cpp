@@ -186,3 +186,15 @@ std::string Client::getUsername() const
 {
 	return _username;
 }
+
+void Client::removechannel_from_client(Channel *channel)
+{
+    for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); it++)
+    {
+        if (*it == channel)
+        {
+            _channels.erase(it);
+            return;
+        }
+    }
+}

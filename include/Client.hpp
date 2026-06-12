@@ -77,7 +77,7 @@ class Client
 
         int     getNumChan() const;
         int     getLimitChan() const;
-
+        void    removechannel_from_client(Channel *channel);
 };
 
 

@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/06/12 18:19:31 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/06/12 18:35:05 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -481,6 +481,7 @@ void    Command::handlePart(Server &server, Client &sender)
     channel->removeClient(&sender);
     channel->removeOperator(&sender);
     channel->removeOperator(sender.getFd());
+    sender.removechannel_from_client(channel);
     // std::cout << "Remaining operators size: " << channel->get_operators_size() << std::endl;
     if (channel->get_operators_size() == 0
         && channel->getChannelSize() > 0)
@@ -1185,6 +1186,7 @@ void Command::handleKICK(Client &sender, Server &server)
     std::string kickMsg = ":ircserver KICK " + channelName + " " + targetNick + " :Kicked by " + sender.getName() + "\r\n";
     targetChannel->broadcast(targetClient, kickMsg); // Notify the channel that the user has been kicked
     targetChannel->removeClient(targetClient); // Remove the client from the channel
+    targetClient->removechannel_from_client(targetChannel);
     // std::cout << sender.getName() << " kicked " << targetNick << " from channel " << channelName << std::endl;
     if (targetChannel->isEmpty())
     {
