@@ -415,7 +415,7 @@ void Command::handleJOIN(Server &server, Client &sender)
         std::string topic_msg = ":ircserver " + intToString(RPL_TOPIC) + " " + sender.getName() + " " + channel_name + " :" + topic + "\r\n";
         sendResponse(sender.getFd(), topic_msg);
         std::string setter = server.findChannel(channel_name)->getsetter_topic();
-        std::string topic_time_msg = ":ircserver " + intToString(RPL_TOPICWHOTIME) + " " + sender.getName() + " " + channel_name + " " + setter + " :Topic set time\r\n";
+        std::string topic_time_msg = ":ircserver " + intToString(RPL_TOPICWHOTIME) + " " + sender.getName() + " " + channel_name + " " + setter + " :Topic set time" + server.findChannel(channel_name)->getCreationTimeStr_Topic() + "\r\n";
         sendResponse(sender.getFd(), topic_time_msg);
     }
     std::string names_msg = ":ircserver " + intToString(RPL_NAMREPLY) + " " + sender.getName() + " = " + channel_name + " :";
@@ -456,7 +456,7 @@ void    Command::handlePart(Server &server, Client &sender)
     {
         std::string err = ":ircserver " + intToString(ERR_NOTONCHANNEL) + " " + sender.getName() + " " + channel_name + " :You're not on that channel\r\n";
         sendResponse(sender.getFd(), err);
-        std::cout << "Client does not belong to the channel " << channel_name << std::endl;
+        std::cout << "Client does not belong to the channgetCreationDateel " << channel_name << std::endl;
         return;
     }
     std::string message = ":" + sender.getName() + " PART " + channel_name + "\r\n";
@@ -532,8 +532,11 @@ void Command::handleMODE(Client &sender, Server &server)
             modestring += "l";
         if (channel->getTopic() != "") // getTopice in boolean not string
             modestring += "t";
-        std::string rpl_mode = ":ircserver " + intToString(RPL_CHANNELMODEIS) + " " + nick + " " + channel->getName() + " :" + modestring + mode_args + "\r\n";
-        sendResponse(sender.getFd(), rpl_mode);
+        std::string rpl_mode_324 = ":ircserver " + intToString(RPL_CHANNELMODEIS) + " " + nick + " " + channel->getName() + " :" + modestring + mode_args + "\r\n";
+        sendResponse(sender.getFd(), rpl_mode_324);
+        std::string time = channel->getCreationTimestr();
+        std::string rpl_mode_329 = ":ircserver " + intToString(RPL_CREATIONTIME) + " " + nick + " " + channel->getName() + " " + time + "\r\n";
+        sendResponse(sender.getFd(), rpl_mode_329);
         return;
     }
 
@@ -894,6 +897,9 @@ void Command::handleTOPIC(Client &sender, Server &server)
 			std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + topic + "\r\n";
 			sendResponse(sender.getFd(), topicMsg);
 			std::cout << "Client FD " << sender.getFd() << " requested topic for channel " << channelName << ". Current topic: " << topic << std::endl;
+            std::string setter = target_channel->getsetter_topic();
+            std::string topic_time_msg = ":ircserver 333 " + sender.getName() + " " + channelName + " " + setter + " :Topic set time" + target_channel->getCreationTimeStr_Topic() + "\r\n";
+            sendResponse(sender.getFd(), topic_time_msg);
 		}
 		else
 		{

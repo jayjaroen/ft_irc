@@ -15,6 +15,8 @@
 # include "Client.hpp"
 # include "Server.hpp"
 
+# include <ctime> 
+
 class Client;
 class Server;
 
@@ -27,6 +29,8 @@ class Channel
 		Client*					_admin;
 		std::vector<Client *>	_clients;
 		std::vector<int>		_operators;
+		std::time_t				_creationTime;
+		std::time_t				_topicSetTime;
 
 		/* Channel modes*/
 		std::string				_key; //channel key, linked with k
@@ -65,6 +69,10 @@ class Channel
 		bool					isInviteOnly() const;
 		bool					isInvited(Client *client) const;
 		std::string 			getsetter_topic() const;
+		std::string				getCreationTimestr() const;
+		std::time_t				getCreationTime() const;
+		std::string				getCreationTimeStr_Topic() const;
+		std::time_t				getCreationTime_Topic() const;
 		// void					setExtMsg(bool flag);
 		
 		bool					checkKey(const std::string &key);

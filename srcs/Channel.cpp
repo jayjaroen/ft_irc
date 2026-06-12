@@ -19,7 +19,7 @@ Channel::Channel(const std::string &name, const std::string &key, Client *admin)
     :_name(name), _admin(admin), _key(key), _limit(0), _inviteOnly(false),
     _topicRestrict(false), _hasKey(false), _hasLimited(false)
 {
-    
+    _creationTime = std::time(NULL);
 }
 
 std::string		Channel::getName() const
@@ -326,6 +326,7 @@ void    Channel::handleOperatorMode(Client &sender, const std::string &modeChang
 void    Channel::setTopic(const std::string &topic, const std::string &setter)
 {
     _topic = topic;
+    _topicSetTime = std::time(NULL);
     _setter_topic = setter;
 }
 
@@ -372,4 +373,31 @@ std::string    Channel::getsetter_topic() const
 std::vector<Client *>	Channel::getClients()
 {
     return _clients;
+}
+
+std::string	Channel::getCreationTimestr() const
+{
+    char buffer[80];
+    std::tm *timeinfo = std::localtime(&_creationTime);
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
+    return std::string(buffer);
+}
+
+
+std::time_t	Channel::getCreationTime() const
+{
+    return _creationTime;
+}
+
+std::string	Channel::getCreationTimeStr_Topic() const
+{
+    char buffer[80];
+    std::tm *timeinfo = std::localtime(&_creationTime);
+    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
+    return std::string(buffer);
+}
+
+std::time_t	Channel::getCreationTime_Topic() const
+{
+    return _creationTime;
 }
