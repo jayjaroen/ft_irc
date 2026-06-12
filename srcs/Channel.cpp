@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:39 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/06/10 21:14:55 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/06/12 23:14:40 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,8 @@
 Channel::Channel(){}
 Channel::~Channel(){}
 
-Channel::Channel(const std::string &name, const std::string &key, Client *admin)
-    :_name(name), _admin(admin), _key(key), _limit(0), _inviteOnly(false),
+Channel::Channel(const std::string &name, const std::string &key, Client *client)
+    :_name(name), _admin(client), _key(key), _limit(0), _inviteOnly(false),
     _topicRestrict(false), _hasKey(false), _hasLimited(false)
 {
     
@@ -27,10 +27,10 @@ std::string		Channel::getName() const
     return _name;
 }
 
-Client*		Channel::getAdmin() const
-{
-    return _admin;
-}
+// Client*		Channel::getAdmin() const
+// {
+//     return _admin;
+// }
 
 std::string		Channel::getKey() const
 {
@@ -108,6 +108,11 @@ void	Channel::addClient(Client *client)
     // }
 }
 
+void    Channel::addInviteClient(Client *client)
+{
+    _invited_clients.push_back(client);
+}
+
 bool    Channel::hasClient(Client *client) const
 {
     for (std::vector<Client*>::const_iterator it = _clients.begin(); it != _clients.end(); it++)
@@ -148,10 +153,30 @@ void    Channel::removeOperator(Client *client)
         if (!_clients.empty())
             _admin = _clients[0]; //reset admin 
     }
+    for (std::vector<int>::iterator it = _operators.begin(); it != _operators.end(); ++it)
+    {
+        if (*it == client->getFd())
+        {
+            _operators.erase(it);
+            return;
+        }
+    }
     //test
     if (_admin) //delete later
         std::cout << "The current admin is " << _admin->getName() << std::endl;
 }
+
+// void    Channel::removeOperator(int fd)
+// {
+//     for (std::vector<int>::iterator it = _operators.begin(); it != _operators.end(); ++it)
+//     {
+//         if (*it == fd)
+//         {
+//             _operators.erase(it);
+//             return;
+//         }
+//     }
+// }
 
 bool    Channel::isEmpty()
 {
@@ -160,12 +185,13 @@ bool    Channel::isEmpty()
 
 bool    Channel::isOperator(int fd)
 {
-    for (size_t i = 0; i < _operators.size(); i++)
-    {
-        if (_operators[i] == fd)
-            return true;
-    }
-    return false;
+    // for (size_t i = 0; i < _operators.size(); i++)
+    // {
+    //     if (_operators[i] == fd)
+    //         return true;
+    // }
+    // return false;
+    return _admin->getFd() == fd;
 }
 
 void    Channel::addOperator(int fd)
@@ -174,17 +200,6 @@ void    Channel::addOperator(int fd)
         _operators.push_back(fd);
 }
 
-void    Channel::removeOperator(int fd)
-{
-    for (std::vector<int>::iterator it = _operators.begin(); it != _operators.end(); ++it)
-    {
-        if (*it == fd)
-        {
-            _operators.erase(it);
-            return;
-        }
-    }
-}
 
 void    Channel::broadcastModeChange(Client &sender, const std::string &modeChanges)
 {
@@ -312,7 +327,7 @@ void    Channel::handleOperatorMode(Client &sender, const std::string &modeChang
     if (modeChanges[0] == '+')
         addOperator(target->getFd());
     else if (modeChanges[0] == '-')
-        removeOperator(target->getFd());
+        removeOperator(target);
     else
     {
         std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
@@ -356,7 +371,7 @@ bool    Channel::isInviteOnly() const
 
 bool    Channel::isInvited(Client *client) const
 {
-    for (std::vector<Client*>::const_iterator it = _clients.begin(); it != _clients.end(); it++)
+    for (std::vector<Client*>::const_iterator it = _invited_clients.begin(); it != _invited_clients.end(); it++)
     {
         if (*it == client)
             return true;

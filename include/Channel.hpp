@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:29 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/05/23 16:55:59 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/06/12 23:03:31 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@ class Channel
 		std::string				_setter_topic;
 		Client*					_admin;
 		std::vector<Client *>	_clients;
+		std::vector<Client*>	_invited_clients; //new
 		std::vector<int>		_operators;
 
 		/* Channel modes*/
@@ -43,11 +44,11 @@ class Channel
 		Channel(const Channel &other);
 	
 	public:
-		Channel(const std::string &name, const std::string &key, Client *admin);
+		Channel(const std::string &name, const std::string &key, Client *client);
 		~Channel();
 		
 		std::string				getName() const;
-		Client*					getAdmin() const;
+		// Client*					getAdmin() const;
 		std::string				getKey() const;
 		size_t					getLimit();
 		// bool					getExtMsg();
@@ -76,12 +77,13 @@ class Channel
 		void					addClient(Client *client);
 		void					removeClient(Client* client);
 		void					removeOperator(Client* client);
+		void					addInviteClient(Client *client);
 		//kick?
 		bool					hasClient(Client *client) const;
 		bool					isEmpty();
 		
 		void					addOperator(int fd);
-		void					removeOperator(int fd);
+		// void					removeOperator(int fd);
 		bool					isOperator(int fd);
 		bool					checkOperator(Client &client);
 		
