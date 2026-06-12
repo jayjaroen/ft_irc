@@ -610,6 +610,11 @@ void Command::handleMODE(Client &sender, Server &server)
                 sendResponse(sender.getFd(), err);
                 return;
             }
+            if (isnumeric(this->params[2][0]) == false)
+            {
+                std::cout << "Invalid limit parameter: " << this->params[2][0] << " from " << sender.getName() << std::endl;
+                return;
+            }
             channel->handleLimitMode(
                 sender,
                 modeChanges,
