@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: jjaroens <jjaroens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:29 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/06/12 23:03:31 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/06/13 15:06:55 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,30 +15,31 @@
 # include "Client.hpp"
 # include "Server.hpp"
 
+# include <ctime> 
+
 class Client;
 class Server;
 
 class Channel
 {
-    private:
+	private:
 		std::string				_name;
 		std::string				_topic;
 		std::string				_setter_topic;
-		Client*					_admin;
-		std::vector<Client *>	_clients;
+		std::vector<Client *>	_clients; // all client
 		std::vector<Client*>	_invited_clients; //new
-		std::vector<int>		_operators;
+		std::vector<int>		_operators; // grant +o
+		std::time_t				_creationTime;
+		std::time_t				_topicSetTime;
 
 		/* Channel modes*/
 		std::string				_key; //channel key, linked with k
 		size_t					_limit; //limit number of channel members, linked to l
-		// bool					_msgs; // yes/no to external msgs
-
+	
 		bool					_inviteOnly;
 		bool					_topicRestrict;
 		bool					_hasKey;
 		bool					_hasLimited;
-		// enum					_mode; //indicate the mode (such as k, l, t, o, i), default mode 
 		
 		Channel();
 		Channel(const Channel &other);
@@ -48,15 +49,12 @@ class Channel
 		~Channel();
 		
 		std::string				getName() const;
-		// Client*					getAdmin() const;
 		std::string				getKey() const;
 		size_t					getLimit();
-		// bool					getExtMsg();
 		size_t					getChannelSize();
 		std::vector<Client *>	getClients();
 
 		void					setKey(std::string key);
-		void					setAdmin(Client *admin);
 		void					setName(std::string name);
 		void					setLimit(size_t limit);
 		bool					getTopic_mode() const;
@@ -66,7 +64,11 @@ class Channel
 		bool					isInviteOnly() const;
 		bool					isInvited(Client *client) const;
 		std::string 			getsetter_topic() const;
-		// void					setExtMsg(bool flag);
+		std::string				getCreationTimestr() const;
+		std::time_t				getCreationTime() const;
+		std::string				getCreationTimeStr_Topic() const;
+		std::time_t				getCreationTime_Topic() const;
+		size_t					get_operators_size() const;
 		
 		bool					checkKey(const std::string &key);
 		/*Channel actions*/
@@ -83,12 +85,10 @@ class Channel
 		bool					isEmpty();
 		
 		void					addOperator(int fd);
-		// void					removeOperator(int fd);
 		bool					isOperator(int fd);
 		bool					checkOperator(Client &client);
+		bool					isAdmin(int fd);
 		
-		
-
 		// Handle modes	
 		void					handleInviteMode(Client &sender, const std::string &modeChanges);
 		void					handleTopicMode(Client &sender, const std::string &modeChanges);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: jjaroens <jjaroens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:39 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/06/12 23:14:40 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/06/13 14:36:07 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,25 +16,21 @@ Channel::Channel(){}
 Channel::~Channel(){}
 
 Channel::Channel(const std::string &name, const std::string &key, Client *client)
-    :_name(name), _admin(client), _key(key), _limit(0), _inviteOnly(false),
+    :_name(name), _key(key), _limit(0), _inviteOnly(false),
     _topicRestrict(false), _hasKey(false), _hasLimited(false)
 {
-    
+    _creationTime = std::time(NULL);
+	addOperator(client->getFd());
 }
 
 std::string		Channel::getName() const
 {
-    return _name;
+	return _name;
 }
-
-// Client*		Channel::getAdmin() const
-// {
-//     return _admin;
-// }
 
 std::string		Channel::getKey() const
 {
-    return _key;
+	return _key;
 }
 
 size_t	Channel::getLimit()
@@ -42,349 +38,337 @@ size_t	Channel::getLimit()
     return _limit;
 }
 
-// bool	Channel::getExtMsg()
-// {
-//     return _msgs;
-// }
 
 size_t	Channel::getChannelSize()
 {
-    return _clients.size();
+	return _clients.size();
 }
 
 void	Channel::setKey(std::string key)
 {
-    // if (key.empty())
-    //  _key.clear();
-    _key = key;
+	_key = key;
 }
 
 void	Channel::setLimit(size_t limit)
 {
-    _limit = limit;
+	_limit = limit;
 }
-
-// void	Channel::setExtMsg(bool flag)
-// {
-//     _msgs = flag;
-// }
 
 void	Channel::broadcast(Client *sender, const std::string &message)
 {
-    for (unsigned long i = 0; i < _clients.size(); i++)
-    {
-        Client* target = _clients[i];
-        if (target == sender)
-            continue;
-        send(target->getFd(), message.c_str(), message.size(), 0);
-    } 
+	for (unsigned long i = 0; i < _clients.size(); i++)
+	{
+		Client* target = _clients[i];
+		if (target == sender)
+			continue;
+		send(target->getFd(), message.c_str(), message.size(), 0);
+	} 
 }
-void    Channel::response(int fd, const std::string &msg)
+void	Channel::response(int fd, const std::string &msg)
 {
-    send(fd, msg.c_str(), msg.size(), 0);
+	send(fd, msg.c_str(), msg.size(), 0);
 }
 
-bool    Channel::checkKey(const std::string &key)
+bool	Channel::checkKey(const std::string &key)
 {
-    if (_key.empty())
-        return true;
-    return _key == key; //if the given key same as the set key
+	if (_key.empty())
+		return true;
+	return _key == key; //if the given key same as the set key
 }
 
 void	Channel::addClient(Client *client)
 {
 	if (!client)
-        return;
-    if (hasClient(client))
-        return;
-    _clients.push_back(client);
-    client->addChannel(this);
-    std::cout << "In addClient function, client fd: " << client->getFd() << std::endl;
-    // if (client->getNumChan() > client->getLimitChan())
-    // {
-    //     std::string err = ":ircserver " + intToString(ERR_TOOMANYCHANNELS) + " " + client->getName() + " " + ":You have joined too many channels\r\n";
-    //     send(client->getFd(), err.c_str(), err.size(), 0);
-    //     return;
-    // }
+		return;
+	if (hasClient(client))
+		return;
+	_clients.push_back(client);
+	client->addChannel(this);
 }
 
-void    Channel::addInviteClient(Client *client)
+void	Channel::addInviteClient(Client *client)
 {
-    _invited_clients.push_back(client);
+	_invited_clients.push_back(client);
 }
 
-bool    Channel::hasClient(Client *client) const
+bool	Channel::hasClient(Client *client) const
 {
-    for (std::vector<Client*>::const_iterator it = _clients.begin(); it != _clients.end(); it++)
-    {
-        if (*it == client)
-            return true;
-    }
-    return false;
+	for (std::vector<Client*>::const_iterator it = _clients.begin(); it != _clients.end(); it++)
+	{
+		if (*it == client)
+			return true;
+	}
+	return false;
 }
 
-void    Channel::setAdmin(Client *admin)
+
+void	Channel::setName(std::string name)
 {
-    _admin = admin;
+	_name = name;
 }
 
-void    Channel::setName(std::string name)
+void	Channel::removeClient(Client *client)
 {
-    _name = name;
+	for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
+	{
+		if (*it == client)
+		{
+			_clients.erase(it);
+			return;
+		}
+	}
 }
 
-void    Channel::removeClient(Client *client)
+void	Channel::removeOperator(Client *client)
 {
-    for (std::vector<Client*>::iterator it = _clients.begin(); it != _clients.end(); it++)
-    {
-        if (*it == client)
-        {
-            _clients.erase(it);
-            return;
-        }
-    }
+	for (std::vector<int>::iterator it = _operators.begin(); it != _operators.end(); ++it)
+	{
+		if (*it == client->getFd())
+		{
+			_operators.erase(it);
+			return;
+		}
+	}
 }
 
-void    Channel::removeOperator(Client *client)
+bool	Channel::isEmpty()
 {
-    if (_admin == client)
-    {
-        _admin = NULL;
-        if (!_clients.empty())
-            _admin = _clients[0]; //reset admin 
-    }
-    for (std::vector<int>::iterator it = _operators.begin(); it != _operators.end(); ++it)
-    {
-        if (*it == client->getFd())
-        {
-            _operators.erase(it);
-            return;
-        }
-    }
-    //test
-    if (_admin) //delete later
-        std::cout << "The current admin is " << _admin->getName() << std::endl;
+	return _clients.empty();
 }
 
-// void    Channel::removeOperator(int fd)
-// {
-//     for (std::vector<int>::iterator it = _operators.begin(); it != _operators.end(); ++it)
-//     {
-//         if (*it == fd)
-//         {
-//             _operators.erase(it);
-//             return;
-//         }
-//     }
-// }
-
-bool    Channel::isEmpty()
+bool	Channel::isOperator(int fd)
 {
-    return _clients.empty();
+	for (size_t i = 0; i < _operators.size(); i++)
+	{
+		if (_operators[i] == fd)
+			return true;
+	}
+	return false;
 }
 
-bool    Channel::isOperator(int fd)
+void	Channel::addOperator(int fd)
 {
-    // for (size_t i = 0; i < _operators.size(); i++)
-    // {
-    //     if (_operators[i] == fd)
-    //         return true;
-    // }
-    // return false;
-    return _admin->getFd() == fd;
-}
-
-void    Channel::addOperator(int fd)
-{
-    if (!isOperator(fd))
-        _operators.push_back(fd);
+	if (!isOperator(fd))
+		_operators.push_back(fd);
 }
 
 
 void    Channel::broadcastModeChange(Client &sender, const std::string &modeChanges)
 {
-    std::string msg = ":" + sender.getName() + " MODE " +
-                        _name + " " + modeChanges + "\r\n";
-    broadcast(&sender, msg); 
+	std::string msg = ":" + sender.getName() + " MODE " +
+						_name + " " + modeChanges + "\r\n";
+	broadcast(&sender, msg); 
 }
 
 bool    Channel::checkOperator(Client &client)
 {
-    if (!isOperator(client.getFd())) //can refactor the function
-    {
-        std::string err = 
-        ":ircserver 482 " + client.getName() +
-        " " + _name + " :You're not channel operator\r\n";
-        response(client.getFd(), err);
-        return false;
-    }
-    return true;
+	if (!isOperator(client.getFd()))
+	{
+		std::string err = 
+		":ircserver 482 " + client.getName() +
+		" " + _name + " :You're not channel operator\r\n";
+		response(client.getFd(), err);
+		return false;
+	}
+	return true;
 }
 
-void    Channel::handleInviteMode(Client &sender, const std::string &modeChanges)
+void	Channel::handleInviteMode(Client &sender, const std::string &modeChanges)
 {
-    if (!checkOperator(sender))
-        return;
-    if (modeChanges[0] == '+')//can't automatically, how to change after
-        _inviteOnly = true;
-    else
-        _inviteOnly = false;
-    broadcastModeChange(sender, modeChanges);
+	if (!checkOperator(sender))
+		return;
+	if (modeChanges[0] == '+')
+		_inviteOnly = true;
+	else
+		_inviteOnly = false;
+	broadcastModeChange(sender, modeChanges);
 }
 
-void    Channel::handleTopicMode(Client &sender, const std::string &modeChanges)
+void	Channel::handleTopicMode(Client &sender, const std::string &modeChanges)
 {
-    if (!checkOperator(sender))
-        return;
-    if (modeChanges[0] == '+')
-        _topicRestrict = true;
-    else
-        _topicRestrict = false;
-    broadcastModeChange(sender, modeChanges);
+	if (!checkOperator(sender))
+		return;
+	if (modeChanges[0] == '+')
+		_topicRestrict = true;
+	else
+		_topicRestrict = false;
+	broadcastModeChange(sender, modeChanges);
 }
 
 
-void    Channel::handleKeyMode(Client &sender, const std::string &modeChanges, const std::string &param)
+void	Channel::handleKeyMode(Client &sender, const std::string &modeChanges, const std::string &param)
 {
-    if (!checkOperator(sender))
-        return;
-    if (modeChanges[0] == '+')
-    {
-        if (param.empty())
-        {
-            std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
-            response(sender.getFd(), err);
-            std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
-            return;
-        }
-        _hasKey = true;
-        _key = param;
-    }
-    else if (modeChanges[0] == '-')
-    {
-        _hasKey = false;
-        _key.clear();
-    }
-    else
-    {
-        std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
-        response(sender.getFd(), err);
-        std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
-    }
-    broadcastModeChange(sender, modeChanges);
+	if (!checkOperator(sender))
+		return;
+	if (modeChanges[0] == '+')
+	{
+		if (param.empty())
+		{
+			std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
+			response(sender.getFd(), err);
+			std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
+			return;
+		}
+		_hasKey = true;
+		_key = param;
+	}
+	else if (modeChanges[0] == '-')
+	{
+		_hasKey = false;
+		_key.clear();
+	}
+	else
+	{
+		std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
+		response(sender.getFd(), err);
+		std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
+	}
+	broadcastModeChange(sender, modeChanges);
 }
 
-void    Channel::handleLimitMode(Client &sender, const std::string &modeChanges, const std::string &param)
+void	Channel::handleLimitMode(Client &sender, const std::string &modeChanges, const std::string &param)
 {
-    if (!checkOperator(sender))
-        return;
-    if (modeChanges[0] == '+')
-    {
-        if (param.empty())
-        {
-            std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
-            response(sender.getFd(), err);
-            std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
-            return;
-        }
-        _hasLimited = true;
-        _limit = std::atoi(param.c_str());
-    }
-    else if (modeChanges[0] == '-')
-    {
-        _hasLimited = false;
-        _limit = 0;
-    }
-    else
-    {
-        std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
-        response(sender.getFd(), err);
-        std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
-    }
-    broadcastModeChange(sender, modeChanges);
-    //Need to change the logic in JOIN
+	if (!checkOperator(sender))
+		return;
+	if (modeChanges[0] == '+')
+	{
+		if (param.empty())
+		{
+			std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
+			response(sender.getFd(), err);
+			std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
+			return;
+		}
+		_hasLimited = true;
+		_limit = std::atoi(param.c_str());
+	}
+	else if (modeChanges[0] == '-')
+	{
+		_hasLimited = false;
+		_limit = 0;
+	}
+	else
+	{
+		std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
+		response(sender.getFd(), err);
+		std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
+	}
+	broadcastModeChange(sender, modeChanges);
 }
 
-void    Channel::handleOperatorMode(Client &sender, const std::string &modeChanges, const std::string &nick, Server &server)
+void	Channel::handleOperatorMode(Client &sender, const std::string &modeChanges, const std::string &nick, Server &server)
 {
-    if (!checkOperator(sender))
-        return;
-    if (nick.empty())
-    {
-        std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
-        response(sender.getFd(), err);
-        std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
-        return;
-    }
-    Client* target = server.findClient(sender.getName());
-    if (!target)
-    {
-        std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " :No such nick\r\n";
-        response(sender.getFd(), err);
-        std::cout << "Client FD " << sender.getFd() << " attempted to change modes for non-existent user: " << std::endl;
-        return;
-    }
-    if (modeChanges[0] == '+')
-        addOperator(target->getFd());
-    else if (modeChanges[0] == '-')
-        removeOperator(target);
-    else
-    {
-        std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
-        response(sender.getFd(), err);
-        std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
-    }
-    broadcastModeChange(sender, modeChanges);
+	if (!checkOperator(sender))
+		return;
+	if (nick.empty())
+	{
+		std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
+		response(sender.getFd(), err);
+		std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
+		return;
+	}
+	Client* target = server.findClient(nick);
+	if (!target)
+	{
+		std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " :No such nick\r\n";
+		response(sender.getFd(), err);
+		std::cout << "Client FD " << sender.getFd() << " attempted to change modes for non-existent user: " << std::endl;
+		return;
+	}
+	if (modeChanges[0] == '+')
+		addOperator(target->getFd());
+	else if (modeChanges[0] == '-')
+		removeOperator(target);
+	else
+	{
+		std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
+		response(sender.getFd(), err);
+		std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
+	}
+	broadcastModeChange(sender, modeChanges);
 }
 
 
 void    Channel::setTopic(const std::string &topic, const std::string &setter)
 {
-    _topic = topic;
-    _setter_topic = setter;
+	_topic = topic;
+	_topicSetTime = std::time(NULL);
+	_setter_topic = setter;
 }
 
-std::string    Channel::getTopic() const
+std::string	Channel::getTopic() const
 {
-    return _topic;
-}
-
-
-bool    Channel::getTopic_mode() const
-{
-    if (_topicRestrict)
-        return true;
-    else
-        return false;
+	return _topic;
 }
 
 
-void    Channel::setInviteOnly(bool inviteOnly)
+bool	Channel::getTopic_mode() const
 {
-    _inviteOnly = inviteOnly;
+	if (_topicRestrict)
+		return true;
+	else
+		return false;
 }
 
-bool    Channel::isInviteOnly() const
+
+void	Channel::setInviteOnly(bool inviteOnly)
 {
-    return _inviteOnly;
+	_inviteOnly = inviteOnly;
 }
 
-bool    Channel::isInvited(Client *client) const
+bool	Channel::isInviteOnly() const
 {
-    for (std::vector<Client*>::const_iterator it = _invited_clients.begin(); it != _invited_clients.end(); it++)
-    {
-        if (*it == client)
-            return true;
-    }
-    return false;
+	return _inviteOnly;
 }
 
-std::string    Channel::getsetter_topic() const
+bool	Channel::isInvited(Client *client) const
 {
-    return _setter_topic;
+	for (std::vector<Client*>::const_iterator it = _invited_clients.begin(); it != _invited_clients.end(); it++)
+	{
+		if (*it == client)
+			return true;
+	}
+	return false;
+}
+
+std::string	Channel::getsetter_topic() const
+{
+	return _setter_topic;
 }
 
 std::vector<Client *>	Channel::getClients()
 {
-    return _clients;
+	return _clients;
+}
+
+std::string	Channel::getCreationTimestr() const
+{
+	char buffer[80];
+	std::tm *timeinfo = std::localtime(&_creationTime);
+	std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
+	return std::string(buffer);
+}
+
+
+std::time_t	Channel::getCreationTime() const
+{
+	return _creationTime;
+}
+
+std::string	Channel::getCreationTimeStr_Topic() const
+{
+	char buffer[80];
+	std::tm *timeinfo = std::localtime(&_creationTime);
+	std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
+	return std::string(buffer);
+}
+
+std::time_t	Channel::getCreationTime_Topic() const
+{
+	return _topicSetTime;
+}
+
+size_t	Channel::get_operators_size() const
+{
+	return _operators.size();
 }

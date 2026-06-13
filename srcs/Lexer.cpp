@@ -1,4 +1,17 @@
-#include "parser.hpp"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Lexer.cpp                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jjaroens <jjaroens@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/06/13 14:59:47 by jjaroens          #+#    #+#             */
+/*   Updated: 2026/06/13 14:59:48 by jjaroens         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+
+#include "./include/Parser.hpp"
 
 size_t	Command::lexer(const std::string &input, const std::string &icomm, std::vector<std::vector<std::string> > &output)
 {
