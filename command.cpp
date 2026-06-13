@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/06/13 09:12:57 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/06/13 12:44:40 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -1207,10 +1207,10 @@ void sendWelcomeMessage(Server &server, Client &sender)
 		// sender.setAuthenticated(true);
 		// std::cout << "Client FD " << sender.getFd() << " has successfully registered." << std::endl;
 		std::string clientNick = sender.getName();
-		std::string welcomeMsg = ":ircserver " + intToString(RPL_WELCOME) + " "+ clientNick + " :Welcome to the IRC server, " + clientNick + "!\r\n";
-		welcomeMsg += ":ircserver " + intToString(RPL_YOURHOST) + " " + clientNick + " :Your host is ircserver, running version 1.0\r\n";
-		welcomeMsg += ":ircserver " + intToString(RPL_CREATED) + " " + clientNick + " :This server was created on " + server.get_creation_date() + "\r\n";
-		welcomeMsg += ":ircserver " + intToString(RPL_MYINFO) + " " + clientNick + " ircserver 1.0 i tkolk\r\n";
+		std::string welcomeMsg = ":ircserver 00" + intToString(RPL_WELCOME) + " "+ clientNick + " :Welcome to the IRC server, " + clientNick + "!\r\n";
+		welcomeMsg += ":ircserver 00" + intToString(RPL_YOURHOST) + " " + clientNick + " :Your host is ircserver, running version 1.0\r\n";
+		welcomeMsg += ":ircserver 00" + intToString(RPL_CREATED) + " " + clientNick + " :This server was created on " + server.get_creation_date() + "\r\n";
+		welcomeMsg += ":ircserver 00" + intToString(RPL_MYINFO) + " " + clientNick + " ircserver 1.0 i tkolk\r\n";
 		
 		sendResponse(sender.getFd(), welcomeMsg);
 	}
