@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/13 15:03:41 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/06/13 15:05:48 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/06/13 16:12:49 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,17 +60,9 @@ Server& Server::operator=(Server const &other)
 
 bool Server::setNonBlocking(int fd)
 {
-	int flag = fcntl(fd, F_GETFL); //receive status
-	if (flag == -1)
+	if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1)
 		return false;
-	return (fcntl(fd, F_SETFL, flag | O_NONBLOCK) != -1);
-}
-
-void Server::setCloexec(int fd)
-{
-	int fd_flag = fcntl(fd, F_GETFD);
-	if (fd_flag != -1)
-		fcntl(fd, F_SETFD, fd_flag | FD_CLOEXEC);
+	return true;
 }
 
 int Server::openSocket()
@@ -96,7 +88,6 @@ int Server::openSocket()
 		_server_fd = -1;
 		return -1;
 	}
-	setCloexec(_server_fd);
 	return _server_fd;
 }
 
@@ -218,6 +209,7 @@ void Server::handleClientMessage(int client_fd)
 		// sending both server and client info
 	}
 }
+
 
 void    Server::deleteChannel(const std::string name)
 {

@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/06/13 15:07:27 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/06/13 15:07:48 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/06/13 16:12:21 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,6 @@ class Server
 		bool	start();
 		int		openSocket();
 		bool	setNonBlocking(int fd);
-		void	setCloexec(int fd);
 		bool	bindAndListen(int fd, int port, int backlog);
 		void	run();
 		std::string get_password() const;
