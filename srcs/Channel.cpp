@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:39 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/06/12 23:14:40 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/06/13 07:18:50 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -414,7 +414,7 @@ std::string	Channel::getCreationTimeStr_Topic() const
 
 std::time_t	Channel::getCreationTime_Topic() const
 {
-    return _creationTime;
+    return _topicSetTime;
 }
 
 size_t	Channel::get_operators_size() const

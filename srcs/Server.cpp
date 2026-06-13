@@ -117,46 +117,46 @@ void Server::disconnectClient(int client_fd)
 
 void Server::acceptNewClient()
 {
-    std::cout << "In accept new client function" << std::endl;
-    while (true)
-    {
-        struct sockaddr_in addr;
-        socklen_t len = sizeof(addr);
-        
-        int client_fd = accept(_server_fd, (struct sockaddr*)&addr, &len);
-        
-        if (client_fd < 0)
-        {
-            if (errno == EAGAIN || errno == EWOULDBLOCK)
-                break;
-            else
-            {
-                std::perror("accept");
-                break;
-            }
-        }
-        //extract client info
-        int port = ntohs(addr.sin_port);
-        std::string ip = inet_ntoa(addr.sin_addr);
-        std::cout << "New client: fd: " << client_fd
-                << " ip = " << ip
-                << " port = " << port << std::endl;
-        
-        if (!setNonBlocking(client_fd))
-        {
-            std::cerr << "Failed to set non-blocking" << std::endl;
-            close(client_fd);
-            continue;
-        }
-        pollfd p = {client_fd, POLLIN, 0}; //fd,events,revents
-        _fds.push_back(p);
-        _clients[client_fd] = new Client(client_fd, port, ip);
-    }
+	std::cout << "In accept new client function" << std::endl;
+	while (true)
+	{
+		struct sockaddr_in addr;
+		socklen_t len = sizeof(addr);
+		
+		int client_fd = accept(_server_fd, (struct sockaddr*)&addr, &len);
+		
+		if (client_fd < 0)
+		{
+			if (errno == EAGAIN || errno == EWOULDBLOCK)
+				break;
+			else
+			{
+				std::perror("accept");
+				break;
+			}
+		}
+		//extract client info
+		int port = ntohs(addr.sin_port);
+		std::string ip = inet_ntoa(addr.sin_addr);
+		std::cout << "New client: fd: " << client_fd
+				<< " ip = " << ip
+				<< " port = " << port << std::endl;
+		
+		if (!setNonBlocking(client_fd))
+		{
+			std::cerr << "Failed to set non-blocking" << std::endl;
+			close(client_fd);
+			continue;
+		}
+		pollfd p = {client_fd, POLLIN, 0}; //fd,events,revents
+		_fds.push_back(p);
+		_clients[client_fd] = new Client(client_fd, port, ip);
+	}
 }
 
 void Server::handleClientMessage(int client_fd)
 {
-    std::cout << "----In handle client function----" << std::endl;
+    // std::cout << "----In handle client function----" << std::endl;
     char buffer[512];
     memset(buffer, 0, sizeof(buffer));
     
@@ -179,7 +179,7 @@ void Server::handleClientMessage(int client_fd)
     {
         std::string message = buf.substr(0, pos);//extract msg
         buf.erase(0, pos + 2); //remove proceed msg from buffer
-        std::cout << "Received from client fd " << client_fd << " Client name " << client->getName() << ": [ " << message << " ]" << std::endl;
+        // std::cout << "Received from client fd " << client_fd << " Client name " << client->getName() << ": [ " << message << " ]" << std::endl;
         /// ****handle command function ****
         Command cmd;
         // cmd.msgparser(message, *this, *client);
@@ -230,7 +230,7 @@ Channel*	Server::findOrCreateChannel(const std::string &name, const std::string 
 	{
 		if (!channel->checkKey(key))
 		{
-			std::cout << "Wrong key to join channel: " << name << std::endl;
+			// std::cout << "Wrong key to join channel: " << name << std::endl;
 			return NULL;
 		}
         if (!channel->hasClient(client))
