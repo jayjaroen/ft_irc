@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 16:21:05 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/06/13 10:22:42 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/06/13 10:25:28 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,8 +18,8 @@ volatile sig_atomic_t server_signaled = 0;
 
 
 void signalHandler(int signum) {
-    (void)signum;
-    server_signaled = 1;
+	(void)signum;
+	server_signaled = 1;
 }
 
 int main(int argc, char **argv)
@@ -30,6 +30,7 @@ int main(int argc, char **argv)
         return 1;
     }
 	std::signal(SIGINT, signalHandler);
+	std::signal(SIGQUIT, signalHandler);
     //check error after
     int port = std::atoi(argv[1]);
     std::string password = argv[2];
