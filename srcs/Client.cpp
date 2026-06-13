@@ -10,7 +10,14 @@ Client::Client(int fd, int port, const std::string &ip): _fd(fd), _port(port),\
 
 Client::Client(){}
 
-Client::~Client(){}
+Client::~Client()
+{
+	// for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+	// {
+    //     delete _channels[it];
+    // }
+    // _channels.clear();
+}
 
 Client::Client(Client const &other)
 {

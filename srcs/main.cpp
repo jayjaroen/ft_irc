@@ -3,14 +3,24 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 16:21:05 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/04/17 14:42:06 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/06/13 10:22:42 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
+#include <csignal>
+
+
+volatile sig_atomic_t server_signaled = 0;
+
+
+void signalHandler(int signum) {
+    (void)signum;
+    server_signaled = 1;
+}
 
 int main(int argc, char **argv)
 {
@@ -19,6 +29,7 @@ int main(int argc, char **argv)
         std::cerr << "Usage: ./ircserv <port> <password>" << std::endl;
         return 1;
     }
+	std::signal(SIGINT, signalHandler);
     //check error after
     int port = std::atoi(argv[1]);
     std::string password = argv[2];

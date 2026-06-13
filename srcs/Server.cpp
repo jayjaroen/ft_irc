@@ -1,10 +1,21 @@
 
 #include "../include/Server.hpp"
+#include <csignal>
 // #include <cstdio>
+
+extern volatile sig_atomic_t server_signaled;
 
 Server::Server(){}
 
-Server::~Server(){}
+Server::~Server()
+{
+
+    // for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it) {
+    //     delete it->second; 
+    // }
+    // _clients.clear();
+
+}
 
 Server::Server(int port, std::string password)
 {
@@ -246,7 +257,7 @@ void Server::run()
 {
     pollfd server_fd = {_server_fd, POLLIN, 0};
     _fds.push_back(server_fd);
-    while (true)
+    while (server_signaled == 0)
     {
         int ret = poll(_fds.data(), _fds.size(), 1000);//number of fds have event
         if (ret < 0)
