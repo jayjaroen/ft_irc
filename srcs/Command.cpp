@@ -1,17 +1,17 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   command.cpp                                        :+:      :+:    :+:   */
+/*   Command.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
+/*   By: jjaroens <jjaroens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/06/13 12:44:40 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/06/13 14:59:02 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 
-#include "parser.hpp"
+#include "./include/Parser.hpp"
 #include <sys/socket.h>
 #include <unistd.h>
 #include <cstdio>
@@ -21,7 +21,6 @@ void sendResponse(int fd, const std::string &message)
 {
 	if (fd <= 0)
 		return;
-	// std::cout << "Sending to FD " << fd << ": " << message << std::endl;
 	ssize_t sent = send(fd, message.c_str(), message.length(), MSG_NOSIGNAL);
 	if (sent < 0)
 	{
@@ -32,27 +31,13 @@ void sendResponse(int fd, const std::string &message)
 
 void Command::execute_command(Server &server, Client &sender)
 {
-	///Debugging: Send a response to the client to confirm that the command is being processed
-	// bool pass_check = sender.isPassSet();
-	// bool nick_check = sender.isNickSet();
-	// bool user_check = sender.isUserSet();
-	// sendResponse(sender.getFd(), "Your status: PASS=" + std::to_string(pass_check) + ", NICK=" + std::to_string(nick_check) + ", USER=" + std::to_string(user_check) + "\r\n");
-	// std::cout << "Sending to FD: " << sender.getFd() << std::endl;
-	////////
 	size_t cmdType = this->type;
-
-	// std::cout << cmdType << std::endl;
-
-
-	// add after apply with connect pass etc. with server message
 	if (sender.isAuthenticated() == false)
 	{
-		// std::cout << sender.isAuthenticated() << std::endl;
 		if (cmdType != PASS && cmdType != NICK && cmdType != USER && cmdType != CAP)
 		{
 			std::string err = ":ircserver " + intToString(ERR_NOTREGISTERED) + " " + sender.getName() + " :You have not registered\r\n";
 			sendResponse(sender.getFd(), err);
-			// std::cout << "Client fd " << sender.getFd() << " attempted to execute command without registering: " << err << std::endl;
 			return ;
 		}
 	}
@@ -79,94 +64,17 @@ void Command::execute_command(Server &server, Client &sender)
 			sendResponse(sender.getFd(), pongResponse);
 			break;
 		}
-		default:      break;
+		default:
+			break;
 	}
-	// switch (cmdType)
-	// {
-	//     case CAP:
-	//         // std::cout << "Executing CAP..." << std::endl;
-	//         handleCAP(sender, server);
-	// 		if (!sender.isAuthenticated() && sender.isPassSet() && sender.isNickSet() && sender.isUserSet())
-	//         {
-	//             sender.setAuthenticated(true);
-	//             std::cout << "Client FD " << sender.getFd() << " successfully registered via CAP END trigger." << std::endl;
-	//             sendWelcomeMessage(server, sender);
-	//         }
-	//         break;
-	//     case USER:
-	//         // std::cout <<  "Executing USER..." << std::endl;
-	//         handleUSER(sender, server);
-	//         break;
-	//     case PASS:
-	//         // std::cout << "Executing PASS..." << std::endl;
-	//         handlePass(sender, server);
-	//         break;
-	//     case NICK:
-	//         handleNick(sender, server);
-	//         // std::cout << "Executing NICK..." << std::endl;
-	//         break;
-	//     case JOIN:
-	//         handleJOIN(server, sender);
-	//         break;
-	//     case PRIVMSG:
-	//         handlePRIVMSG(server,sender);
-	//         break;
-	//     case QUIT:
-	//         // std::cout << "Client quitting..." << std::endl;
-	//         handleQuit(sender, server);
-	//         break;
-	//     case MODE:
-	//         // std::cout << "Executing MODE..." << std::endl;
-	//         handleMODE(sender, server);
-	//         break;
-	//     case HELP:
-	//     {
-	//         handleHELP(sender, server);
-	//         break;
-	//     }
-	//     case PING:
-	//     {
-	//         if (this->params.empty() || this->params[0].empty()) return;
-	//         std::string token = this->params[0][0]; // ดึงสิ่งที่ Client ส่งมา (เช่น ชื่อเซิร์ฟเวอร์หรือเลขสุ่ม)
-	//         std::string pongResponse = ":ircserver PONG ircserver :" + token + "\r\n";
-	//         sendResponse(sender.getFd(), pongResponse);
-	//         break;
-	//     }
-	//     case PART:
-	//     {
-	//         handlePart(server, sender);
-	//         break;
-	//     }
-	//     case INVITE:
-	//     {
-	//         handleINVITE(sender, server);
-	//         break;
-	//     }
-	//     case KICK:
-	//     {
-	//         handleKICK(sender, server);
-	//         break;
-	//     }
-	//     case TOPIC:
-	//     {
-	//         handleTOPIC(sender, server);
-	//         break;
-	//     }
-	//     default:
-	//         // std::cout << "Command " << this->params[0][0] << " not implementes" << std::endl;
-	//         break;
-	// }
+	
 	if (sender.isPassSet() == true && sender.isNickSet() == true && sender.isUserSet() == true && sender.isAuthenticated() == false)
 	{
-		// std::cout << "--- SUCCESS: Client FD " << sender.getFd() << " registered properly! ---" << std::endl;
 		sendWelcomeMessage(server, sender);
 		sender.setAuthenticated(true);
 	}
 	if (this->type == 0)
 	{
-	//     // std::string err = ":ircserver" + std::to_string(UNKNOWN_CMD) + " " + sender.getNick() + " :Unknown command\r\n";
-	//     // sendResponse(sender.getFd(), err);
-	//     // std::cout << "Unknown command from client fd " << sender.getFd() << ": " << err << std::endl;
 		return;                                                                                                                                         
 	}
 
@@ -211,21 +119,15 @@ void Command::handleNick(Client &sender, Server &server)
 	std::string oldNick = sender.getName();
 	sender.setNick(newNick);
 	sender.setNickSet(true);
-	// std::cout << "Client FD " << sender.getFd() << " successfully set nick to " << newNick << std::endl;
-
-
 
 	if (sender.isAuthenticated() && !oldNick.empty() && oldNick != newNick)
 	{
-		// 1. ปั้นสตริงเต็มยศบอกสถานะการเปลี่ยนชื่อ: :OldNick!User@Host NICK :NewNick
 		std::string nick_change_msg = ":" + oldNick + "!" + sender.getUsername() + "@127.0.0.1 NICK :" + newNick + "\r\n";
 		sendResponse(sender.getFd(), nick_change_msg);
 		
-
 		std::vector<Channel*> my_channels = sender.getChannels();
 		for (size_t i = 0; i < my_channels.size(); ++i)
 		{
-			// สั่งให้ห้องนั้น ๆ บอร์ดแคสต์สาดข้อความแจ้งข่าวบอกเพื่อนร่วมห้องทุกคนทันที!
 			my_channels[i]->broadcast(&sender, nick_change_msg);
 		}
 	}
@@ -487,7 +389,7 @@ void	Command::handlePart(Server &server, Client &sender)
 	{
 		Client* new_admin = channel->getClients()[0];
 		std::string new_name = "@" + new_admin->getName();
-		channel->setAdmin(new_admin);
+		// channel->setAdmin(new_admin);
 		channel->addOperator(new_admin->getFd());
 		std::string admin_msg = ":ircserver " + intToString(RPL_YOUREOPER) + " " + new_admin->getName() + " :You are now the channel operator\r\n";
 		sendResponse(new_admin->getFd(), admin_msg);
@@ -903,81 +805,6 @@ void Command::handleTOPIC(Client &sender, Server &server)
 	target_channel->broadcast(&sender, time_broadcast);
 }
 
-// void Command::handleTOPIC(Client &sender, Server &server)
-// {
-	// 	if (this->params.empty() || this->params[0].empty() || this->params[1].empty())
-	// 	{
-	// 		std::string err = ":ircserver "+ intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " TOPIC :Not enough parameters\r\n";
-	// 		sendResponse(sender.getFd(), err);
-	// 		// std::cout << "Client FD " << sender.getFd() << " attempted to set topic without providing channel name." << std::endl;
-	// 		return;
-	// 	}
-	// 	std::string channelName = this->params[0][0];
-	// 	if (server.findChannel(channelName) == NULL)
-	// 	{
-	// 		// std::cout << "Channel not found" << std::endl;
-	// 		std::string err = ":ircserver " + intToString(ERR_NOSUCHCHANNEL) + " " + sender.getName() + " " + channelName + " :No such channel\r\n";
-	// 		sendResponse(sender.getFd(), err);
-	// 		return;
-	// 	}
-	// Channel *target_channel = server.findChannel(channelName);
-	// if (!target_channel->hasClient(&sender))
-	// {
-	// 	std::string err = ":ircserver " + intToString(ERR_NOTONCHANNEL) + " " + sender.getName() + " " + channelName + " :You're not on that channel\r\n";
-	// 	sendResponse(sender.getFd(), err);
-	// 	// std::cout << "Client FD " << sender.getFd() << " attempted to set topic for channel " << channelName << " without being a member." << std::endl;
-	// 	return;
-	// }
-	// 	if (this->params.size() < 2 || this->params[1].empty() || this->params[1][0] == "")
-	// 	{
-	// 		std::string topic = target_channel->getTopic();
-	// 		if (!topic.empty())
-	// 		{
-	// 			std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + topic + "\r\n";
-	// 			sendResponse(sender.getFd(), topicMsg);
-	// 			// std::cout << "Client FD " << sender.getFd() << " requested topic for channel " << channelName << ". Current topic: " << topic << std::endl;
-	//             std::stringstream ss;
-	// 			ss << target_channel->getCreationTime_Topic();
-	// 			std::string time_str = ss.str();
-	// 			std::string setter = target_channel->getsetter_topic();
-	//             std::string topic_time_msg = ":ircserver 333 " + sender.getName() + " " + channelName + " " + setter + " " + time_str + "\r\n";
-	//             sendResponse(sender.getFd(), topic_time_msg);
-	// 		}
-	// 		else
-	// 		{
-	// 			std::string noTopicMsg = ":ircserver 331 " + sender.getName() + " " + channelName + " :No topic is set\r\n";
-	// 			sendResponse(sender.getFd(), noTopicMsg);
-	// 			// std::cout << "Client FD " << sender.getFd() << " requested topic for channel " << channelName << ". No topic is set." << std::endl;
-	// 		}
-	// 		return;
-	// 	}
-	// 	std::string newTopic = this->params[1][0];
-	// 	bool mode = target_channel->getTopic_mode(); // do this to check if the channel is moderated or not
-	// 	if (mode == true && target_channel->isOperator(sender.getFd()) == false)
-	// 	{
-	//         std::string err = ":ircserver " + intToString(ERR_CHANOPRIVSNEEDED) + " " + sender.getName() + " " + channelName + " :You're not channel operator\r\n";
-	//         sendResponse(sender.getFd(), err);
-	//         // std::cout << "Client FD " << sender.getFd() << " attempted to set topic without operator privileges." << std::endl;
-	//         return;
-	//     }
-	//     else if (mode == true && target_channel->isOperator(sender.getFd()) == true)
-	//     {
-	//         target_channel->setTopic(newTopic, sender.getName()); // Set the new topic with the name of the user who set it
-	//         target_channel->broadcast(&sender, ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n");
-	//         std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n";
-	//         sendResponse(sender.getFd(), topicMsg);
-	//         // std::cout << "Client FD " << sender.getFd() << " set topic for channel " << channelName << " to: " << newTopic << std::endl;
-	//     }
-	//     else if  (mode == false)
-	//     {
-	//         target_channel->setTopic(newTopic, sender.getName()); // Set the new topic with the name of the user who set it
-	//         target_channel->broadcast(&sender, ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n");
-	//         std::string topicMsg = ":ircserver 332 " + sender.getName() + " " + channelName + " :" + newTopic + "\r\n";
-	//         sendResponse(sender.getFd(), topicMsg);
-	//         // std::cout << "Client FD " << sender.getFd() << " set topic for channel " << channelName << " to: " << newTopic << std::endl;
-	// 	}
-// }
-
 void Command::handleCAP(Client &sender, Server &server)
 {
 	(void) server;
@@ -1038,7 +865,6 @@ void Command::handleCAP(Client &sender, Server &server)
 			{
 				if (!this->params[i].empty())
 				{
-					// ตรวจค้นคำว่า "multi-prefix" (วิธีนี้ต่อให้ติดเครื่องหมาย : หรือเว้นวรรคแปลกๆ ก็เอาอยู่)
 					if (this->params[i][0].find("multi-prefix") != std::string::npos)
 					{
 						has_multi_prefix = true;
@@ -1048,15 +874,11 @@ void Command::handleCAP(Client &sender, Server &server)
 			}
 			if (has_multi_prefix)
 			{
-				// ตอบรับ (ACK) ด้วยรูปแบบที่ Irssi ต้องการ
-				// สำคัญมาก: บางไคลเอนต์ต้องการให้ส่งเครื่องหมาย : กลับไปด้วย เช่น :multi-prefix
 				std::string reply = ":ircserver CAP " + sender.getName() + " ACK :multi-prefix\r\n";
 				sendResponse(sender.getFd(), reply);
 			}
 			else
 			{
-				// ถ้าเป็นฟีเจอร์อื่นที่เราไม่รองรับ ให้ส่ง NAK
-				// โดยการส่งค่าที่เขาส่งมากลับไปปฏิเสธ
 				std::string requested = (this->params.size() > 1 && !this->params[1].empty()) ? this->params[1][0] : "unknown";
 				std::string reply = ":ircserver CAP " + sender.getName() + " NAK :" + requested + "\r\n";
 				sendResponse(sender.getFd(), reply);

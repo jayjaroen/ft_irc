@@ -1,3 +1,16 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Server.hpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jjaroens <jjaroens@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/06/13 15:07:27 by jjaroens          #+#    #+#             */
+/*   Updated: 2026/06/13 15:07:48 by jjaroens         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
@@ -17,7 +30,7 @@
 # include <cstdio>
 # include "Client.hpp"
 # include "Channel.hpp"
-# include "../parser.hpp"
+# include "Parser.hpp"
 
 class Client;
 class Channel;
@@ -54,15 +67,12 @@ class Server
 		void	handleClientMessage(int client_fd);
 		std::string get_creation_date() const;
 
-		// Channel*	findUser(const std::string name);
 		Channel*	findChannel(const std::string name);
 		Channel*	createChannel(const std::string &name, const std::string &key, Client *client);
 		Channel*	findOrCreateChannel(const std::string &name, const std::string &key, Client *client);
 		void		deleteChannel(const std::string name);
 
 		Client*		findClient(const std::string name);
-		
-		// bool	sendMessage(int fd, std::string msg);
 };
 
 #endif

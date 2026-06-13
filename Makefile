@@ -3,19 +3,19 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+         #
+#    By: jjaroens <jjaroens@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/03/21 16:19:53 by jjaroens          #+#    #+#              #
-#    Updated: 2026/05/02 15:23:00 by jjaroens         ###   ########.fr        #
+#    Updated: 2026/06/13 15:02:01 by jjaroens         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = ft_irc
 
-SRC = srcs/main.cpp srcs/Server.cpp srcs/Client.cpp command.cpp parser.cpp lexer.cpp \
-		srcs/Channel.cpp
+SRC = srcs/main.cpp srcs/Server.cpp srcs/Client.cpp srcs/Command.cpp srcs/Parser.cpp \
+		srcs/Lexer.cpp srcs/Channel.cpp
 
-HEADER = include/Server.hpp include/Client.hpp include/Channel.hpp
+HEADER = include/Server.hpp include/Client.hpp include/Channel.hpp include/Parser.hpp 
 
 CC = c++ -Wall -Wextra -Werror -std=c++98 -g3
 
