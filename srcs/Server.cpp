@@ -4,7 +4,17 @@
 
 Server::Server(){}
 
-Server::~Server(){}
+Server::~Server()
+{
+    if (_server_fd != -1)
+        close(_server_fd);
+    
+    for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
+    {
+        close(it->first);
+        delete it->second;
+    }
+}
 
 Server::Server(int port, std::string password)
 {
@@ -194,7 +204,7 @@ void Server::handleClientMessage(int client_fd)
         std::string message = buf.substr(0, pos);//extract msg
         buf.erase(0, pos + 2); //remove proceed msg from buffer
         if (_clients.find(client_fd) != _clients.end())
-            _clients[client_fd]->getBuffer() = buf; //update buffer
+            _clients[client_fd]->getBuffer() = buf;
         // std::cout << "Received from client fd " << client_fd << " Client name " << client->getName() << ": [ " << message << " ]" << std::endl;
         /// ****handle command function ****
         Command cmd;
@@ -267,7 +277,7 @@ void Server::run()
 {
     pollfd server_fd = {_server_fd, POLLIN, 0};
     _fds.push_back(server_fd);
-    while (true)
+    while (Server::_serverRunning)
     {
         int ret = poll(_fds.data(), _fds.size(), 1000);//number of fds have event
         if (ret < 0)

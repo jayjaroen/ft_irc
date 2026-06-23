@@ -37,6 +37,7 @@ class Server
 		Server();
 	
 	public:
+		static bool _serverRunning;
 		Server(int port, std::string password);
 		Server(const Server &other);
 		~Server();

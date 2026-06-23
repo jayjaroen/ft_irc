@@ -11,7 +11,15 @@
 /* ************************************************************************** */
 
 #include "../include/Server.hpp"
+#include <csignal>
 
+bool Server::_serverRunning = true;
+
+void signalHandler(int signum)
+{
+    std::cout << "\nInterrupt signal (" << signum << ") received. Shutting down the server..." << std::endl;
+    Server::_serverRunning = false;
+}
 
 int main(int argc, char **argv)
 {
@@ -20,6 +28,7 @@ int main(int argc, char **argv)
         std::cerr << "Usage: ./ircserv <port> <password>" << std::endl;
         return 1;
     }
+    std::signal(SIGINT, signalHandler);
     //check error after
     for (size_t i = 0; argv[1][i]; ++i)
     {
