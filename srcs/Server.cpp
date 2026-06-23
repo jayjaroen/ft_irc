@@ -30,18 +30,24 @@ Server& Server::operator=(Server const &other)
 
 bool Server::setNonBlocking(int fd)
 {
-    int flag = fcntl(fd, F_GETFL); //receive status
-    if (flag == -1)
+    if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1)
+    {
+        std::cerr << "Failed to set non-blocking" << std::endl;
         return false;
-    return (fcntl(fd, F_SETFL, flag | O_NONBLOCK) != -1);
+    }
+    return true;
+    // int flag = fcntl(fd, F_GETFL); //receive status
+    // if (flag == -1)
+    //     return false;
+    // return (fcntl(fd, F_SETFL, flag | O_NONBLOCK) != -1);
 }
 
-void Server::setCloexec(int fd)
-{
-    int fd_flag = fcntl(fd, F_GETFD);
-    if (fd_flag != -1)
-        fcntl(fd, F_SETFD, fd_flag | FD_CLOEXEC);
-}
+// void Server::setCloexec(int fd)
+// {
+//     int fd_flag = fcntl(fd, F_GETFD);
+//     if (fd_flag != -1)
+//         fcntl(fd, F_SETFD, fd_flag | FD_CLOEXEC);
+// }
 
 int Server::openSocket()
 {
@@ -66,7 +72,7 @@ int Server::openSocket()
         _server_fd = -1;
         return -1;
     }
-    setCloexec(_server_fd);
+    // setCloexec(_server_fd);
     return _server_fd;
 }
 
@@ -118,24 +124,26 @@ void Server::disconnectClient(int client_fd)
 void Server::acceptNewClient()
 {
     std::cout << "In accept new client function" << std::endl;
-    while (true)
-    {
+    // while (true)
+    // {
         struct sockaddr_in addr;
         socklen_t len = sizeof(addr);
+        //extract client info
         
         int client_fd = accept(_server_fd, (struct sockaddr*)&addr, &len);
         
         if (client_fd < 0)
         {
-            if (errno == EAGAIN || errno == EWOULDBLOCK)
-                break;
-            else
-            {
-                std::perror("accept");
-                break;
-            }
+            std::perror("accept failed");
+            return;
+            // if (errno == EAGAIN || errno == EWOULDBLOCK)
+            //     break;
+            // else
+            // {
+                //     std::perror("accept");
+                //     break;
+                // }
         }
-        //extract client info
         int port = ntohs(addr.sin_port);
         std::string ip = inet_ntoa(addr.sin_addr);
         std::cout << "New client: fd: " << client_fd
@@ -146,16 +154,22 @@ void Server::acceptNewClient()
         {
             std::cerr << "Failed to set non-blocking" << std::endl;
             close(client_fd);
-            continue;
+            return;
+            // continue;
         }
         pollfd p = {client_fd, POLLIN, 0}; //fd,events,revents
         _fds.push_back(p);
         _clients[client_fd] = new Client(client_fd, port, ip);
-    }
+    // }
 }
 
 void Server::handleClientMessage(int client_fd)
 {
+    if (_clients.find(client_fd) == _clients.end())
+    {
+        std::cerr << "Client fd " << client_fd << " not found" << std::endl;
+        return;
+    }
     std::cout << "----In handle client function----" << std::endl;
     char buffer[512];
     memset(buffer, 0, sizeof(buffer));
@@ -172,19 +186,26 @@ void Server::handleClientMessage(int client_fd)
     //append to existing buffer
     client->appendBuffer(std::string(buffer, bytes));
     //get buffer
-    std::string &buf = client->getBuffer();
+    std::string buf = client->getBuffer();
     size_t pos;
     // std::cout << "Am here" << std::endl;
     while ((pos = buf.find("\r\n")) != std::string::npos)
     {
         std::string message = buf.substr(0, pos);//extract msg
         buf.erase(0, pos + 2); //remove proceed msg from buffer
-        std::cout << "Received from client fd " << client_fd << " Client name " << client->getName() << ": [ " << message << " ]" << std::endl;
+        if (_clients.find(client_fd) != _clients.end())
+            _clients[client_fd]->getBuffer() = buf; //update buffer
+        // std::cout << "Received from client fd " << client_fd << " Client name " << client->getName() << ": [ " << message << " ]" << std::endl;
         /// ****handle command function ****
         Command cmd;
         // cmd.msgparser(message, *this, *client);
         cmd.msgparser(message);
         cmd.execute_command(*this, *client); 
+        if (_clients.find(client_fd) == _clients.end())
+        {
+            std::cout << "Client fd " << client_fd << " disconnected during command execution" << std::endl;
+            return;
+        }
 		// sending both server and client info
     }
 }

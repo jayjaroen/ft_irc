@@ -41,8 +41,11 @@ void Command::execute_command(Server &server, Client &sender)
     size_t cmdType = this->type;
 
     std::cout << cmdType << std::endl;
-    
-
+    if (cmdType == QUIT)
+    {
+        handleQuit(sender, server);
+        return;
+    }
     // add after apply with connect pass etc. with server message
     if (sender.isAuthenticated() == false)
     {
@@ -63,7 +66,7 @@ void Command::execute_command(Server &server, Client &sender)
 		case NICK:    handleNick(sender, server);    break;
 		case JOIN:    handleJOIN(server, sender);    break;
 		case PRIVMSG: handlePRIVMSG(server, sender); break;
-		case QUIT:    handleQuit(sender, server);    break;
+		case QUIT:    handleQuit(sender, server);    return;
 		case MODE:    handleMODE(sender, server);    break;
 		case HELP:    handleHELP(sender, server);    break;
 		case PART:    handlePart(server, sender);    break;
@@ -170,6 +173,7 @@ void Command::execute_command(Server &server, Client &sender)
     }
 
 }
+
 void Command::handleNick(Client &sender, Server &server)
 {
     if (this->params.empty() || this->params[0].empty() || this->params[0][0] == "")
