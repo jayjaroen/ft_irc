@@ -207,17 +207,16 @@ void Server::handleClientMessage(int client_fd)
     //append to existing buffer
     client->appendBuffer(std::string(buffer, bytes));
     //get buffer
-    std::string buf = client->getBuffer();
+    std::string &buf = client->getBuffer();
     size_t pos;
     // std::cout << "Am here" << std::endl;
     while ((pos = buf.find("\r\n")) != std::string::npos)
     {
         std::string message = buf.substr(0, pos);//extract msg
-        buf.erase(0, pos + 2); //remove proceed msg from buffer
+        buf.erase(0, pos + 2);
         // std::cout << "Received from client fd " << client_fd << " Client name " << client->getName() << ": [ " << message << " ]" << std::endl;
         /// ****handle command function ****
         Command cmd;
-        // cmd.msgparser(message, *this, *client);
         cmd.msgparser(message);
         cmd.execute_command(*this, *client); 
         if (_clients.find(client_fd) == _clients.end())

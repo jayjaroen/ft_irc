@@ -49,7 +49,6 @@ void Command::execute_command(Server &server, Client &sender)
     // add after apply with connect pass etc. with server message
     if (sender.isAuthenticated() == false)
     {
-        // std::cout << sender.isAuthenticated() << std::endl;
         if (cmdType != PASS && cmdType != NICK && cmdType != USER && cmdType != CAP)
         {
             std::string err = ":ircserver " + intToString(ERR_NOTREGISTERED) + " " + sender.getName() + " :You have not registered\r\n";
@@ -83,81 +82,6 @@ void Command::execute_command(Server &server, Client &sender)
     	}
 		default:      break;
 	}
-    // switch (cmdType)
-    // {
-    //     case CAP:
-    //         // std::cout << "Executing CAP..." << std::endl;
-    //         handleCAP(sender, server);
-	// 		if (!sender.isAuthenticated() && sender.isPassSet() && sender.isNickSet() && sender.isUserSet())
-    //         {
-    //             sender.setAuthenticated(true);
-    //             std::cout << "Client FD " << sender.getFd() << " successfully registered via CAP END trigger." << std::endl;
-    //             sendWelcomeMessage(server, sender);
-    //         }
-    //         break;
-    //     case USER:
-    //         // std::cout <<  "Executing USER..." << std::endl;
-    //         handleUSER(sender, server);
-    //         break;
-    //     case PASS:
-    //         // std::cout << "Executing PASS..." << std::endl;
-    //         handlePass(sender, server);
-    //         break;
-    //     case NICK:
-    //         handleNick(sender, server);
-    //         // std::cout << "Executing NICK..." << std::endl;
-    //         break;
-    //     case JOIN:
-    //         handleJOIN(server, sender);
-    //         break;
-    //     case PRIVMSG:
-    //         handlePRIVMSG(server,sender);
-    //         break;
-    //     case QUIT:
-    //         // std::cout << "Client quitting..." << std::endl;
-    //         handleQuit(sender, server);
-    //         break;
-    //     case MODE:
-    //         // std::cout << "Executing MODE..." << std::endl;
-    //         handleMODE(sender, server);
-    //         break;
-    //     case HELP:
-    //     {
-    //         handleHELP(sender, server);
-    //         break;
-    //     }
-    //     case PING:
-    //     {
-    //         if (this->params.empty() || this->params[0].empty()) return;
-    //         std::string token = this->params[0][0]; // ดึงสิ่งที่ Client ส่งมา (เช่น ชื่อเซิร์ฟเวอร์หรือเลขสุ่ม)
-    //         std::string pongResponse = ":ircserver PONG ircserver :" + token + "\r\n";
-    //         sendResponse(sender.getFd(), pongResponse);
-    //         break;
-    //     }
-    //     case PART:
-    //     {
-    //         handlePart(server, sender);
-    //         break;
-    //     }
-    //     case INVITE:
-    //     {
-    //         handleINVITE(sender, server);
-    //         break;
-    //     }
-    //     case KICK:
-    //     {
-    //         handleKICK(sender, server);
-    //         break;
-    //     }
-    //     case TOPIC:
-    //     {
-    //         handleTOPIC(sender, server);
-    //         break;
-    //     }
-    //     default:
-    //         // std::cout << "Command " << this->params[0][0] << " not implementes" << std::endl;
-    //         break;
-    // }
 	if (sender.isPassSet() == true && sender.isNickSet() == true && sender.isUserSet() == true && sender.isAuthenticated() == false)
     {
 		std::cout << "--- SUCCESS: Client FD " << sender.getFd() << " registered properly! ---" << std::endl;
@@ -165,13 +89,7 @@ void Command::execute_command(Server &server, Client &sender)
         sender.setAuthenticated(true);
     }
     if (this->type == 0)
-    {
-    //     // std::string err = ":ircserver" + std::to_string(UNKNOWN_CMD) + " " + sender.getNick() + " :Unknown command\r\n";
-    //     // sendResponse(sender.getFd(), err);
-    //     // std::cout << "Unknown command from client fd " << sender.getFd() << ": " << err << std::endl;
         return;                                                                                                                                         
-    }
-
 }
 
 void Command::handleNick(Client &sender, Server &server)
@@ -346,6 +264,11 @@ void Command::handleJOIN(Server &server, Client &sender)
     {
         std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " JOIN :Not enough parameters\r\n";
         sendResponse(sender.getFd(), err);
+        return;
+    }
+    if (this->params[0].size() > 1 || this->params[1].size() > 1)
+    {
+        std::cout << "test should not be more one channel/password name" << std::endl;
         return;
     }
     // size_t joined_count = 0;
@@ -1066,7 +989,7 @@ void sendWelcomeMessage(Server &server, Client &sender)
 {
     if (sender.isNickSet() && sender.isUserSet() && sender.isPassSet() && !sender.isAuthenticated())
     {
-        // sender.setAuthenticated(true);
+        sender.setAuthenticated(true);
         std::cout << "Client FD " << sender.getFd() << " has successfully registered." << std::endl;
         std::string clientNick = sender.getName();
         std::string welcomeMsg = ":ircserver 001 " + clientNick + " :Welcome to the IRC server, " + clientNick + "!\r\n";
