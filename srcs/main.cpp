@@ -29,6 +29,7 @@ int main(int argc, char **argv)
         return 1;
     }
     std::signal(SIGINT, signalHandler);
+    std::signal(SIGTSTP, signalHandler);
     //check error after
     for (size_t i = 0; argv[1][i]; ++i)
     {
@@ -61,5 +62,7 @@ int main(int argc, char **argv)
         std::cerr << "Error:" << e.what() << std::endl;
     }
     irc.run();
-    return 0;
+    // for (int fd = 3; fd < 1024; fd++)
+    //     close(fd); 
+    return (0);
 }

@@ -6,13 +6,22 @@ Server::Server(){}
 
 Server::~Server()
 {
-    if (_server_fd != -1)
-        close(_server_fd);
-    
     for (std::map<int, Client*>::iterator it = _clients.begin(); it != _clients.end(); ++it)
     {
-        close(it->first);
+        if (it->first != -1)
+            close(it->first);
         delete it->second;
+    }
+    _clients.clear();
+
+    for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); ++it)
+        delete *it;
+    _channels.clear();
+
+    if (_server_fd != -1)
+    {
+        close(_server_fd);
+        _server_fd = -1;
     }
 }
 
@@ -21,6 +30,7 @@ Server::Server(int port, std::string password)
     _port = port;
     _password = password;
     _backlog = 10; //number of connections can wait
+    _server_fd = -1;
 }
 
 Server::Server(Server const &other)
@@ -52,6 +62,7 @@ bool Server::setNonBlocking(int fd)
     // return (fcntl(fd, F_SETFL, flag | O_NONBLOCK) != -1);
 }
 
+// พี่เจท่าดีครับ แต่ไว้ใช้กับ transcendence
 // void Server::setCloexec(int fd)
 // {
 //     int fd_flag = fcntl(fd, F_GETFD);
@@ -203,8 +214,6 @@ void Server::handleClientMessage(int client_fd)
     {
         std::string message = buf.substr(0, pos);//extract msg
         buf.erase(0, pos + 2); //remove proceed msg from buffer
-        if (_clients.find(client_fd) != _clients.end())
-            _clients[client_fd]->getBuffer() = buf;
         // std::cout << "Received from client fd " << client_fd << " Client name " << client->getName() << ": [ " << message << " ]" << std::endl;
         /// ****handle command function ****
         Command cmd;
@@ -286,7 +295,7 @@ void Server::run()
                 continue;
             throw std::runtime_error("poll failed");
         }
-        for (int i = 0 ; i < (int)_fds.size(); i++)
+        for (int i = 0; i < (int)_fds.size(); i++)
         {
             pollfd &p = _fds[i];
             if (p.revents == 0)
