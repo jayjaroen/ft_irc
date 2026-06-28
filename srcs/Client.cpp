@@ -54,6 +54,16 @@ std::string Client::getName() const
 	return _nickname.empty() ? _ip : _nickname;
 }
 
+std::string Client::getUsername() const
+{
+    return _username;
+}
+
+std::string Client::getIp() const
+{
+    return _ip;
+}
+
 std::string& Client::getBuffer()
 {
 	return _buffer;

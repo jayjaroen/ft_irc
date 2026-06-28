@@ -28,6 +28,57 @@ void sendResponse(int fd, const std::string &message)
 	}
 }
 
+static bool isValidJoinChannelName(const std::string &channel_name)
+{
+    if (channel_name.empty() || channel_name.length() > 50)
+        return false;
+    if (channel_name[0] != '#' && channel_name[0] != '&')
+        return false;
+    if (channel_name.find(' ') != std::string::npos)
+        return false;
+    if (channel_name.find(',') != std::string::npos)
+        return false;
+    if (channel_name.find('\a') != std::string::npos)
+        return false;
+    if (channel_name.find('\r') != std::string::npos)
+        return false;
+    if (channel_name.find('\n') != std::string::npos)
+        return false;
+    return true;
+}
+
+static void sendJoinReplies(Client &sender, Channel *channel)
+{
+    if (channel == NULL)
+        return;
+    std::string channel_name = channel->getName();
+    std::string join_prefix = ":" + sender.getName() + "!" + sender.getUsername() + "@" + sender.getIp() + " JOIN :" + channel_name + "\r\n";
+    sendResponse(sender.getFd(), join_prefix);
+    channel->broadcast(&sender, join_prefix);
+    std::string topic = channel->getTopic();
+    if (!topic.empty())
+    {
+        std::string topic_msg = ":ircserver " + intToString(RPL_TOPIC) + " " + sender.getName() + " " + channel_name + " :" + topic + "\r\n";
+        sendResponse(sender.getFd(), topic_msg);
+        std::string setter = channel->getsetter_topic();
+        std::string topic_time_msg = ":ircserver " + intToString(RPL_TOPICWHOTIME) + " " + sender.getName() + " " + channel_name + " " + setter + " :Topic set time\r\n";
+        sendResponse(sender.getFd(), topic_time_msg);
+    }
+    std::string names_msg = ":ircserver " + intToString(RPL_NAMREPLY) + " " + sender.getName() + " = " + channel_name + " :";
+    std::vector<Client*> clients = channel->getClients();
+    for (size_t i = 0; i < clients.size(); ++i)
+    {
+        if (channel->isOperator(clients[i]->getFd()))
+            names_msg += "@" + clients[i]->getName() + " ";
+        else
+            names_msg += clients[i]->getName() + " ";
+    }
+    names_msg += "\r\n";
+    sendResponse(sender.getFd(), names_msg);
+    std::string end_of_names_msg = ":ircserver " + intToString(RPL_ENDOFNAMES) + " " + sender.getName() + " " + channel_name + " :End of NAMES list\r\n";
+    sendResponse(sender.getFd(), end_of_names_msg);
+}
+
 
 void Command::execute_command(Server &server, Client &sender)
 {
@@ -266,99 +317,79 @@ void Command::handleJOIN(Server &server, Client &sender)
         sendResponse(sender.getFd(), err);
         return;
     }
-    if (this->params[0].size() > 1 || this->params[1].size() > 1)
+    if (this->params[0].empty() || this->params.size() > 2)
     {
-        std::cout << "test should not be more one channel/password name" << std::endl;
-        return;
-    }
-    // size_t joined_count = 0;
-    std::string key = "";
-    std::string channel_name = this->params[0][0];
-    //ERR_BADCHANMASK
-    if (channel_name.empty() 
-        || channel_name.length() > 50 
-        || (channel_name[0] != '#' && channel_name[0] != '&') // ต้องขึ้นต้นด้วย # หรือ & เท่านั้น
-        || channel_name.find(' ') != std::string::npos
-        || channel_name.find(',') != std::string::npos
-        || channel_name.find('\a') != std::string::npos
-        || channel_name.find('\r') != std::string::npos
-        || channel_name.find('\n') != std::string::npos)
-    {
-        std::string err = ":ircserver " + intToString(ERR_BADCHANMASK) + " " + sender.getName() + " " + channel_name + " :Bad channel mask\r\n";
+        std::string bad_channel = (this->params[0].empty() ? "" : this->params[0][0]);
+        std::string err = ":ircserver " + intToString(ERR_BADCHANMASK) + " " + sender.getName() + " " + bad_channel + " :Bad channel mask\r\n";
         sendResponse(sender.getFd(), err);
-        std::cout << "Client FD " << sender.getFd() << " attempted to join channel with invalid name: " << channel_name << std::endl;
+        std::cerr << "Client FD " << sender.getFd() << " attempted to join with invalid JOIN parameters: " << bad_channel << std::endl;
         return;
     }
-    if (server.findChannel(channel_name) == NULL )
+    std::vector<std::string> channels = this->params[0];
+    std::vector<std::string> keys;
+    if (this->params.size() > 1)
+        keys = this->params[1];
+
+    for (size_t i = 0; i < channels.size(); ++i)
     {
-        if (channel_name.empty() || channel_name[0] != '#')
+        std::string channel_name = channels[i];
+        std::string key = "";
+        if (i < keys.size())
+            key = keys[i];
+
+        if (!isValidJoinChannelName(channel_name))
         {
-            std::string err = ":ircserver " + intToString(ERR_NOSUCHCHANNEL) + " " + sender.getName() + " " + channel_name + " :No such channel\r\n";
+            std::string err = ":ircserver " + intToString(ERR_BADCHANMASK) + " " + sender.getName() + " " + channel_name + " :Bad channel mask\r\n";
             sendResponse(sender.getFd(), err);
-            std::cout << "Client FD " << sender.getFd() << " attempted to join non-existent channel: " << channel_name << std::endl;
-            return;
+            std::cout << "Client FD " << sender.getFd() << " attempted to join channel with invalid name: " << channel_name << std::endl;
+            continue;
         }
-    }   
-    if (sender.getNumChan() >= sender.getLimitChan())
-    {
-        std::string err = ":ircserver " + intToString(ERR_TOOMANYCHANNELS) + " " + sender.getName() + " " + channel_name + " :You have joined too many channels\r\n";
-        sendResponse(sender.getFd(), err);
-        return;
+
+        Channel *channel = server.findChannel(channel_name);
+        bool alreadyMember = (channel != NULL && channel->hasClient(&sender));
+
+        if (!alreadyMember && sender.getNumChan() >= sender.getLimitChan())
+        {
+            std::string err = ":ircserver " + intToString(ERR_TOOMANYCHANNELS) + " " + sender.getName() + " " + channel_name + " :You have joined too many channels\r\n";
+            sendResponse(sender.getFd(), err);
+            continue;
+        }
+
+        if (channel != NULL && !alreadyMember)
+        {
+            if (channel->getKey() != "" && !channel->checkKey(key))
+            {
+                std::string err = ":ircserver " + intToString(ERR_BADCHANNELKEY) + " " + sender.getName() + " " + channel_name + " :Cannot join channel (+k)\r\n";
+                sendResponse(sender.getFd(), err);
+                std::cout << "Client FD " << sender.getFd() << " attempted to join channel with incorrect key: " << channel_name << std::endl;
+                continue;
+            }
+            if (channel->getLimit() > 0 && channel->getChannelSize() >= channel->getLimit())
+            {
+                std::string err = ":ircserver " + intToString(ERR_CHANNELISFULL) + " " + sender.getName() + " " + channel_name + " :Cannot join channel (+l)\r\n";
+                sendResponse(sender.getFd(), err);
+                std::cout << "Client FD " << sender.getFd() << " attempted to join full channel: " << channel_name << std::endl;
+                continue;
+            }
+            if (channel->isInviteOnly() && !channel->isInvited(&sender))
+            {
+                std::string err = ":ircserver " + intToString(ERR_INVITEONLYCHAN) + " " + sender.getName() + " " + channel_name + " :Cannot join channel (+i)\r\n";
+                sendResponse(sender.getFd(), err);
+                std::cout << "Client FD " << sender.getFd() << " attempted to join invite-only channel without an invitation: " << channel_name << std::endl;
+                continue;
+            }
+        }
+
+        std::cout << "Channel name is: " << "\"" << channel_name << "\"" << " key is " << "\"" << key << "\"" << std::endl;
+        channel = server.findOrCreateChannel(channel_name, key, &sender);
+        if (channel == NULL)
+        {
+            std::string err = ":ircserver " + intToString(ERR_BADCHANNELKEY) + " " + sender.getName() + " " + channel_name + " :Cannot join channel (+k)\r\n";
+            sendResponse(sender.getFd(), err);
+            continue;
+        }
+        sendJoinReplies(sender, channel);
     }
-    
-    //ERR_BADCHANNELKEY
-    if (server.findChannel(channel_name) != NULL && server.findChannel(channel_name)->getKey() != "" && (this->params.size() <= 1 || this->params[1].empty() || !server.findChannel(channel_name)->checkKey(this->params[1][0])))
-    {
-        std::string err = ":ircserver " + intToString(ERR_BADCHANNELKEY) + " " + sender.getName() + " " + channel_name + " :Cannot join channel (+k)\r\n";
-        sendResponse(sender.getFd(), err);
-        std::cout << "Client FD " << sender.getFd() << " attempted to join channel with incorrect key: " << channel_name << std::endl;
-        return;
-    }
-    //ERR_CHANNELISFULL
-    if (server.findChannel(channel_name) != NULL && server.findChannel(channel_name)->getLimit() > 0 && server.findChannel(channel_name)->getChannelSize() >= server.findChannel(channel_name)->getLimit())
-    {
-        std::string err = ":ircserver " + intToString(ERR_CHANNELISFULL) + " " + sender.getName() + " " + channel_name + " :Cannot join channel (+l)\r\n";
-        sendResponse(sender.getFd(), err);
-        std::cout << "Client FD " << sender.getFd() << " attempted to join full channel: " << channel_name << std::endl;
-        return;
-    }
-    //ERR_INVITEONLYCHAN
-    if (server.findChannel(channel_name) != NULL && server.findChannel(channel_name)->isInviteOnly() && !server.findChannel(channel_name)->isInvited(&sender))
-    {
-        std::string err = ":ircserver " + intToString(ERR_INVITEONLYCHAN) + " " + sender.getName() + " " + channel_name + " :Cannot join channel (+i)\r\n";
-        sendResponse(sender.getFd(), err);
-        std::cout << "Client FD " << sender.getFd() << " attempted to join invite-only channel without an invitation: " << channel_name << std::endl;
-        return;
-    }
-    if (this->params.size() > 1 && !this->params[1].empty())
-        key = this->params[1][0];
-    std::cout << "Channel name is: " << "\"" << channel_name << "\"" << " key is " << "\"" << key << "\"" << std::endl;
-    server.findOrCreateChannel(channel_name, key, &sender);
-    // RPL_TOPIC, RPL_TOPICWHOTIME, RPL_NAMREPLY, RPL_ENDOFNAMES
-    // RPL_TOPIC :ircserver 332 <nick> <channel> :<topic>
-    std::string topic = server.findChannel(channel_name)->getTopic();
-    if (!topic.empty())
-    {
-        std::string topic_msg = ":ircserver " + intToString(RPL_TOPIC) + " " + sender.getName() + " " + channel_name + " :" + topic + "\r\n";
-        sendResponse(sender.getFd(), topic_msg);
-        std::string setter = server.findChannel(channel_name)->getsetter_topic();
-        std::string topic_time_msg = ":ircserver " + intToString(RPL_TOPICWHOTIME) + " " + sender.getName() + " " + channel_name + " " + setter + " :Topic set time\r\n";
-        sendResponse(sender.getFd(), topic_time_msg);
-    }
-    std::string names_msg = ":ircserver " + intToString(RPL_NAMREPLY) + " " + sender.getName() + " = " + channel_name + " :";
-    Channel* channel = server.findChannel(channel_name);
-    std::vector<Client*> clients = channel->getClients();
-    for (size_t i = 0; i < clients.size(); ++i)
-    {
-        if (channel->isOperator(clients[i]->getFd()))
-            names_msg += "@" + clients[i]->getName() + " ";
-        else
-            names_msg += clients[i]->getName() + " ";
-    }
-    names_msg += "\r\n";
-    sendResponse(sender.getFd(), names_msg);
-    std::string end_of_names_msg = ":ircserver " + intToString(RPL_ENDOFNAMES) + " " + sender.getName() + " " + channel_name + " :End of NAMES list\r\n";
-    sendResponse(sender.getFd(), end_of_names_msg);
 }
 
 void    Command::handlePart(Server &server, Client &sender)
@@ -404,12 +435,6 @@ void Command::handleMODE(Client &sender, Server &server)
     // MODE requires at least a target
     if (this->params.size() < 1 || this->params[0].empty())
     {
-        std::string err = ":ircserver " +
-            intToString(ERR_NEEDMOREPARAMS) + " " +
-            sender.getName() +
-            " MODE :Not enough parameters\r\n";
-
-        sendResponse(sender.getFd(), err);
         return;
     }
 
@@ -435,12 +460,27 @@ void Command::handleMODE(Client &sender, Server &server)
     // MODE #channel
     if (this->params.size() < 2 || this->params[1].empty())
     {
-        std::string err = ":ircserver " +
-            intToString(ERR_NEEDMOREPARAMS) + " " +
-            sender.getName() +
-            " MODE :Not enough parameters\r\n";
+        std::string modeFlags = "+";
+        if (channel->isInviteOnly())
+            modeFlags += "i";
+        if (channel->getTopic_mode())
+            modeFlags += "t";
+        if (!channel->getKey().empty())
+            modeFlags += "k";
+        if (channel->getLimit() > 0)
+            modeFlags += "l";
 
-        sendResponse(sender.getFd(), err);
+        std::string modeReply = ":ircserver 324 " + sender.getName() + " " + modeTarget + " " + modeFlags;
+        if (!channel->getKey().empty())
+            modeReply += " " + channel->getKey();
+        if (channel->getLimit() > 0)
+        {
+            std::stringstream limitStream;
+            limitStream << channel->getLimit();
+            modeReply += " " + limitStream.str();
+        }
+        modeReply += "\r\n";
+        sendResponse(sender.getFd(), modeReply);
         return;
     }
 
