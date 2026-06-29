@@ -1,0 +1,11 @@
+{
+  "C_Cpp.default.configurationProvider": null,
+  "C_Cpp.default.compileCommands": "",
+  "C_Cpp.default.cppStandard": "c++98",
+  "C_Cpp.default.includePath": [
+    "${workspaceFolder}",
+    "${workspaceFolder}/include",
+    "${workspaceFolder}/srcs",
+    "${workspaceFolder}/bircd"
+  ]
+}

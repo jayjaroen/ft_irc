@@ -18,7 +18,7 @@
 # include <cstdio>
 # include "Client.hpp"
 # include "Channel.hpp"
-# include "../parser.hpp"
+# include "Parser.hpp"
 
 class Client;
 class Channel;

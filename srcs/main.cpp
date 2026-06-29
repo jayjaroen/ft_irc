@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+        */
+/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/21 16:21:05 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/04/17 14:42:06 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/06/29 09:40:58 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,8 +29,7 @@ int main(int argc, char **argv)
         return 1;
     }
     std::signal(SIGINT, signalHandler);
-    std::signal(SIGTSTP, signalHandler);
-    //check error after
+    std::signal(SIGQUIT, signalHandler);
     for (size_t i = 0; argv[1][i]; ++i)
     {
         if (!std::isdigit(argv[1][i]))

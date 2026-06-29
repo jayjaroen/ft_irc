@@ -3,19 +3,19 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: jjaroens <jjaroens@student.42bangkok.co    +#+  +:+       +#+         #
+#    By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/03/21 16:19:53 by jjaroens          #+#    #+#              #
-#    Updated: 2026/05/02 15:23:00 by jjaroens         ###   ########.fr        #
+#    Updated: 2026/06/29 09:19:05 by gyeepach         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = ircserv
 
-SRC = srcs/main.cpp srcs/Server.cpp srcs/Client.cpp command.cpp parser.cpp lexer.cpp \
+SRC = srcs/main.cpp srcs/Server.cpp srcs/Client.cpp srcs/Command.cpp srcs/Parser.cpp srcs/Lexer.cpp \
 		srcs/Channel.cpp
 
-HEADER = include/Server.hpp include/Client.hpp include/Channel.hpp
+HEADER = include/Server.hpp include/Client.hpp include/Channel.hpp include/Parser.hpp
 
 CC = c++ -Wall -Wextra -Werror -std=c++98 -g3
 

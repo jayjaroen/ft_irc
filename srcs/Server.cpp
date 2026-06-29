@@ -29,7 +29,7 @@ Server::Server(int port, std::string password)
 {
     _port = port;
     _password = password;
-    _backlog = 10; //number of connections can wait
+    _backlog = 10;
     _server_fd = -1;
 }
 
@@ -56,19 +56,7 @@ bool Server::setNonBlocking(int fd)
         return false;
     }
     return true;
-    // int flag = fcntl(fd, F_GETFL); //receive status
-    // if (flag == -1)
-    //     return false;
-    // return (fcntl(fd, F_SETFL, flag | O_NONBLOCK) != -1);
 }
-
-// พี่เจท่าดีครับ แต่ไว้ใช้กับ transcendence
-// void Server::setCloexec(int fd)
-// {
-//     int fd_flag = fcntl(fd, F_GETFD);
-//     if (fd_flag != -1)
-//         fcntl(fd, F_SETFD, fd_flag | FD_CLOEXEC);
-// }
 
 int Server::openSocket()
 {
@@ -93,7 +81,6 @@ int Server::openSocket()
         _server_fd = -1;
         return -1;
     }
-    // setCloexec(_server_fd);
     return _server_fd;
 }
 
@@ -191,7 +178,6 @@ void Server::handleClientMessage(int client_fd)
         std::cerr << "Client fd " << client_fd << " not found" << std::endl;
         return;
     }
-    std::cout << "----In handle client function----" << std::endl;
     char buffer[512];
     memset(buffer, 0, sizeof(buffer));
     
@@ -248,7 +234,6 @@ Channel*	Server::findChannel(const std::string name)
 		if (_channels[i]->getName() == name)
 			return _channels[i];
 	}
-    // add error message for channel not found ERR_NOSUCHCHANNEL
 	return NULL;
 }
 
@@ -257,8 +242,6 @@ Channel*	Server::createChannel(const std::string &name, const std::string &key, 
 	Channel *channel = new Channel(name, key, client);
 	_channels.push_back(channel);
 	channel->addClient(client);
-	channel->setAdmin(client);
-    channel->addOperator(client->getFd());//add channel operator
 	return channel;
 }
 

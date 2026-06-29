@@ -1,4 +1,4 @@
-#include "parser.hpp"
+#include "../include/Parser.hpp"
 
 size_t	Command::lexer(const std::string &input, const std::string &icomm, std::vector<std::vector<std::string> > &output)
 {
