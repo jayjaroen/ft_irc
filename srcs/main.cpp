@@ -62,7 +62,5 @@ int main(int argc, char **argv)
         std::cerr << "Error:" << e.what() << std::endl;
     }
     irc.run();
-    // for (int fd = 3; fd < 1024; fd++)
-    //     close(fd); 
     return (0);
 }
