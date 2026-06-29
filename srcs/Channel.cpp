@@ -6,11 +6,18 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:39 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/06/29 10:06:09 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/06/29 10:40:48 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "./include/Channel.hpp"
+#include "../include/Channel.hpp"
+
+static std::string buildClientPrefix(const Client &sender)
+{
+	std::string username = sender.getUsername().empty() ? "unknown" : sender.getUsername();
+	std::string host = sender.getIp().empty() ? "localhost" : sender.getIp();
+	return ":" + sender.getName() + "!" + username + "@" + host;
+}
 
 Channel::Channel(){}
 Channel::~Channel(){}
@@ -155,7 +162,7 @@ void	Channel::addOperator(int fd)
 
 void    Channel::broadcastModeChange(Client &sender, const std::string &modeChanges)
 {
-	std::string msg = ":" + sender.getName() + " MODE " +
+	std::string msg = buildClientPrefix(sender) + " MODE " +
 						_name + " " + modeChanges + "\r\n";
 	broadcast(&sender, msg); 
 }

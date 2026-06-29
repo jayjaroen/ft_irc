@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/06/29 10:00:09 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/06/29 10:24:25 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,14 @@
 #include <unistd.h>
 #include <cstdio>
 #include <string>
+
+static std::string buildClientPrefix(const Client &sender)
+{
+    std::string nickname = sender.getName();
+    std::string username = sender.getUsername().empty() ? "unknown" : sender.getUsername();
+    std::string host = sender.getIp().empty() ? "localhost" : sender.getIp();
+    return ":" + nickname + "!" + username + "@" + host;
+}
 
 void sendResponse(int fd, const std::string &message)
 {
@@ -52,7 +60,7 @@ static void sendJoinReplies(Client &sender, Channel *channel)
     if (channel == NULL)
         return;
     std::string channel_name = channel->getName();
-    std::string join_prefix = ":" + sender.getName() + "!" + sender.getUsername() + "@" + sender.getIp() + " JOIN :" + channel_name + "\r\n";
+    std::string join_prefix = buildClientPrefix(sender) + " JOIN :" + channel_name + "\r\n";
     sendResponse(sender.getFd(), join_prefix);
     channel->broadcast(&sender, join_prefix);
     std::string topic = channel->getTopic();
@@ -180,7 +188,7 @@ void Command::handleNick(Client &sender, Server &server)
     //     std::string nick_change_msg = ":" + oldNick + " NICK " + newNick + "\r\n";
 	if (sender.isAuthenticated() && !oldNick.empty() && oldNick != newNick)
 	{
-		std::string nick_change_msg = ":" + oldNick + "!" + sender.getUsername() + "@127.0.0.1 NICK :" + newNick + "\r\n";
+        std::string nick_change_msg = buildClientPrefix(sender) + " NICK :" + newNick + "\r\n";
 		sendResponse(sender.getFd(), nick_change_msg);
 		
 		std::vector<Channel*> my_channels = sender.getChannels();
@@ -292,7 +300,7 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
             sendResponse(sender.getFd(), err);
             return;
         }
-        std::string text = ":" + sender.getName() + " PRIVMSG " + target + " : " + message + "\r\n";
+        std::string text = buildClientPrefix(sender) + " PRIVMSG " + target + " : " + message + "\r\n";
         channel->broadcast(&sender, text);
     }
     else 
@@ -305,7 +313,7 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
             sendResponse(sender.getFd(), err);
             return;
         }
-        std::string text = ":" + sender.getName() + " PRIVMSG " + target + " : " + message + "\r\n";
+        std::string text = buildClientPrefix(sender) + " PRIVMSG " + target + " : " + message + "\r\n";
         send(target_client->getFd(), text.c_str(), text.size(), 0);   
     }
 }
@@ -418,7 +426,7 @@ void    Command::handlePart(Server &server, Client &sender)
         // std::cout << "Client does not belong to the channel " << channel_name << std::endl;
         return;
     }
-    std::string message = ":" + sender.getName() + " PART " + channel_name + "\r\n";
+    std::string message = buildClientPrefix(sender) + " PART " + channel_name + "\r\n";
     channel->broadcast(&sender, message);
     sendResponse(sender.getFd(), message);
     channel->removeClient(&sender);
@@ -836,7 +844,7 @@ void Command::handleTOPIC(Client &sender, Server &server)
 	ss << target_channel->getCreationTime_Topic();
 	std::string time_str = ss.str();
 
-	std::string topic_broadcast = ":" + sender.getName() + "!" + sender.getUsername() + "@127.0.0.1 TOPIC " + channelName + " :" + newTopic + "\r\n";
+    std::string topic_broadcast = buildClientPrefix(sender) + " TOPIC " + channelName + " :" + newTopic + "\r\n";
 	std::string time_broadcast  = ":ircserver " + intToString(RPL_TOPICWHOTIME) + " " + sender.getName() + " " + channelName + " " + sender.getName() + " " + time_str + "\r\n";
 
 	sendResponse(sender.getFd(), topic_broadcast);
