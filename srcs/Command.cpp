@@ -610,7 +610,6 @@ if (channel->isOperator(sender.getFd()) == false)
 					intToString(ERR_NEEDMOREPARAMS) + " " +
 					sender.getName() +
 					" MODE :Not enough parameters\r\n";
-
 				sendResponse(sender.getFd(), err);
 				return;
 			}
@@ -643,6 +642,9 @@ if (channel->isOperator(sender.getFd()) == false)
 			return;
 		}
 	}
+    std::string msg = ":" + sender.getName() + " MODE " +
+					this->params[2][0] + " " + modeChanges + "\r\n";
+	sendResponse(sender.getFd(), msg);
 }
 
 void Command::handleHELP(Client &sender, Server &server)
