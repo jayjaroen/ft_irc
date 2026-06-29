@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/06/29 10:24:25 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/06/29 11:09:54 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -494,13 +494,13 @@ if (this->params.size() < 2 || this->params[1].empty())
 	std::string mode_args = "";
 	
 	if (channel->isInviteOnly())
-	modestring += "i";
+	    modestring += "i";
 	if (channel->getKey() != "")
-	modestring += "k";
+	    modestring += "k";
 	if (channel->getLimit() > 0)
-	modestring += "l";
-	if (channel->getTopic() != "") // getTopice in boolean not string
-	modestring += "t";
+	    modestring += "l";
+    if (channel->getTopic_mode())
+	    modestring += "t";
 	std::string rpl_mode_324 = ":ircserver " + intToString(RPL_CHANNELMODEIS) + " " + nick + " " + channel->getName() + " :" + modestring + mode_args + "\r\n";
 	sendResponse(sender.getFd(), rpl_mode_324);
 	std::stringstream ss_chan;

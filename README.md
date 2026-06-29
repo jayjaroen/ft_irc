@@ -69,13 +69,13 @@ Below is the table listing all available commands implemented in this project an
 || Subcommand for ending capability negotiations | CAP END |
 | QUIT    | For disconnecting from the server | QUIT |
 | PING    | For fetching/checking connection to the server | PING |
-| JOIN    | For joining the specified channel, or create a new one if the channel doesn't exist. Can add keys as a password to the private channel. Can join/create multiple channels and keys by separating each with comma ",". | JOIN [#channel1,#channel2,...] [key1,key2,...(optional)] |
+| JOIN    | For joining the specified channel, or create a new one if the channel doesn't exist. Can add keys as a password to the private channel. | JOIN [#channel] [key(optional)] |
 | PART    | For leaving the specified channel | PART |
 | PRIVMSG | For sending message to the specified target, which can be client or channel | PRIVMSG [target] : [text] |
-| MODE    | For channel operator to modify the channel. This project supports k, l, t, o, i mode flags | MODE [channel] [+/-][flag] [input(conditional)] |
-| TOPIC   | Set up the topic of conversation for the channel | TOPIC [channel] [topic] |
-| INVITE  | For inviting target client(s) not in the channel to join | INVITE [nickname] [channel] |
-| KICK    | For channel operator to kick the specified client out of the channel | KICK [channel] [nickname] |
+| MODE    | For channel operator to modify the channel. This project supports k, l, t, o, i mode flags | MODE [#channel] [+/-][flag] [input(conditional)] |
+| TOPIC   | Set up the topic of conversation for the channel | TOPIC [#channel] [topic] |
+| INVITE  | For inviting target client(s) not in the channel to join | INVITE [nickname] [#channel] |
+| KICK    | For channel operator to kick the specified client out of the channel | KICK [#channel] [nickname] |
 | HELP    | For displaying the function of specified command | HELP [command] |
 > *NOTE that in irssi, every command must type / at the start of the input line. This can be followed by either lowercase or UPPERCASE.*
 
