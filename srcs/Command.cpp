@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/06/30 08:18:20 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/06/30 08:23:29 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -351,7 +351,7 @@ void Command::handleJOIN(Server &server, Client &sender)
         if (i < keys.size())
             key = keys[i];
 
-		if (!channel_name.empty() && channel_name[0] == '&')
+		if (!channel_name.empty() && (channel_name[0] == '&' || channel_name[0] == '+' || channel_name[0] == '!'))
 		{
 			std::string err = ":ircserver " + intToString(ERR_NOSUCHCHANNEL) + " " + sender.getName() + " " + channel_name + " :No such channel\r\n";
 			sendResponse(sender.getFd(), err);
