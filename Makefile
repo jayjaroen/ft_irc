@@ -6,7 +6,7 @@
 #    By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/03/21 16:19:53 by jjaroens          #+#    #+#              #
-#    Updated: 2026/06/29 09:19:05 by gyeepach         ###   ########.fr        #
+#    Updated: 2026/06/29 22:33:47 by gyeepach         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -34,7 +34,6 @@ $(OBJ_DIR)%.o: %.cpp $(HEADER) Makefile
 
 clean:
 	rm -rf $(OBJ_DIR)
-
 fclean: clean
 	rm -f $(NAME)
 

@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/06/29 11:09:54 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/06/30 08:18:20 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,9 +38,14 @@ void sendResponse(int fd, const std::string &message)
 
 static bool isValidJoinChannelName(const std::string &channel_name)
 {
+	if (channel_name.empty() || channel_name.length() > 50)
+        return false;
+
+	if (channel_name.length() == 1)
+		return false;
     if (channel_name.empty() || channel_name.length() > 50)
         return false;
-    if (channel_name[0] != '#' && channel_name[0] != '&')
+    if (channel_name[0] != '#')
         return false;
     if (channel_name.find(' ') != std::string::npos)
         return false;
@@ -346,6 +351,12 @@ void Command::handleJOIN(Server &server, Client &sender)
         if (i < keys.size())
             key = keys[i];
 
+		if (!channel_name.empty() && channel_name[0] == '&')
+		{
+			std::string err = ":ircserver " + intToString(ERR_NOSUCHCHANNEL) + " " + sender.getName() + " " + channel_name + " :No such channel\r\n";
+			sendResponse(sender.getFd(), err);
+			continue;
+		}
         if (!isValidJoinChannelName(channel_name))
         {
             std::string err = ":ircserver " + intToString(ERR_BADCHANMASK) + " " + sender.getName() + " " + channel_name + " :Bad channel mask\r\n";
@@ -353,7 +364,6 @@ void Command::handleJOIN(Server &server, Client &sender)
             std::cout << "Client FD " << sender.getFd() << " attempted to join channel with invalid name: " << channel_name << std::endl;
             continue;
         }
-
         Channel *channel = server.findChannel(channel_name);
         bool alreadyMember = (channel != NULL && channel->hasClient(&sender));
 
@@ -581,8 +591,26 @@ if (channel->isOperator(sender.getFd()) == false)
 
 		case 'l':
 		{
-			if ((this->params.size() < 2 && modeChanges[0] == '-') || (this->params.size() < 3 && modeChanges[0] == '+'))
+            std::string limitParam;
+            if (modeChanges[0] == '+')
 			{
+                if (this->params.size() < 3 || this->params[2].empty())
+                {
+                    std::string err = ":ircserver " +
+                        intToString(ERR_NEEDMOREPARAMS) + " " +
+                        sender.getName() +
+                        " MODE :Not enough parameters\r\n";
+                    sendResponse(sender.getFd(), err);
+                    return;
+                }
+                limitParam = this->params[2][0];
+                if (isnumeric(limitParam) == false)
+                {
+                    return;
+                }
+            }
+            else if (modeChanges[0] == '-' && this->params.size() < 2)
+            {
 				std::string err = ":ircserver " +
 					intToString(ERR_NEEDMOREPARAMS) + " " +
 					sender.getName() +
@@ -590,15 +618,10 @@ if (channel->isOperator(sender.getFd()) == false)
 				sendResponse(sender.getFd(), err);
 				return;
 			}
-			if (modeChanges[0] == '+' && isnumeric(this->params[2][0]) == false)
-			{
-				// std::cout << "Invalid limit parameter: " << this->params[2][0] << " from " << sender.getName() << std::endl;
-				return;
-			}
 			channel->handleLimitMode(
 				sender,
 				modeChanges,
-				this->params[2][0]);
+                limitParam);
 			break;
 		}
 
@@ -642,9 +665,6 @@ if (channel->isOperator(sender.getFd()) == false)
 			return;
 		}
 	}
-    std::string msg = ":" + sender.getName() + " MODE " +
-					this->params[2][0] + " " + modeChanges + "\r\n";
-	sendResponse(sender.getFd(), msg);
 }
 
 void Command::handleHELP(Client &sender, Server &server)
