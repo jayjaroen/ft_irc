@@ -3,7 +3,6 @@
 
 # include <iostream>
 # include <vector>
-# include <poll.h>
 # include <map>
 # include <sys/socket.h> //socket(), bind(), listen(), accept()
 # include <poll.h> //poll() and pollfd structure
@@ -48,7 +47,7 @@ class Server
 		bool	start();
 		int		openSocket();
 		bool	setNonBlocking(int fd);
-		void	setCloexec(int fd);
+		// void	setCloexec(int fd);
 		bool	bindAndListen(int fd, int port, int backlog);
 		void	run();
 		std::string get_password() const;

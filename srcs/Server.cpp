@@ -349,6 +349,15 @@ void Server::run()
                     }
                 }
             }
+			else if (p.revents & POLLOUT)
+			{
+				if (_clients.find(p.fd) != _clients.end())
+				{
+					// --> broadcast something <--
+					if (_clients.find(p.fd) == _clients.end())
+						--i;
+				}
+			}
         }
     }
 }
