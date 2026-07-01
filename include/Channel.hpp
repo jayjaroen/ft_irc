@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:29 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/06/29 09:51:14 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/06/30 15:43:12 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -75,6 +75,7 @@ class Channel
 		void					broadcast(Client *sender, const std::string &message);
 		void					response(int fd, const std::string &msg);
 		void					broadcastModeChange(Client &sender, const std::string &message);
+		void					mode_broadcast(const std::string &message);
 		
 		void					addClient(Client *client);
 		void					removeClient(Client* client);
@@ -87,8 +88,7 @@ class Channel
 		void					addOperator(int fd);
 		bool					isOperator(int fd);
 		bool					checkOperator(Client &client);
-		bool					isAdmin(int fd);
-		
+
 		// Handle modes	
 		void					handleInviteMode(Client &sender, const std::string &modeChanges);
 		void					handleTopicMode(Client &sender, const std::string &modeChanges);

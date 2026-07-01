@@ -12,6 +12,7 @@
 # include <unistd.h>
 # include <cstring>
 
+
 # include <arpa/inet.h> //inet_aton socket programming to convert an IPv4 network address (binary) to ASCII
 # include <cstdlib> //atoi
 # include <cerrno> //perror
@@ -61,7 +62,7 @@ class Server
 		Channel*	createChannel(const std::string &name, const std::string &key, Client *client);
 		Channel*	findOrCreateChannel(const std::string &name, const std::string &key, Client *client);
 		void		deleteChannel(const std::string name);
-
+		// void	deleteChannel(const std::string &channel_name);
 		Client*		findClient(const std::string name);
 		
 		// bool	sendMessage(int fd, std::string msg);

@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:39 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/06/29 21:18:18 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/01 08:40:51 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,16 @@ void	Channel::broadcast(Client *sender, const std::string &message)
 		send(target->getFd(), message.c_str(), message.size(), 0);
 	} 
 }
+
+void	Channel::mode_broadcast(const std::string &message)
+{
+	for (unsigned long i = 0; i < _clients.size(); i++)
+	{
+		Client* target = _clients[i];
+		response(target->getFd(), message);
+	} 
+}
+
 void	Channel::response(int fd, const std::string &msg)
 {
 	send(fd, msg.c_str(), msg.size(), 0);
@@ -164,8 +174,7 @@ void    Channel::broadcastModeChange(Client &sender, const std::string &modeChan
 {
 	std::string msg = buildClientPrefix(sender) + " MODE " +
 						_name + " " + modeChanges + "\r\n";
-	broadcast(&sender, msg); 
-	response(sender.getFd(), msg);
+	mode_broadcast(msg);
 }
 
 bool    Channel::checkOperator(Client &client)

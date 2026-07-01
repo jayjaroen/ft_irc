@@ -108,26 +108,68 @@ bool Server::bindAndListen(int fd, int port, int backlog)
 
 void Server::disconnectClient(int client_fd)
 {
-    std::cout << "Disconnect client fd: " << client_fd << std::endl;
-    //close socket
-    close(client_fd);
-    //remove from poll
-    for (std::vector<pollfd>::iterator it = _fds.begin(); it != _fds.end(); ++it)
-    {
-        if (it->fd == client_fd)
-        {
-            _fds.erase(it);
-            break;
-        }
-    }
-    //remove from client map
-    std::map<int, Client*>::iterator it = _clients.find(client_fd);
-    if (it != _clients.end())//why checking end
-    {
-        delete it->second;
-        _clients.erase(it);
-    }
+	Client* client = _clients[client_fd];
+	std::string quit_msg = std::string("Disconnect client fd: ") + intToString(client_fd) + "\r\n";
+	for (std::vector<Channel*>::iterator it = _channels.begin(); it != _channels.end(); )
+	{
+		Channel* chan = *it;
+		
+		if (chan != NULL && chan->hasClient(client))
+		{
+
+			chan->broadcast(client, quit_msg);
+			chan->removeClient(client);
+			chan->removeOperator(client);
+			
+
+			if (chan->isEmpty())
+			{
+				delete chan;
+				it = _channels.erase(it);
+				continue;
+			}
+		}
+		it++;
+	}
+	
+	for (std::vector<pollfd>::iterator it = _fds.begin(); it != _fds.end(); ++it)
+	{
+		if (it->fd == client_fd)
+		{
+			_fds.erase(it);
+			break;
+		}
+	}
+
+    ::close(client_fd); 
+
+
+    _clients.erase(client_fd);
+    delete client;
 }
+
+// void Server::disconnectClient(int client_fd)
+// {
+//     std::cout << "Disconnect client fd: " << client_fd << std::endl;
+//     //close socket
+//     close(client_fd);
+//     //remove from poll
+//     for (std::vector<pollfd>::iterator it = _fds.begin(); it != _fds.end(); ++it)
+//     {
+//         if (it->fd == client_fd)
+//         {
+//             _fds.erase(it);
+//             break;
+//         }
+//     }
+//     //remove from client map
+//     std::map<int, Client*>::iterator it = _clients.find(client_fd);
+//     if (it != _clients.end())//why checking end
+//     {
+//         delete it->second;
+//         _clients.erase(it);
+//     }
+// }
 
 void Server::acceptNewClient()
 {
@@ -270,7 +312,7 @@ void Server::run()
     _fds.push_back(server_fd);
     while (Server::_serverRunning)
     {
-        int ret = poll(_fds.data(), _fds.size(), 1000);//number of fds have event
+        int ret = poll(_fds.data(), _fds.size(), 5);//number of fds have event
         if (ret < 0)
         {
             if (errno == EINTR)
