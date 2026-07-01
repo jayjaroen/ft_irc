@@ -35,6 +35,9 @@ class Server
 		std::map<int, Client*>	_clients;
 		std::vector<Channel*> _channels;
 		
+		// std::map<clientfd, std::string[]>	_messagebuffer;
+		//	_messagebuffer.sendresponse();
+		//	_messagevuffer.clear();
 		Server();
 	
 	public:
