@@ -6,14 +6,16 @@
 #    By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/03/21 16:19:53 by jjaroens          #+#    #+#              #
-#    Updated: 2026/06/29 22:33:47 by gyeepach         ###   ########.fr        #
+#    Updated: 2026/07/02 21:12:45 by gyeepach         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = ircserv
 
 SRC = srcs/main.cpp srcs/Server.cpp srcs/Client.cpp srcs/Command.cpp srcs/Parser.cpp srcs/Lexer.cpp \
-		srcs/Channel.cpp
+		srcs/Channel.cpp srcs/Join.cpp srcs/Invite.cpp srcs/Kick.cpp srcs/Cap.cpp srcs/Topic.cpp \
+		srcs/Help.cpp srcs/Part.cpp srcs/Mode.cpp srcs/Privmsg.cpp srcs/User.cpp srcs/Quit.cpp \
+		srcs/Pass.cpp srcs/Nick.cpp
 
 HEADER = include/Server.hpp include/Client.hpp include/Channel.hpp include/Parser.hpp
 
