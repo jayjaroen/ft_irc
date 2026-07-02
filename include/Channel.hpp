@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:29 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/06/30 15:43:12 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/02 09:23:52 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,6 +31,7 @@ class Channel
 		std::vector<int>		_operators; // grant +o
 		std::time_t				_creationTime;
 		std::time_t				_topicSetTime;
+		std::string				_broadcast_buffer;
 
 		/* Channel modes*/
 		std::string				_key; //channel key, linked with k
@@ -53,7 +54,9 @@ class Channel
 		size_t					getLimit();
 		size_t					getChannelSize();
 		std::vector<Client *>	getClients();
-
+		std::string&			get_broadcast_buffer();
+		std::string				append_buffer(std::string buffer);
+		void					test_broadcast(const std::string &message);
 		void					setKey(std::string key);
 		void					setName(std::string name);
 		void					setLimit(size_t limit);
@@ -75,6 +78,7 @@ class Channel
 		void					broadcast(Client *sender, const std::string &message);
 		void					response(int fd, const std::string &msg);
 		void					broadcastModeChange(Client &sender, const std::string &message);
+		
 		void					mode_broadcast(const std::string &message);
 		
 		void					addClient(Client *client);
@@ -90,7 +94,7 @@ class Channel
 		bool					checkOperator(Client &client);
 
 		// Handle modes	
-		void					handleInviteMode(Client &sender, const std::string &modeChanges);
+		void					handleInviteMode(Client &sender, const std::string &modeChanges, Server &server);
 		void					handleTopicMode(Client &sender, const std::string &modeChanges);
 		void					handleKeyMode(Client &sender, const std::string &modeChanges, const std::string &param);
 		void					handleLimitMode(Client &sender, const std::string &modeChanges, const std::string &param);

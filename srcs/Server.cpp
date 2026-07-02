@@ -31,6 +31,7 @@ Server::Server(int port, std::string password)
 	_password = password;
 	_backlog = 10;
 	_server_fd = -1;
+	_check_broadcast = false;
 }
 
 Server::Server(Server const &other)
@@ -173,7 +174,7 @@ void Server::disconnectClient(int client_fd)
 
 void Server::acceptNewClient()
 {
-	std::cout << "In accept new client function" << std::endl;
+	// std::cout << "In accept new client function" << std::endl;
 	// while (true)
 	// {
 		struct sockaddr_in addr;
@@ -196,9 +197,9 @@ void Server::acceptNewClient()
 		}
 		int port = ntohs(addr.sin_port);
 		std::string ip = inet_ntoa(addr.sin_addr);
-		std::cout << "New client: fd: " << client_fd
-				<< " ip = " << ip
-				<< " port = " << port << std::endl;
+		// std::cout << "New client: fd: " << client_fd
+				// << " ip = " << ip
+				// << " port = " << port << std::endl;
 		
 		if (!setNonBlocking(client_fd))
 		{
@@ -227,7 +228,7 @@ void Server::handleClientMessage(int client_fd)
 	//client disconnect or error
 	if (bytes <= 0) //check condition: 0 -> client close connection, < 0 -> error
 	{
-		std::cout << "Client " << client_fd << " disconnected" << std::endl;
+		// std::cout << "Client " << client_fd << " disconnected" << std::endl;
 		disconnectClient(client_fd);
 		return;
 	}
@@ -249,10 +250,22 @@ void Server::handleClientMessage(int client_fd)
 		cmd.execute_command(*this, *client); 
 		if (_clients.find(client_fd) == _clients.end())
 		{
-			std::cout << "Client fd " << client_fd << " disconnected during command execution" << std::endl;
+			// std::cout << "Client fd " << client_fd << " disconnected during command execution" << std::endl;
 			return;
 		}
+		// if (this->get_check_broadcast() == true)
+		// {
+		// 	for (size_t i = 0; i < this->_channels.size(); ++i)
+		// 	{
+		// 		std::string buffer = this->_channels[i]->get_broadcast_buffer();
+		// 		if (!(buffer.empty()))
+		// 			this->_channels[i]->broadcast(client, buffer);
+		// 	}
+		// }
 		// sending both server and client info
+			// --> if (checkBroadcast(p.fd) == true)
+			//		broadcast();
+			// <--
 	}
 }
 
@@ -294,7 +307,7 @@ Channel*	Server::findOrCreateChannel(const std::string &name, const std::string 
 	{
 		if (!channel->checkKey(key))
 		{
-			std::cout << "Wrong key to join channel: " << name << std::endl;
+			// std::cout << "Wrong key to join channel: " << name << std::endl;
 			return NULL;
 		}
 		if (!channel->hasClient(client))
@@ -304,67 +317,210 @@ Channel*	Server::findOrCreateChannel(const std::string &name, const std::string 
 	return createChannel(name, key, client);
 }
 
-
+// worked but slow and no POLLOUT
+// void Server::run()
+// {
+//     pollfd server_fd = {_server_fd, POLLIN, 0};
+//     _fds.push_back(server_fd);
+//     while (Server::_serverRunning)
+//     {
+//         int ret = poll(_fds.data(), _fds.size(), 5);//number of fds have event
+//         if (ret < 0)
+//         {
+//             if (errno == EINTR)
+//                 continue;
+//             throw std::runtime_error("poll failed");
+//         }
+//         for (int i = 0; i < (int)_fds.size(); i++)
+//         {
+//             pollfd &p = _fds[i];
+//             if (p.revents == 0)
+//                 continue;
+//             //handle error
+//             if (p.revents & (POLLHUP | POLLERR))
+//             {
+//                 disconnectClient(p.fd);
+//                 i--; // Adjust index since we just removed an element
+//                 continue;
+//             }
+//             //new connection
+//             if (p.fd == _server_fd)
+//             {
+//                 acceptNewClient();
+//             }
+//             else if (p.revents & POLLIN)
+//             {
+//                 // Check if client still exists before handling
+//                 if (_clients.find(p.fd) != _clients.end())
+//                 {
+//                     handleClientMessage(p.fd);
+//                     // Check if client was disconnected during handleClientMessage
+//                     if (_clients.find(p.fd) == _clients.end())
+//                     {
+//                         i--; // Adjust index since we just removed an element
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
 
 void Server::run()
 {
-	pollfd server_fd = {_server_fd, POLLIN, 0};
+	pollfd server_fd = {_server_fd, POLLIN, -1};
 	_fds.push_back(server_fd);
+
 	while (Server::_serverRunning)
 	{
-		int ret = poll(_fds.data(), _fds.size(), 5);//number of fds have event
-		if (ret < 0)
+		for (size_t i = 1; i < _fds.size(); i++)
 		{
+			pollfd &p = _fds[i];
+			Client *c = _clients[p.fd];
+			
+			if (c)
+				if (!c->getWriteBuffer().empty())
+					p.events |= POLLOUT;
+		}
+
+		int ret = poll(_fds.data(), _fds.size(), -1);
+		
+		if (ret < 0) {
 			if (errno == EINTR)
 				continue;
 			throw std::runtime_error("poll failed");
 		}
-		for (int i = 0; i < (int)_fds.size(); ++i)
+		for (int i = 0; i < (int)_fds.size(); i++)
 		{
 			pollfd &p = _fds[i];
 			if (p.revents == 0)
-			continue;
-			//handle error
+				continue;
 			if (p.revents & (POLLHUP | POLLERR))
 			{
 				disconnectClient(p.fd);
-				i--; // Adjust index since we just removed an element
-				printf("ragequit %d\t%d/%d/%d\n", ret, p.fd, p.events, p.revents);
-				continue;
+				i--; continue;
 			}
-			//new connection
 			if (p.fd == _server_fd)
-			{
 				acceptNewClient();
-				printf("connect %d\t%d/%d/%d\n", ret, p.fd, p.events, p.revents);
-			}
-			else if (p.revents & POLLIN)
+			else
 			{
-				// Check if client still exists before handling
-				if (_clients.find(p.fd) != _clients.end())
+			if (p.revents & POLLIN)
+			{
+				handleClientMessage(p.fd);
+				if (_clients.find(p.fd) == _clients.end())
 				{
-					handleClientMessage(p.fd);
-					// --> if (checkBroadcast(p.fd) == true)
-					//		broadcast();
-					// <--
-					printf("contact %d\t%d/%d/%d\n", ret, p.fd, p.events, p.revents);
-					// Check if client was disconnected during handleClientMessage
-					if (_clients.find(p.fd) == _clients.end())
-						--i; // Adjust index since we just removed an element
+					i--;
+					continue;
 				}
 			}
-			// else if (p.revents & POLLOUT)
-			// {
-			// 	if (_clients.find(p.fd) != _clients.end())
-			// 	{
-			// 		// --> broadcast something <--
-			// 		if (_clients.find(p.fd) == _clients.end())
-			// 			--i;
-			// 	}
-			// }
+			if (p.revents & POLLOUT)
+			{
+				Client *c = _clients[p.fd];
+				if (c && !c->getWriteBuffer().empty())
+				{
+					std::string &buf = c->getWriteBuffer();
+					std::cout << "[DEBUG] Sending to fd " << p.fd << " : " << buf;
+					int sent = send(p.fd, buf.c_str(), buf.length(), 0);
+					if (sent > 0)
+					{
+						buf.erase(0, sent);
+					} 
+					else if (sent < 0)
+					{
+						if (errno != EAGAIN && errno != EWOULDBLOCK) {
+								disconnectClient(p.fd);
+								i--;
+								continue;
+							}
+					}
+
+					if (buf.empty())
+						p.events &= ~POLLOUT;
+				}
+			}
+		}
 		}
 	}
 }
+
+// void Server::run()
+// {
+// 	pollfd server_fd = {_server_fd, POLLIN, 0};
+// 	_fds.push_back(server_fd);
+// 	while (Server::_serverRunning)
+// 	{
+// 		int ret = poll(_fds.data(), _fds.size(), 5);//number of fds have event
+// 		if (ret < 0)
+// 		{
+// 			if (errno == EINTR)
+// 				continue;
+// 			throw std::runtime_error("poll failed");
+// 		}
+// 		for (int i = 0; i < (int)_fds.size(); ++i)
+// 		{
+// 			pollfd &p = _fds[i];
+// 			if (p.revents == 0)
+// 			continue;
+// 			//handle error
+// 			if (p.revents & (POLLHUP | POLLERR))
+// 			{
+// 				disconnectClient(p.fd);
+// 				i--; // Adjust index since we just removed an element
+// 				// printf("ragequit %d\t%d/%d/%d\n", ret, p.fd, p.events, p.revents);
+// 				continue;
+// 			}
+// 			//new connection
+// 			if (p.fd == _server_fd)
+// 			{
+// 				acceptNewClient();
+// 				// printf("connect %d\t%d/%d/%d\n", ret, p.fd, p.events, p.revents);
+// 			}
+// 			else if (p.revents & POLLIN)
+// 			{
+// 				// Check if client still exists before handling
+// 				if (_clients.find(p.fd) != _clients.end())
+// 				{
+// 					handleClientMessage(p.fd);
+// 					if (p.revents & POLLOUT)
+// 					{
+// 						std::cout << "access POLLOUT 1" << std::endl;
+// 					}
+// 					// printf("contact %d\t%d/%d/%d\n", ret, p.fd, p.events, p.revents);
+// 					// Check if client was disconnected during handleClientMessage
+// 					if (_clients.find(p.fd) == _clients.end())
+// 						--i; // Adjust index since we just removed an element
+// 					// if (p.revents & POLLOUT)
+// 					// {
+// 					// 	std::cout << "access POLLOUT 2" << std::endl;
+// 					// }
+// 				}
+// 				// if (p.revents & POLLOUT)
+// 				// {
+// 				// 	std::cout << "access POLLOUT 3" << std::endl;
+// 				// }
+// 			}
+// 			if (p.revents & POLLOUT)
+// 			{
+				
+// 				std::cout << "access POLLOUT" << std::endl;
+// 				// printf("boradcast %d\t%d/%d/%d\n", ret, p.fd, p.events, p.revents);
+// 				// if (_clients.find(p.fd) != _clients.end())
+// 				// {
+// 				// 	if (this->get_check_broadcast() == true)
+// 				// 	{
+// 				// 		for (size_t i = 0; i < this->_channels.size(); ++i)
+// 				// 		{
+// 				// 			std::string buffer = this->_channels[i]->get_broadcast_buffer();
+// 				// 			if (!(buffer.empty()))
+// 				// 				this->_channels[i]->test_broadcast(buffer);
+// 				// 		}
+// 				// 	}
+// 				// 	if (_clients.find(p.fd) == _clients.end())
+// 				// 		--i;
+// 				// }
+// 			}
+// 		}
+// 	}
+// }
 
 bool Server::start()
 {
@@ -402,4 +558,40 @@ Client*	Server::findClient(const std::string name)
 			return it->second;
 	}
 	return NULL;
+}
+
+
+// std::string& Server::get_message_send_client_buffer()
+// {
+// 	return _messagebuffer;
+// }
+
+// std::string Server::append_buffer(std::string buffer)
+// {
+// 	this->_messagebuffer = buffer;
+// 	this->check_broadcast = true;
+// 	return (this->_messagebuffer);
+// }
+
+bool Server::get_check_broadcast() const
+{
+	return this->_check_broadcast;
+}
+
+bool Server::set_check_broadcast(bool check)
+{
+	this->_check_broadcast = check;
+	return (this->_check_broadcast);
+}
+
+void	Server::enablePollOut(int fd)
+{
+	for (size_t i = 1; i < _fds.size(); i++)
+	{
+		if (_fds[i].fd == fd)
+		{
+			_fds[i].events |= POLLOUT;
+			break;
+		}
+	}
 }

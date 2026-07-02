@@ -18,6 +18,7 @@ class Client
         std::string _nickname;
         std::string _username;
         std::string _buffer;
+		std::string _write_buffer;
         // Channel*    _channel;
         //client join many channels?
         std::vector<Channel*>   _channels;
@@ -63,6 +64,8 @@ class Client
         bool    setCapNegotiating(bool negotiating);
         bool    isCapNegotiating() const;
         std::string& getBuffer();
+		std::string& getWriteBuffer();
+		void appendWriteBuffer(const std::string &data);
         Channel*    getChannel() const;
         std::vector<Channel*>   getChannels() const;
 

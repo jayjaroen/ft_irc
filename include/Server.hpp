@@ -10,7 +10,7 @@
 # include <netinet/in.h>
 # include <unistd.h>
 # include <cstring>
-
+#include <netinet/tcp.h>
 
 # include <arpa/inet.h> //inet_aton socket programming to convert an IPv4 network address (binary) to ASCII
 # include <cstdlib> //atoi
@@ -29,13 +29,15 @@ class Server
 		int	_server_fd;
 		int	_port;
 		int	_backlog;
+		bool _check_broadcast;
 		std::string	_password;
 		
 		std::vector<pollfd>	_fds;
 		std::map<int, Client*>	_clients;
 		std::vector<Channel*> _channels;
 		
-		// std::map<clientfd, std::string[]>	_messagebuffer;
+		// std::map<pollfd, std::string[]>	_messagebuffer;
+		// std::string _messagebuffer;
 		//	_messagebuffer.sendresponse();
 		//	_messagevuffer.clear();
 		Server();
@@ -50,10 +52,14 @@ class Server
 		bool	start();
 		int		openSocket();
 		bool	setNonBlocking(int fd);
+		bool	get_check_broadcast() const;
+		bool	set_check_broadcast(bool check);
 		// void	setCloexec(int fd);
 		bool	bindAndListen(int fd, int port, int backlog);
 		void	run();
 		std::string get_password() const;
+		// std::string append_buffer(std::string buffer);
+		// std::string& get_message_send_client_buffer();
 		void	acceptNewClient();
 		void	disconnectClient(int client_fd);
 		void	handleClientMessage(int client_fd);
@@ -66,6 +72,8 @@ class Server
 		void		deleteChannel(const std::string name);
 		// void	deleteChannel(const std::string &channel_name);
 		Client*		findClient(const std::string name);
+		void		enablePollOut(int fd);
+
 		
 		// bool	sendMessage(int fd, std::string msg);
 };

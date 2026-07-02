@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:39 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/07/01 08:40:51 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/02 12:22:28 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,15 +61,24 @@ void	Channel::setLimit(size_t limit)
 	_limit = limit;
 }
 
+void	Channel::test_broadcast(const std::string &message)
+{
+	for (unsigned long i = 0; i < _clients.size(); i++)
+		_clients[i]->appendBuffer(message);
+	// this->_broadcast_buffer.clear();
+}
+
 void	Channel::broadcast(Client *sender, const std::string &message)
 {
+	(void) sender;
 	for (unsigned long i = 0; i < _clients.size(); i++)
 	{
 		Client* target = _clients[i];
-		if (target == sender)
-			continue;
+		// if (target == sender)
+		// 	continue;
 		send(target->getFd(), message.c_str(), message.size(), 0);
-	} 
+	}
+	this->_broadcast_buffer.clear();
 }
 
 void	Channel::mode_broadcast(const std::string &message)
@@ -90,7 +99,7 @@ bool	Channel::checkKey(const std::string &key)
 {
 	if (_key.empty())
 		return true;
-	return _key == key; //if the given key same as the set key
+	return _key == key;
 }
 
 void	Channel::addClient(Client *client)
@@ -190,7 +199,37 @@ bool    Channel::checkOperator(Client &client)
 	return true;
 }
 
-void	Channel::handleInviteMode(Client &sender, const std::string &modeChanges)
+// void    Channel::handleInviteMode(Client &sender, const std::string &modeChanges, Server &server)
+// {
+//     if (!checkOperator(sender))
+//         return;
+
+//     _inviteOnly = (modeChanges[0] == '+');
+
+//     // 1. สร้างข้อความ
+//     std::string msg = buildClientPrefix(sender) + " MODE " + _name + " " + modeChanges + "\r\n";
+//     std::string rpl_324 = ":ircserver 324 " + sender.getName() + " " + _name + " :" + (modeChanges[0] == '+' ? "+i" : "") + "\r\n";
+
+//     // 2. ลูปที่ 1: ยัดลง Buffer ให้ครบทุกคน (เตรียมของให้พร้อม)
+//     for (unsigned long i = 0; i < _clients.size(); i++) {
+//         if (_clients[i] != NULL) {
+//             _clients[i]->appendWriteBuffer(msg);
+//             // ถ้าเป็นคนสั่ง ให้แปะ 324 ตามลงไปใน Buffer ทันที
+//             if (_clients[i]->getFd() == sender.getFd()) {
+//                 _clients[i]->appendWriteBuffer(rpl_324);
+//             }
+//         }
+//     }
+
+//     // 3. ลูปที่ 2: เปิด POLLOUT ให้ทุกคนพร้อมกัน (กดสวิตช์ส่งพร้อมกัน)
+//     for (unsigned long i = 0; i < _clients.size(); i++) {
+//         if (_clients[i] != NULL) {
+//             server.enablePollOut(_clients[i]->getFd());
+//         }
+//     }
+// }
+
+void	Channel::handleInviteMode(Client &sender, const std::string &modeChanges, Server &server)
 {
 	if (!checkOperator(sender))
 		return;
@@ -198,7 +237,18 @@ void	Channel::handleInviteMode(Client &sender, const std::string &modeChanges)
 		_inviteOnly = true;
 	else
 		_inviteOnly = false;
-	broadcastModeChange(sender, modeChanges);
+	// broadcastModeChange(sender, modeChanges);
+	std::string msg = buildClientPrefix(sender) + " MODE " +
+						_name + " " + modeChanges + "\r\n";
+	std::string current_modes = (_inviteOnly ? "+i" : "+"); // เพิ่ม logic เช็ค mode อื่นได้ที่นี่
+    std::string rpl_324 = ":ircserver 324 " + sender.getName() + " " + _name + " :" + current_modes + "\r\n";
+	std::string final_msg = msg + rpl_324;
+	for (unsigned long i = 0; i < _clients.size(); i++) {
+		if (_clients[i] != NULL) {
+			_clients[i]->appendWriteBuffer(final_msg);
+			server.enablePollOut(_clients[i]->getFd());
+		}
+	}
 }
 
 void	Channel::handleTopicMode(Client &sender, const std::string &modeChanges)
@@ -223,7 +273,7 @@ void	Channel::handleKeyMode(Client &sender, const std::string &modeChanges, cons
 		{
 			std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
 			response(sender.getFd(), err);
-			std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
+			// std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
 			return;
 		}
 		_hasKey = true;
@@ -238,7 +288,7 @@ void	Channel::handleKeyMode(Client &sender, const std::string &modeChanges, cons
 	{
 		std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
 		response(sender.getFd(), err);
-		std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
+		// std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
 	}
 	broadcastModeChange(sender, modeChanges);
 }
@@ -253,7 +303,7 @@ void	Channel::handleLimitMode(Client &sender, const std::string &modeChanges, co
 		{
 			std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
 			response(sender.getFd(), err);
-			std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
+			// std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
 			return;
 		}
 		_hasLimited = true;
@@ -268,7 +318,7 @@ void	Channel::handleLimitMode(Client &sender, const std::string &modeChanges, co
 	{
 		std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
 		response(sender.getFd(), err);
-		std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
+		// std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
 	}
 	broadcastModeChange(sender, modeChanges);
 }
@@ -281,7 +331,7 @@ void	Channel::handleOperatorMode(Client &sender, const std::string &modeChanges,
 	{
 		std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
 		response(sender.getFd(), err);
-		std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
+		// std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
 		return;
 	}
 	Client* target = server.findClient(nick);
@@ -289,7 +339,7 @@ void	Channel::handleOperatorMode(Client &sender, const std::string &modeChanges,
 	{
 		std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " :No such nick\r\n";
 		response(sender.getFd(), err);
-		std::cout << "Client FD " << sender.getFd() << " attempted to change modes for non-existent user: " << std::endl;
+		// std::cout << "Client FD " << sender.getFd() << " attempted to change modes for non-existent user: " << std::endl;
 		return;
 	}
 	if (modeChanges[0] == '+')
@@ -300,7 +350,7 @@ void	Channel::handleOperatorMode(Client &sender, const std::string &modeChanges,
 	{
 		std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
 		response(sender.getFd(), err);
-		std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
+		// std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
 	}
 	broadcastModeChange(sender, modeChanges);
 }
@@ -388,4 +438,17 @@ std::time_t	Channel::getCreationTime_Topic() const
 size_t	Channel::get_operators_size() const
 {
 	return _operators.size();
+}
+
+std::string&	Channel::get_broadcast_buffer()
+{
+	return (_broadcast_buffer);
+}
+
+
+std::string Channel::append_buffer(std::string buffer)
+{
+		this->_broadcast_buffer = buffer;
+		this->_broadcast_buffer = true;
+		return (this->_broadcast_buffer);
 }
