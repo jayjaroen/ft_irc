@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 19:47:33 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/02 19:49:28 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/02 23:38:43 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
 	if (this->params.empty() || this->params[0].empty())
 	{
 		std::string err = ":ircserver " + intToString(ERR_NORECIPIENT) + " " + sender.getName() + " PRIVMSG :No recipient given\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		return;
 	}
@@ -34,7 +34,7 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
 	if (params.size() < 2 || params[1].empty())
 	{
 		std::string err = ":ircserver " + intToString(ERR_NOTEXTTOSEND) + " " + sender.getName() + " PRIVMSG :No text to send\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		return;
 	}
@@ -49,7 +49,7 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
 		{
 			// std::cout << "Channel not found" << std::endl;
 			std::string err = ":ircserver " + intToString(ERR_NOSUCHCHANNEL) + " " + sender.getName() + " " + target + " :No such channel\r\n";
-			sender.appendBuffer(err);
+			sender.appendWriteBuffer(err);
 			server.enablePollOut(sender.getFd());
 			return;
 		}
@@ -57,7 +57,7 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
 		{
 			// std::cout << "Sender does not belong to " << target << std::endl;
 			std::string err = ":ircserver " + intToString(ERR_CANNOTSENDTOCHAN) + " " + sender.getName() + " " + target + " :Cannot send to channel\r\n";
-			sender.appendBuffer(err);
+			sender.appendWriteBuffer(err);
 			server.enablePollOut(sender.getFd());
 			return;
 		}
@@ -71,7 +71,7 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
 		if (!target_client) //401
 		{
 			std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " " + target + " :No such nick/channel\r\n";
-			sender.appendBuffer(err);
+			sender.appendWriteBuffer(err);
 			server.enablePollOut(sender.getFd());
 			return;
 		}

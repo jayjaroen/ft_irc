@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 19:49:11 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/02 19:49:42 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/02 23:38:57 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,14 +19,14 @@ void Command::handleUSER(Client &sender, Server &server)
 	if (this->params.empty() || this->params.size() != 4 || this->params[0].empty() || this->params[1].empty() || this->params[2].empty() || this->params[3].empty())
 	{
 		std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " USER :Not enough parameters\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		return;
 	}
 	if (sender.isAuthenticated() || sender.isUserSet())
 	{
 		std::string err = ":ircserver " + intToString(ERR_ALREADYREGISTERED) + " " + sender.getName() + " :You may not register again\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		// std::cout << "Client FD " << sender.getFd() << " attempted to re-register." << std::endl;
 		return;

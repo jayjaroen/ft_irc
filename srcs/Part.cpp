@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 19:45:22 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/02 19:47:54 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/02 23:38:37 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ void    Command::handlePart(Server &server, Client &sender)
 		std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() +
 			"PART :Not enough parameters\r\n";
 		 
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		return;
 	}
@@ -36,21 +36,21 @@ void    Command::handlePart(Server &server, Client &sender)
 	if (!channel)
 	{
 		std::string err = ":ircserver " + intToString(ERR_NOSUCHCHANNEL) + " " + sender.getName() + " " + channel_name + " :No such channel\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		return;
 	}
 	if (!channel->hasClient(&sender))
 	{
 		std::string err = ":ircserver " + intToString(ERR_NOTONCHANNEL) + " " + sender.getName() + " " + channel_name + " :You're not on that channel\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		// std::cout << "Client does not belong to the channel " << channel_name << std::endl;
 		return;
 	}
 	std::string message = buildClientPrefix(sender) + " PART " + channel_name + "\r\n";
 	channel->broadcast(&sender, message);
-	sender.appendBuffer(message);
+	sender.appendWriteBuffer(message);
 	server.enablePollOut(sender.getFd());
 	channel->removeClient(&sender);
 	channel->removeOperator(&sender);
@@ -63,7 +63,7 @@ void    Command::handlePart(Server &server, Client &sender)
 		// channel->setAdmin(new_admin);
 		channel->addOperator(new_admin->getFd());
 		std::string admin_msg = ":ircserver " + intToString(RPL_YOUREOPER) + " " + new_admin->getName() + " :You are now the channel operator\r\n";
-		sender.appendBuffer(admin_msg);
+		sender.appendWriteBuffer(admin_msg);
 		server.enablePollOut(sender.getFd());
 		channel->broadcastModeChange(*new_admin, "+o " + new_admin->getName());
 		// std::cout << "New admin of channel " << channel_name << " is " << new_admin->getName() << std::endl;

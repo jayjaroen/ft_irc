@@ -233,7 +233,7 @@ void Server::handleClientMessage(int client_fd)
 		return;
 	}
 	Client* client = _clients[client_fd];
-	//append to existing buffer
+	//append to existing read buffer (was incorrectly using write buffer)
 	client->appendBuffer(std::string(buffer, bytes));
 	//get buffer
 	std::string &buf = client->getBuffer();

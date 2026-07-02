@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 19:42:37 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/02 19:42:49 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/02 23:35:22 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,7 @@ void Command::handleCAP(Client &sender, Server &server)
 	if (this->params.empty())
 	{
 		std::string err = ":ircserver "+ intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " CAP :Not enough parameters\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		// std::cout << "Client FD " << sender.getFd() << " attempted to inquire capabilities without proper input(s)." << std::endl;
 		return;
@@ -53,7 +53,7 @@ void Command::handleCAP(Client &sender, Server &server)
 	if (sub == UNKNOWN_CMD_CAP)
 	{
 		std::string err = ":ircserver "+ intToString(ERR_INVALIDCAPCMD) + " " + sender.getName() + " CAP :Invalid CAP subcommands\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		// std::cout << "Client FD " << sender.getFd() << " attempted to inquire capabilities without proper subcommand." << std::endl;
 		return;
@@ -64,12 +64,12 @@ void Command::handleCAP(Client &sender, Server &server)
 			sender.setCapNegotiating(true); // set a flag in client to indicate that CAP negotiation is in progress
 			if (this->params.size() > 1 && !this->params[1].empty()) // leak solved checked
 			{
-				sender.appendBuffer(":ircserver CAP " + sender.getName() +  " LS "  + this->params[1][0] + " " + " multi-prefix\r\n");
+				sender.appendWriteBuffer(":ircserver CAP " + sender.getName() +  " LS "  + this->params[1][0] + " " + " multi-prefix\r\n");
 				server.enablePollOut(sender.getFd());
 			}
 			else
 			{
-				sender.appendBuffer(":ircserver CAP " + sender.getName() + " LS multi-prefix\r\n");
+				sender.appendWriteBuffer(":ircserver CAP " + sender.getName() + " LS multi-prefix\r\n");
 				server.enablePollOut(sender.getFd());
 			}
 			break;
@@ -90,14 +90,14 @@ void Command::handleCAP(Client &sender, Server &server)
 			if (has_multi_prefix)
 			{
 				std::string reply = ":ircserver CAP " + sender.getName() + " ACK :multi-prefix\r\n";
-				sender.appendBuffer(reply);
+				sender.appendWriteBuffer(reply);
 				server.enablePollOut(sender.getFd());
 			}
 			else
 			{
 				std::string requested = (this->params.size() > 1 && !this->params[1].empty()) ? this->params[1][0] : "unknown";
 				std::string reply = ":ircserver CAP " + sender.getName() + " NAK :" + requested + "\r\n";
-				sender.appendBuffer(reply);
+				sender.appendWriteBuffer(reply);
 				server.enablePollOut(sender.getFd());
 			}
 			break;

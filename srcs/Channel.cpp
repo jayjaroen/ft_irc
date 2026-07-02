@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:39 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/07/02 15:29:23 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/02 23:37:36 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,13 +59,6 @@ void	Channel::setKey(std::string key)
 void	Channel::setLimit(size_t limit)
 {
 	_limit = limit;
-}
-
-void	Channel::test_broadcast(const std::string &message)
-{
-	for (unsigned long i = 0; i < _clients.size(); i++)
-		_clients[i]->appendBuffer(message);
-	// this->_broadcast_buffer.clear();
 }
 
 void	Channel::broadcast(Client *sender, const std::string &message)

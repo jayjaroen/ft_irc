@@ -1,16 +1,24 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   Join_cmd.cpp                                       :+:      :+:    :+:   */
+/*   Join.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 19:37:14 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/02 19:38:18 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/02 23:28:21 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/Parser.hpp"
+
+static std::string buildClientPrefix(const Client &sender)
+{
+	std::string nickname = sender.getName();
+	std::string username = sender.getUsername().empty() ? "unknown" : sender.getUsername();
+	std::string host = sender.getIp().empty() ? "localhost" : sender.getIp();
+	return ":" + nickname + "!" + username + "@" + host;
+}
 
 static bool isValidJoinChannelName(const std::string &channel_name)
 {
@@ -36,22 +44,22 @@ static bool isValidJoinChannelName(const std::string &channel_name)
 	return true;
 }
 
-static void sendJoinReplies(Client &sender, Channel *channel)
+static void sendJoinReplies(Server &server, Client &sender, Channel *channel)
 {
 	if (channel == NULL)
 		return;
 	std::string channel_name = channel->getName();
 	std::string join_prefix = buildClientPrefix(sender) + " JOIN :" + channel_name + "\r\n";
-	sendResponse(sender.getFd(), join_prefix);
+	sender.appendWriteBuffer(join_prefix);
 	channel->broadcast(&sender, join_prefix);
 	std::string topic = channel->getTopic();
 	if (!topic.empty())
 	{
 		std::string topic_msg = ":ircserver " + intToString(RPL_TOPIC) + " " + sender.getName() + " " + channel_name + " :" + topic + "\r\n";
-		sendResponse(sender.getFd(), topic_msg);
+		sender.appendWriteBuffer(topic_msg);
 		std::string setter = channel->getsetter_topic();
 		std::string topic_time_msg = ":ircserver " + intToString(RPL_TOPICWHOTIME) + " " + sender.getName() + " " + channel_name + " " + setter + " :Topic set time\r\n";
-		sendResponse(sender.getFd(), topic_time_msg);
+		sender.appendWriteBuffer(topic_time_msg);
 	}
 	std::string names_msg = ":ircserver " + intToString(RPL_NAMREPLY) + " " + sender.getName() + " = " + channel_name + " :";
 	std::vector<Client*> clients = channel->getClients();
@@ -63,9 +71,10 @@ static void sendJoinReplies(Client &sender, Channel *channel)
 			names_msg += clients[i]->getName() + " ";
 	}
 	names_msg += "\r\n";
-	sendResponse(sender.getFd(), names_msg);
+	sender.appendWriteBuffer(names_msg);
 	std::string end_of_names_msg = ":ircserver " + intToString(RPL_ENDOFNAMES) + " " + sender.getName() + " " + channel_name + " :End of NAMES list\r\n";
-	sendResponse(sender.getFd(), end_of_names_msg);
+	sender.appendWriteBuffer(end_of_names_msg);
+	server.enablePollOut(sender.getFd());
 }
 
 void Command::handleJOIN(Server &server, Client &sender)
@@ -161,6 +170,6 @@ void Command::handleJOIN(Server &server, Client &sender)
 			server.enablePollOut(sender.getFd());
 			continue;
 		}
-		sendJoinReplies(sender, channel);
+		sendJoinReplies(server, sender, channel);
 	}
 }

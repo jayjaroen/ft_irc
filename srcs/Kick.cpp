@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 19:41:02 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/02 19:41:58 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/02 23:38:01 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@ void Command::handleKICK(Client &sender, Server &server)
 	if (this->params.empty() || this->params[0].empty() || this->params.size() < 2 || this->params[1].empty())
 	{
 		std::string err = ":ircserver "+ intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " KICK :Not enough parameters\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		// std::cout << "Client FD " << sender.getFd() << " attempted to kick without providing necessary parameters." << std::endl;        
 		return;
@@ -36,7 +36,7 @@ void Command::handleKICK(Client &sender, Server &server)
 	if (channelName[0] != '#' && channelName[0] != '&') // check if the channel name starts with # or & which are valid channel prefixes in IRC
 	{
 		std::string err = ":ircserver " + intToString(ERR_BADCHANMASK) + " " + sender.getName() + " KICK :Bad channel mask\r\n";    
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		// std::cout << "Client FD " << sender.getFd() << " attempted to kick with invalid parameters: targetNick: " << targetNick << ", channelName: " << channelName << std::endl;
 		return;
@@ -47,14 +47,14 @@ void Command::handleKICK(Client &sender, Server &server)
 	if (!targetChannel)
 	{
 		std::string err = ":ircserver " + intToString(ERR_NOSUCHCHANNEL) + " " + sender.getName() + " " + channelName + " : no such channel\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		return;
 	}
 	if (!targetClient)
 	{
 		std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " " + targetNick + " :No such nick\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		// std::cout << "Client FD " << sender.getFd() << " attempted to kick non-existent user: " << targetNick << std::endl;
 		return;
@@ -62,7 +62,7 @@ void Command::handleKICK(Client &sender, Server &server)
 	if (!targetChannel->hasClient(&sender))
 	{
 		std::string err = ":ircserver " + intToString(ERR_NOTONCHANNEL) + sender.getName() + " " + channelName + " :You're not on that channel\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		// std::cout << "Client FD " << sender.getFd() << " attempted to kick user from channel they are not part of: " << channelName << std::endl;
 		return;
@@ -70,7 +70,7 @@ void Command::handleKICK(Client &sender, Server &server)
 	if (!targetChannel->hasClient(targetClient))
 	{
 		std::string err = ":ircserver " + intToString(ERR_USERNOTINCHANNEL) + " " + sender.getName() + " " + targetNick + " " + channelName + " :is not on channel\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		// std::cout << "Client FD " << sender.getFd() << " attempted to kick user who is not on the channel: " << targetNick << " from channel: " << channelName << std::endl;
 		return;
@@ -78,7 +78,7 @@ void Command::handleKICK(Client &sender, Server &server)
 	if (targetChannel->isOperator(sender.getFd()) == false)
 	{
 		std::string err = ":ircserver " + intToString(ERR_CHANOPRIVSNEEDED) + sender.getName() + " " + channelName + " :You're not channel operator\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		// std::cout << "Client FD " << sender.getFd() << " attempted to kick user from channel without operator privileges: " << channelName << std::endl;
 		return;
@@ -98,7 +98,7 @@ void Command::handleKICK(Client &sender, Server &server)
 	
 
 	// sendResponse(targetClient->getFd(), kickMsg);
-	sender.appendBuffer(kickMsg);
+	sender.appendWriteBuffer(kickMsg);
 	server.enablePollOut(targetClient->getFd());
 	targetChannel->broadcast(&sender, kickMsg); 
 

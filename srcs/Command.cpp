@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/07/02 21:10:59 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/02 23:42:54 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,14 +15,6 @@
 #include <unistd.h>
 #include <cstdio>
 #include <string>
-
-static std::string buildClientPrefix(const Client &sender)
-{
-	std::string nickname = sender.getName();
-	std::string username = sender.getUsername().empty() ? "unknown" : sender.getUsername();
-	std::string host = sender.getIp().empty() ? "localhost" : sender.getIp();
-	return ":" + nickname + "!" + username + "@" + host;
-}
 
 // void sendResponse(int fd, const std::string &message)
 // {
@@ -50,7 +42,7 @@ void Command::execute_command(Server &server, Client &sender)
 		if (cmdType != PASS && cmdType != NICK && cmdType != USER && cmdType != CAP)
 		{
 			std::string err = ":ircserver " + intToString(ERR_NOTREGISTERED) + " " + sender.getName() + " :You have not registered\r\n";
-			sender.appendBuffer(err);
+			sender.appendWriteBuffer(err);
 			server.enablePollOut(sender.getFd());
 			// std::cout << "Client fd " << sender.getFd() << " attempted to execute command without registering: " << err << std::endl;
 			return ;
@@ -76,7 +68,7 @@ void Command::execute_command(Server &server, Client &sender)
 			if (this->params.empty() || this->params[0].empty()) return;
 			std::string token = this->params[0][0];
 			std::string pongResponse = ":ircserver PONG ircserver :" + token + "\r\n";
-			sender.appendBuffer(pongResponse);
+			sender.appendWriteBuffer(pongResponse);
 			server.enablePollOut(sender.getFd());
 			break;
 		}
@@ -85,7 +77,6 @@ void Command::execute_command(Server &server, Client &sender)
 	if (sender.isPassSet() == true && sender.isNickSet() == true && sender.isUserSet() == true && sender.isAuthenticated() == false)
 	{
 		sendWelcomeMessage(server, sender);
-		sender.setAuthenticated(true);
 	}
 	if (this->type == 0)
 		return;                                                                                                                                         
@@ -97,7 +88,7 @@ void sendWelcomeMessage(Server &server, Client &sender)
 {
 	if (sender.isNickSet() && sender.isUserSet() && sender.isPassSet() && !sender.isAuthenticated())
 	{
-		// sender.setAuthenticated(true);
+		sender.setAuthenticated(true);
 		// std::cout << "Client FD " << sender.getFd() << " has successfully registered." << std::endl;
 		std::string clientNick = sender.getName();
 		std::string welcomeMsg = ":ircserver 001 " + clientNick + " :Welcome to the IRC server, " + clientNick + "!\r\n";
@@ -105,7 +96,7 @@ void sendWelcomeMessage(Server &server, Client &sender)
 		welcomeMsg += ":ircserver 003 " + clientNick + " :This server was created on " + server.get_creation_date() + "\r\n";
 		welcomeMsg += ":ircserver 004 " + clientNick + " ircserver 1.0 i tkolk\r\n";
 		
-		sender.appendBuffer(welcomeMsg);
+		sender.appendWriteBuffer(welcomeMsg);
 		server.enablePollOut(sender.getFd());
 	}
 }

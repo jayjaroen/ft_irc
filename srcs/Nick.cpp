@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 21:11:06 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/02 21:11:36 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/02 23:38:29 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ void Command::handleNick(Client &sender, Server &server)
 	{
 		std::string current_nick = sender.getName().empty() ? "unknown" : sender.getName();
 		std::string err = ":ircserver " + intToString(ERR_NONICKNAMEGIVEN) + " " + current_nick + " :No nickname given\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		return;
 	}
@@ -42,7 +42,7 @@ void Command::handleNick(Client &sender, Server &server)
 		std::string current_nick = sender.getName().empty() ? "*" : sender.getName();
 		if (current_nick.empty()) current_nick = "*";
 		std::string err = ":ircserver " + intToString(ERR_NICKNAMEINUSE) + " " + current_nick + " " + newNick + " :Nickname is already in use\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		return; 
 	}
@@ -54,7 +54,7 @@ void Command::handleNick(Client &sender, Server &server)
 		|| (newNick[0] >= '0' && newNick[0] <= '9'))
 	{
 		std::string err = ":ircserver " + intToString(ERR_ERRONEUSNICKNAME) + " " + newNick + " :Erroneous nickname\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		return;
 	}
@@ -71,7 +71,7 @@ void Command::handleNick(Client &sender, Server &server)
 	if (sender.isAuthenticated() && !oldNick.empty() && oldNick != newNick)
 	{
 		std::string nick_change_msg = buildClientPrefix(sender) + " NICK :" + newNick + "\r\n";
-		sender.appendBuffer(nick_change_msg);
+		sender.appendWriteBuffer(nick_change_msg);
 		server.enablePollOut(sender.getFd());
 		
 		std::vector<Channel*> my_channels = sender.getChannels();

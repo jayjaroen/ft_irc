@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 19:44:44 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/02 19:44:54 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/02 23:38:19 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ if (this->params.size() < 1 || this->params[0].empty())
 	sender.getName() +
 	" MODE :Not enough parameters\r\n";
 	
-	sender.appendBuffer(err);
+	sender.appendWriteBuffer(err);
 	server.enablePollOut(sender.getFd());
 	return;
 }
@@ -42,7 +42,7 @@ if (!channel)
 	modeTarget +
 	" :No such channel\r\n";
 	
-	sender.appendBuffer(err);
+	sender.appendWriteBuffer(err);
 	server.enablePollOut(sender.getFd());
 	return;
 }
@@ -95,7 +95,7 @@ if (channel->isOperator(sender.getFd()) == false)
 	// 		sender.getName() +
 	// 		" MODE :Not enough parameters\r\n";
 
-	// 	sender.appendBuffer(err);
+	// 	sender.appendWriteBuffer(err);
 	// 	server.enablePollOut(sender.getFd());
 	// 	return;
 	// }
@@ -120,9 +120,9 @@ if (channel->isOperator(sender.getFd()) == false)
 			intToString(ERR_UMODEUNKOWNFLAG) + " " +
 			sender.getName() +
 			" :Unknown MODE flag\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
-		// sender.appendBuffer(err);
+		// sender.appendWriteBuffer(err);
 		// server.enablePollOut(sender.getFd());
 		return;
 	}
@@ -200,7 +200,7 @@ if (channel->isOperator(sender.getFd()) == false)
 					intToString(ERR_NEEDMOREPARAMS) + " " +
 					sender.getName() +
 					" MODE :Not enough parameters\r\n";
-				sender.appendBuffer(err);
+				sender.appendWriteBuffer(err);
 				server.enablePollOut(sender.getFd());
 				return;
 			}
@@ -229,7 +229,7 @@ if (channel->isOperator(sender.getFd()) == false)
 				std::string(1, modeChanges[1]) +
 				" :is unknown mode char\r\n";
 
-			sender.appendBuffer(err);
+			sender.appendWriteBuffer(err);
 			server.enablePollOut(sender.getFd());
 			return;
 		}
