@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:29 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/07/02 09:23:52 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/02 13:45:58 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -95,9 +95,9 @@ class Channel
 
 		// Handle modes	
 		void					handleInviteMode(Client &sender, const std::string &modeChanges, Server &server);
-		void					handleTopicMode(Client &sender, const std::string &modeChanges);
-		void					handleKeyMode(Client &sender, const std::string &modeChanges, const std::string &param);
-		void					handleLimitMode(Client &sender, const std::string &modeChanges, const std::string &param);
+		void					handleTopicMode(Client &sender, const std::string &modeChanges, Server &server);
+		void					handleKeyMode(Client &sender, const std::string &modeChanges, const std::string &param, Server &server);
+		void					handleLimitMode(Client &sender, const std::string &modeChanges, const std::string &param, Server &server);
 		void					handleOperatorMode(Client &sender, const std::string &modeChanges, const std::string &nick, Server &server);
 };
 

@@ -66,7 +66,7 @@ class Client
         std::string& getBuffer();
 		std::string& getWriteBuffer();
 		void appendWriteBuffer(const std::string &data);
-        Channel*    getChannel() const;
+        // Channel*    getChannel() const;
         std::vector<Channel*>   getChannels() const;
 
         //setter

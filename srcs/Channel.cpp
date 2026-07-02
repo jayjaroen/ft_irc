@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:39 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/07/02 12:22:28 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/02 15:29:23 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -235,12 +235,12 @@ void	Channel::handleInviteMode(Client &sender, const std::string &modeChanges, S
 		return;
 	if (modeChanges[0] == '+')
 		_inviteOnly = true;
-	else
+	else if (modeChanges[0] == '-')
 		_inviteOnly = false;
 	// broadcastModeChange(sender, modeChanges);
 	std::string msg = buildClientPrefix(sender) + " MODE " +
 						_name + " " + modeChanges + "\r\n";
-	std::string current_modes = (_inviteOnly ? "+i" : "+"); // เพิ่ม logic เช็ค mode อื่นได้ที่นี่
+	std::string current_modes = (_inviteOnly ? "+i" : "-i"); // เพิ่ม logic เช็ค mode อื่นได้ที่นี่
     std::string rpl_324 = ":ircserver 324 " + sender.getName() + " " + _name + " :" + current_modes + "\r\n";
 	std::string final_msg = msg + rpl_324;
 	for (unsigned long i = 0; i < _clients.size(); i++) {
@@ -251,20 +251,64 @@ void	Channel::handleInviteMode(Client &sender, const std::string &modeChanges, S
 	}
 }
 
-void	Channel::handleTopicMode(Client &sender, const std::string &modeChanges)
+void	Channel::handleTopicMode(Client &sender, const std::string &modeChanges, Server &server)
 {
+	// if (!checkOperator(sender))
+	// 	return;
+	// if (modeChanges[0] == '+')
+	// 	_topicRestrict = true;
+	// else
+	// 	_topicRestrict = false;
+	// broadcastModeChange(sender, modeChanges);
 	if (!checkOperator(sender))
 		return;
 	if (modeChanges[0] == '+')
 		_topicRestrict = true;
-	else
+	else if (modeChanges[0] == '-')
 		_topicRestrict = false;
-	broadcastModeChange(sender, modeChanges);
+	// broadcastModeChange(sender, modeChanges);
+	std::string msg = buildClientPrefix(sender) + " MODE " +
+						_name + " " + modeChanges + "\r\n";
+	std::string current_modes = (_topicRestrict ? "+t" : "-t"); // เพิ่ม logic เช็ค mode อื่นได้ที่นี่
+    std::string rpl_324 = ":ircserver 324 " + sender.getName() + " " + _name + " :" + current_modes + "\r\n";
+	std::string final_msg = msg + rpl_324;
+	for (unsigned long i = 0; i < _clients.size(); i++) {
+		if (_clients[i] != NULL) {
+			_clients[i]->appendWriteBuffer(final_msg);
+			server.enablePollOut(_clients[i]->getFd());
+		}
+	}
 }
 
 
-void	Channel::handleKeyMode(Client &sender, const std::string &modeChanges, const std::string &param)
+void	Channel::handleKeyMode(Client &sender, const std::string &modeChanges, const std::string &param, Server &server)
 {
+	// if (!checkOperator(sender))
+	// 	return;
+	// if (modeChanges[0] == '+')
+	// {
+	// 	if (param.empty())
+	// 	{
+	// 		std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
+	// 		response(sender.getFd(), err);
+	// 		// std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
+	// 		return;
+	// 	}
+	// 	_hasKey = true;
+	// 	_key = param;
+	// }
+	// else if (modeChanges[0] == '-')
+	// {
+	// 	_hasKey = false;
+	// 	_key.clear();
+	// }
+	// else
+	// {
+	// 	std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
+	// 	response(sender.getFd(), err);
+		// std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
+	// }
+	// broadcastModeChange(sender, modeChanges);
 	if (!checkOperator(sender))
 		return;
 	if (modeChanges[0] == '+')
@@ -272,9 +316,9 @@ void	Channel::handleKeyMode(Client &sender, const std::string &modeChanges, cons
 		if (param.empty())
 		{
 			std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
-			response(sender.getFd(), err);
-			// std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
-			return;
+			sender.appendWriteBuffer(err);
+			server.enablePollOut(sender.getFd());
+			return ;
 		}
 		_hasKey = true;
 		_key = param;
@@ -284,17 +328,47 @@ void	Channel::handleKeyMode(Client &sender, const std::string &modeChanges, cons
 		_hasKey = false;
 		_key.clear();
 	}
-	else
-	{
-		std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
-		response(sender.getFd(), err);
-		// std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
+	std::string msg = buildClientPrefix(sender) + " MODE " +
+						_name + " " + modeChanges + "\r\n";
+	std::string current_modes = (_hasKey ? "+k" : "-k"); // เพิ่ม logic เช็ค mode อื่นได้ที่นี่
+    std::string rpl_324 = ":ircserver 324 " + sender.getName() + " " + _name + " :" + current_modes + "\r\n";
+	std::string final_msg = msg + rpl_324;
+	for (unsigned long i = 0; i < _clients.size(); i++) {
+		if (_clients[i] != NULL) {
+			_clients[i]->appendWriteBuffer(final_msg);
+			server.enablePollOut(_clients[i]->getFd());
+		}
 	}
-	broadcastModeChange(sender, modeChanges);
 }
 
-void	Channel::handleLimitMode(Client &sender, const std::string &modeChanges, const std::string &param)
+void	Channel::handleLimitMode(Client &sender, const std::string &modeChanges, const std::string &param, Server &server)
 {
+	// if (!checkOperator(sender))
+	// 	return;
+	// if (modeChanges[0] == '+')
+	// {
+	// 	if (param.empty())
+	// 	{
+	// 		std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
+	// 		response(sender.getFd(), err);
+	// 		// std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
+	// 		return;
+	// 	}
+	// 	_hasLimited = true;
+	// 	_limit = std::atoi(param.c_str());
+	// }
+	// else if (modeChanges[0] == '-')
+	// {
+	// 	_hasLimited = false;
+	// 	_limit = 0;
+	// }
+	// else
+	// {
+	// 	std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
+	// 	response(sender.getFd(), err);
+	// 	// std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
+	// }
+	// broadcastModeChange(sender, modeChanges);
 	if (!checkOperator(sender))
 		return;
 	if (modeChanges[0] == '+')
@@ -302,8 +376,8 @@ void	Channel::handleLimitMode(Client &sender, const std::string &modeChanges, co
 		if (param.empty())
 		{
 			std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
-			response(sender.getFd(), err);
-			// std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
+			sender.appendWriteBuffer(err);
+			server.enablePollOut(sender.getFd());
 			return;
 		}
 		_hasLimited = true;
@@ -311,48 +385,91 @@ void	Channel::handleLimitMode(Client &sender, const std::string &modeChanges, co
 	}
 	else if (modeChanges[0] == '-')
 	{
-		_hasLimited = false;
+		_hasLimited =false;
 		_limit = 0;
 	}
-	else
-	{
-		std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
-		response(sender.getFd(), err);
-		// std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
+	std::string msg = buildClientPrefix(sender) + " MODE " +
+						_name + " " + modeChanges + "\r\n";
+	std::string current_modes = (_hasLimited ? "+l" : "-l");
+	std::string rpl_324 = ":ircserver 324 " + sender.getName() + " " + _name + " :" + current_modes + "\r\n";
+	std::string final_msg = msg + rpl_324;
+	for (unsigned long i = 0; i < _clients.size(); i++) {
+		if (_clients[i] != NULL) {
+			_clients[i]->appendWriteBuffer(final_msg);
+			server.enablePollOut(_clients[i]->getFd());
+		}
 	}
-	broadcastModeChange(sender, modeChanges);
 }
 
 void	Channel::handleOperatorMode(Client &sender, const std::string &modeChanges, const std::string &nick, Server &server)
 {
+	// if (!checkOperator(sender))
+	// 	return;
+	// if (nick.empty())
+	// {
+	// 	std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
+	// 	response(sender.getFd(), err);
+	// 	// std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
+	// 	return;
+	// }
+	// Client* target = server.findClient(nick);
+	// if (!target)
+	// {
+	// 	std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " :No such nick\r\n";
+	// 	response(sender.getFd(), err);
+	// 	// std::cout << "Client FD " << sender.getFd() << " attempted to change modes for non-existent user: " << std::endl;
+	// 	return;
+	// }
+	// if (modeChanges[0] == '+')
+	// 	addOperator(target->getFd());
+	// else if (modeChanges[0] == '-')
+	// 	removeOperator(target);
+	// else
+	// {
+	// 	std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
+	// 	response(sender.getFd(), err);
+	// 	// std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
+	// }
+	// broadcastModeChange(sender, modeChanges);
+	std::string current_modes = "";
 	if (!checkOperator(sender))
 		return;
 	if (nick.empty())
 	{
 		std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
-		response(sender.getFd(), err);
+		sender.appendWriteBuffer(err);
+		server.enablePollOut(sender.getFd());
 		// std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
 		return;
 	}
 	Client* target = server.findClient(nick);
 	if (!target)
 	{
-		std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " :No such nick\r\n";
-		response(sender.getFd(), err);
-		// std::cout << "Client FD " << sender.getFd() << " attempted to change modes for non-existent user: " << std::endl;
+		std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
+		sender.appendWriteBuffer(err);
+		server.enablePollOut(sender.getFd());
 		return;
 	}
 	if (modeChanges[0] == '+')
-		addOperator(target->getFd());
-	else if (modeChanges[0] == '-')
-		removeOperator(target);
-	else
 	{
-		std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
-		response(sender.getFd(), err);
-		// std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
+		addOperator(target->getFd());
+		current_modes = "+o";
 	}
-	broadcastModeChange(sender, modeChanges);
+	else if (modeChanges[0] == '-')
+	{
+		removeOperator(target);
+		current_modes = "-o";
+	}
+	std::string msg = buildClientPrefix(sender) + " MODE " +
+						_name + " " + modeChanges + "\r\n";
+	std::string rpl_324 = ":ircserver 324 " + sender.getName() + " " + _name + " :" + current_modes + "\r\n";
+	std::string final_msg = msg + rpl_324;
+	for (unsigned long i = 0; i < _clients.size(); i++) {
+	if (_clients[i] != NULL) {
+		_clients[i]->appendWriteBuffer(final_msg);
+		server.enablePollOut(_clients[i]->getFd());
+	}
+	}
 }
 
 

@@ -202,5 +202,9 @@ void Client::appendWriteBuffer(const std::string &data)
 	if (_write_buffer.empty())
 		_write_buffer.reserve(1024);
     _write_buffer += data;
-
 }
+
+// std::vector<Channel*> Client::getChannel() const
+// {
+// 	return (_channels);
+// }

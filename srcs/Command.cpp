@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/07/02 09:26:29 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/02 15:53:16 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -471,7 +471,8 @@ if (this->params.size() < 1 || this->params[0].empty())
 	sender.getName() +
 	" MODE :Not enough parameters\r\n";
 	
-	sendResponse(sender.getFd(), err);
+	sender.appendBuffer(err);
+	server.enablePollOut(sender.getFd());
 	return;
 }
 
@@ -490,7 +491,8 @@ if (!channel)
 	modeTarget +
 	" :No such channel\r\n";
 	
-	sendResponse(sender.getFd(), err);
+	sender.appendBuffer(err);
+	server.enablePollOut(sender.getFd());
 	return;
 }
 
@@ -511,11 +513,13 @@ if (this->params.size() < 2 || this->params[1].empty())
 	if (channel->getTopic_mode())
 		modestring += "t";
 	std::string rpl_mode_324 = ":ircserver " + intToString(RPL_CHANNELMODEIS) + " " + nick + " " + channel->getName() + " :" + modestring + mode_args + "\r\n";
-	sendResponse(sender.getFd(), rpl_mode_324);
+	sender.appendWriteBuffer(rpl_mode_324);
+	server.enablePollOut(sender.getFd());
 	std::stringstream ss_chan;
 	ss_chan << channel->getCreationTime();
 	std::string rpl_329_msg = ":ircserver " + intToString(RPL_CREATIONTIME) + " " + sender.getName() + " " + channel->getName() + " " + ss_chan.str() + "\r\n";
-	sendResponse(sender.getFd(), rpl_329_msg);
+	sender.appendWriteBuffer(rpl_mode_324);
+	server.enablePollOut(sender.getFd());
 	return;
 }
 if (channel->isOperator(sender.getFd()) == false)
@@ -526,22 +530,24 @@ if (channel->isOperator(sender.getFd()) == false)
 		modeTarget +
 		" :You're not channel operator\r\n";
 
-	sendResponse(sender.getFd(), err);
+	sender.appendWriteBuffer(err);
+	server.enablePollOut(sender.getFd());
 	return;
 	}
 
 	std::string modeChanges = this->params[1][0];
 
-	if (modeChanges.empty())
-	{
-		std::string err = ":ircserver " +
-			intToString(ERR_NEEDMOREPARAMS) + " " +
-			sender.getName() +
-			" MODE :Not enough parameters\r\n";
+	// if (modeChanges.empty())
+	// {
+	// 	std::string err = ":ircserver " +
+	// 		intToString(ERR_NEEDMOREPARAMS) + " " +
+	// 		sender.getName() +
+	// 		" MODE :Not enough parameters\r\n";
 
-		sendResponse(sender.getFd(), err);
-		return;
-	}
+	// 	sender.appendBuffer(err);
+	// 	server.enablePollOut(sender.getFd());
+	// 	return;
+	// }
 
 	if (modeChanges[0] != '+' && modeChanges[0] != '-')
 	{
@@ -551,19 +557,21 @@ if (channel->isOperator(sender.getFd()) == false)
 			modeChanges +
 			" :Unknown MODE flag\r\n";
 
-		sendResponse(sender.getFd(), err);
+		sender.appendWriteBuffer(err);
+		server.enablePollOut(sender.getFd());
 		return;
 	}
 
 	// Need at least "+i", "-k", etc.
-	if (modeChanges.length() < 2)
+	if (modeChanges.length() != 2)
 	{
 		std::string err = ":ircserver " +
 			intToString(ERR_UMODEUNKOWNFLAG) + " " +
 			sender.getName() +
 			" :Unknown MODE flag\r\n";
-
 		sendResponse(sender.getFd(), err);
+		// sender.appendBuffer(err);
+		// server.enablePollOut(sender.getFd());
 		return;
 	}
 
@@ -571,20 +579,25 @@ if (channel->isOperator(sender.getFd()) == false)
 	{
 		case 'k':
 		{
-			if (this->params.size() < 3 || this->params[2].empty())
+			if (modeChanges[0] == '+')
 			{
-				std::string err = ":ircserver " +
-					intToString(ERR_NEEDMOREPARAMS) + " " +
-					sender.getName() +
-					" MODE :Not enough parameters\r\n";
+				if ((this->params.size() < 3 || this->params[2].empty()))
+				{
+					std::string err = ":ircserver " +
+						intToString(ERR_NEEDMOREPARAMS) + " " +
+						sender.getName() +
+						" MODE :Not enough parameters\r\n";
 
-				sendResponse(sender.getFd(), err);
-				return;
+					sender.appendWriteBuffer(err);
+					server.enablePollOut(sender.getFd());
+					return;
+				}
 			}
 			channel->handleKeyMode(
 				sender,
 				modeChanges,
-				this->params[2][0]);
+				this->params[2][0],
+				server);
 			break;
 		}
 
@@ -599,7 +612,8 @@ if (channel->isOperator(sender.getFd()) == false)
 						intToString(ERR_NEEDMOREPARAMS) + " " +
 						sender.getName() +
 						" MODE :Not enough parameters\r\n";
-					sendResponse(sender.getFd(), err);
+					sender.appendWriteBuffer(err);
+					server.enablePollOut(sender.getFd());
 					return;
 				}
 				limitParam = this->params[2][0];
@@ -614,13 +628,15 @@ if (channel->isOperator(sender.getFd()) == false)
 					intToString(ERR_NEEDMOREPARAMS) + " " +
 					sender.getName() +
 					" MODE :Not enough parameters\r\n";
-				sendResponse(sender.getFd(), err);
+				sender.appendWriteBuffer(err);
+				server.enablePollOut(sender.getFd());
 				return;
 			}
 			channel->handleLimitMode(
 				sender,
 				modeChanges,
-				limitParam);
+				limitParam,
+				server);
 			break;
 		}
 
@@ -632,10 +648,10 @@ if (channel->isOperator(sender.getFd()) == false)
 					intToString(ERR_NEEDMOREPARAMS) + " " +
 					sender.getName() +
 					" MODE :Not enough parameters\r\n";
-				sendResponse(sender.getFd(), err);
+				sender.appendBuffer(err);
+				server.enablePollOut(sender.getFd());
 				return;
 			}
-
 			channel->handleOperatorMode(
 				sender,
 				modeChanges,
@@ -645,7 +661,7 @@ if (channel->isOperator(sender.getFd()) == false)
 		}
 
 		case 't':
-			channel->handleTopicMode(sender, modeChanges);
+			channel->handleTopicMode(sender, modeChanges, server);
 			break;
 
 		case 'i':
@@ -661,7 +677,8 @@ if (channel->isOperator(sender.getFd()) == false)
 				std::string(1, modeChanges[1]) +
 				" :is unknown mode char\r\n";
 
-			sendResponse(sender.getFd(), err);
+			sender.appendBuffer(err);
+			server.enablePollOut(sender.getFd());
 			return;
 		}
 	}

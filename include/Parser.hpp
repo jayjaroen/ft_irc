@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:03:17 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/06/29 09:53:49 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/02 14:41:18 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@
 
 #include "./include/Client.hpp"
 #include "./include/Server.hpp"
+#include "./include/Channel.hpp"
 
 class Server;
 class Client;
