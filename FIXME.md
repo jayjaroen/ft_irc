@@ -1,3 +1,3 @@
 เช็คความถูกต้องของโปรโตคอล รอบเก็บตก
-- MODE #channel +o nosuchuser | returns 461 not enough parameters
+- MODE #channel +o nosuchuser | returns 461 not enough parameters (แก้แล้ว)
 - 
