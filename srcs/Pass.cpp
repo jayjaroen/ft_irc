@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 19:51:06 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/03 07:06:34 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/04 06:15:23 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,12 @@
 void Command::handlePass(Client &sender, Server &server)
 {
 	if (this->params.empty() || this->params[0].empty())
+	{
+		std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " PASS :Not enough parameters\r\n";
+		sender.appendWriteBuffer(err);
+		server.enablePollOut(sender.getFd());
 		return;
+	}
 	if (sender.isAuthenticated())
 	{
 		std::string err = ":ircserver " + intToString(ERR_ALREADYREGISTERED) + " " + sender.getName() + " :You may not register again\r\n";

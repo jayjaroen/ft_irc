@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 21:11:06 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/02 23:38:29 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/04 06:56:15 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,15 +22,15 @@ static std::string buildClientPrefix(const Client &sender)
 
 void Command::handleNick(Client &sender, Server &server)
 {
+	std::string current_nick = sender.getName().empty() ? "*" : sender.getName();
+
 	if (this->params.empty() || this->params[0].empty() || this->params[0][0] == "")
 	{
-		std::string current_nick = sender.getName().empty() ? "unknown" : sender.getName();
 		std::string err = ":ircserver " + intToString(ERR_NONICKNAMEGIVEN) + " " + current_nick + " :No nickname given\r\n";
 		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		return;
 	}
-
 	std::string newNick = this->params[0][0];
 
 	while (!newNick.empty() && (newNick[newNick.length() - 1] == '\r' || newNick[newNick.length() - 1] == '\n' || newNick[newNick.length() - 1] == ' ')) {
@@ -39,8 +39,6 @@ void Command::handleNick(Client &sender, Server &server)
 
 	if (server.findClient(newNick) != NULL && server.findClient(newNick)->getFd() != sender.getFd())
 	{
-		std::string current_nick = sender.getName().empty() ? "*" : sender.getName();
-		if (current_nick.empty()) current_nick = "*";
 		std::string err = ":ircserver " + intToString(ERR_NICKNAMEINUSE) + " " + current_nick + " " + newNick + " :Nickname is already in use\r\n";
 		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
@@ -59,25 +57,24 @@ void Command::handleNick(Client &sender, Server &server)
 		return;
 	}
 
-
 	std::string oldNick = sender.getName();
+	
+	std::string nick_change_msg = "";
+
+	if (sender.isAuthenticated() && !oldNick.empty() && oldNick != newNick)
+		nick_change_msg = buildClientPrefix(sender) + " NICK :" + newNick + "\r\n";
+	
 	sender.setNick(newNick);
 	sender.setNickSet(true);
 	// std::cout << "Client FD " << sender.getFd() << " successfully set nick to " << newNick << std::endl;
 
-
-	// if (sender.isAuthenticated() && !oldNick.empty() && oldNick != newNick)
-	//     std::string nick_change_msg = ":" + oldNick + " NICK " + newNick + "\r\n";
-	if (sender.isAuthenticated() && !oldNick.empty() && oldNick != newNick)
+	if (!nick_change_msg.empty())
 	{
-		std::string nick_change_msg = buildClientPrefix(sender) + " NICK :" + newNick + "\r\n";
 		sender.appendWriteBuffer(nick_change_msg);
 		server.enablePollOut(sender.getFd());
 		
 		std::vector<Channel*> my_channels = sender.getChannels();
 		for (size_t i = 0; i < my_channels.size(); ++i)
-		{
 			my_channels[i]->broadcast(server, &sender, nick_change_msg);
-		}
 	}
 }
