@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:39 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/07/03 11:03:13 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/03 17:06:34 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -396,34 +396,6 @@ void	Channel::handleLimitMode(Client &sender, const std::string &modeChanges, co
 
 void	Channel::handleOperatorMode(Client &sender, const std::string &modeChanges, const std::string &nick, Server &server)
 {
-	// if (!checkOperator(sender))
-	// 	return;
-	// if (nick.empty())
-	// {
-	// 	std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
-	// 	response(sender.getFd(), err);
-	// 	// std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
-	// 	return;
-	// }
-	// Client* target = server.findClient(nick);
-	// if (!target)
-	// {
-	// 	std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " :No such nick\r\n";
-	// 	response(sender.getFd(), err);
-	// 	// std::cout << "Client FD " << sender.getFd() << " attempted to change modes for non-existent user: " << std::endl;
-	// 	return;
-	// }
-	// if (modeChanges[0] == '+')
-	// 	addOperator(target->getFd());
-	// else if (modeChanges[0] == '-')
-	// 	removeOperator(target);
-	// else
-	// {
-	// 	std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
-	// 	response(sender.getFd(), err);
-	// 	// std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
-	// }
-	// broadcastModeChange(sender, modeChanges);
 	std::string current_modes = "";
 	if (!checkOperator(sender))
 		return;
@@ -438,7 +410,7 @@ void	Channel::handleOperatorMode(Client &sender, const std::string &modeChanges,
 	Client* target = server.findClient(nick);
 	if (!target)
 	{
-		std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
+		std::string err = ":ircserver " + intToString(ERR_NOSUCHNICK) + " " + sender.getName() + " MODE :No such nick\r\n";
 		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		return;
@@ -453,6 +425,7 @@ void	Channel::handleOperatorMode(Client &sender, const std::string &modeChanges,
 		removeOperator(target);
 		current_modes = "-o";
 	}
+	// if (this->getClients() != nick)
 	std::string msg = buildClientPrefix(sender) + " MODE " +
 						_name + " " + modeChanges + "\r\n";
 	std::string rpl_324 = ":ircserver 324 " + sender.getName() + " " + _name + " :" + current_modes + "\r\n";
