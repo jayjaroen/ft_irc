@@ -49,7 +49,7 @@ void    Command::handlePart(Server &server, Client &sender)
 		return;
 	}
 	std::string message = buildClientPrefix(sender) + " PART " + channel_name + "\r\n";
-	channel->broadcast(&sender, message);
+	channel->broadcast(server, &sender, message);
 	sender.appendWriteBuffer(message);
 	server.enablePollOut(sender.getFd());
 	channel->removeClient(&sender);

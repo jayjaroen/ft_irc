@@ -77,7 +77,7 @@ void Command::handleNick(Client &sender, Server &server)
 		std::vector<Channel*> my_channels = sender.getChannels();
 		for (size_t i = 0; i < my_channels.size(); ++i)
 		{
-			my_channels[i]->broadcast(&sender, nick_change_msg);
+			my_channels[i]->broadcast(server, &sender, nick_change_msg);
 		}
 	}
 }

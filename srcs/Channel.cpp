@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:39 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/07/02 23:37:36 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/03 11:03:13 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,15 +61,15 @@ void	Channel::setLimit(size_t limit)
 	_limit = limit;
 }
 
-void	Channel::broadcast(Client *sender, const std::string &message)
+void	Channel::broadcast(Server &server, Client *sender, const std::string &message)
 {
-	(void) sender;
 	for (unsigned long i = 0; i < _clients.size(); i++)
 	{
 		Client* target = _clients[i];
-		// if (target == sender)
-		// 	continue;
-		send(target->getFd(), message.c_str(), message.size(), 0);
+		if (target == sender)
+			continue;
+		target->appendWriteBuffer(message);
+		server.enablePollOut(target->getFd());
 	}
 	this->_broadcast_buffer.clear();
 }

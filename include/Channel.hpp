@@ -76,6 +76,7 @@ class Channel
 		bool					checkKey(const std::string &key);
 		/*Channel actions*/
 		void					broadcast(Client *sender, const std::string &message);
+		void					broadcast(Server &server, Client *sender, const std::string &message);
 		void					response(int fd, const std::string &msg);
 		void					broadcastModeChange(Client &sender, const std::string &message);
 		

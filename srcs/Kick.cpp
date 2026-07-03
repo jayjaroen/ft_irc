@@ -100,7 +100,7 @@ void Command::handleKICK(Client &sender, Server &server)
 	// sendResponse(targetClient->getFd(), kickMsg);
 	sender.appendWriteBuffer(kickMsg);
 	server.enablePollOut(targetClient->getFd());
-	targetChannel->broadcast(&sender, kickMsg); 
+	targetChannel->broadcast(server, &sender, kickMsg); 
 
 
 	targetChannel->removeClient(targetClient);

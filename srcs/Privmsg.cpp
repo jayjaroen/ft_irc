@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 19:47:33 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/02 23:38:43 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/03 12:50:51 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,8 +61,16 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
 			server.enablePollOut(sender.getFd());
 			return;
 		}
-		std::string text = buildClientPrefix(sender) + " PRIVMSG " + target + " : " + message + "\r\n";
-		channel->broadcast(&sender, text);
+		std::string text = buildClientPrefix(sender) + " PRIVMSG " + target + " :" + message + "\r\n";
+		std::vector<Client *> recipients = channel->getClients();
+		for (size_t i = 0; i < recipients.size(); ++i)
+		{
+			if (recipients[i] && recipients[i] != &sender)
+			{
+				recipients[i]->appendWriteBuffer(text);
+				server.enablePollOut(recipients[i]->getFd());
+			}
+		}
 	}
 	else 
 	{
@@ -75,7 +83,11 @@ void Command::handlePRIVMSG(Server &server, Client &sender)
 			server.enablePollOut(sender.getFd());
 			return;
 		}
-		std::string text = buildClientPrefix(sender) + " PRIVMSG " + target + " : " + message + "\r\n";
-		send(target_client->getFd(), text.c_str(), text.size(), 0);   
+		if (target_client != &sender)
+		{
+			std::string text = buildClientPrefix(sender) + " PRIVMSG " + target + " :" + message + "\r\n";
+			target_client->appendWriteBuffer(text);
+			server.enablePollOut(target_client->getFd());
+		}
 	}
 }

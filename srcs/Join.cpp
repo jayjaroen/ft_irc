@@ -51,7 +51,7 @@ static void sendJoinReplies(Server &server, Client &sender, Channel *channel)
 	std::string channel_name = channel->getName();
 	std::string join_prefix = buildClientPrefix(sender) + " JOIN :" + channel_name + "\r\n";
 	sender.appendWriteBuffer(join_prefix);
-	channel->broadcast(&sender, join_prefix);
+	channel->broadcast(server, &sender, join_prefix);
 	std::string topic = channel->getTopic();
 	if (!topic.empty())
 	{
@@ -82,7 +82,7 @@ void Command::handleJOIN(Server &server, Client &sender)
 	if (this->params.empty())
 	{
 		std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " JOIN :Not enough parameters\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		return;
 	}
@@ -90,7 +90,7 @@ void Command::handleJOIN(Server &server, Client &sender)
 	{
 		std::string bad_channel = (this->params[0].empty() ? "" : this->params[0][0]);
 		std::string err = ":ircserver " + intToString(ERR_BADCHANMASK) + " " + sender.getName() + " " + bad_channel + " :Bad channel mask\r\n";
-		sender.appendBuffer(err);
+		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
 		std::cerr << "Client FD " << sender.getFd() << " attempted to join with invalid JOIN parameters: " << bad_channel << std::endl;
 		return;
@@ -110,14 +110,14 @@ void Command::handleJOIN(Server &server, Client &sender)
 		if (!channel_name.empty() && (channel_name[0] == '&' || channel_name[0] == '+' || channel_name[0] == '!'))
 		{
 			std::string err = ":ircserver " + intToString(ERR_NOSUCHCHANNEL) + " " + sender.getName() + " " + channel_name + " :No such channel\r\n";
-			sender.appendBuffer(err);
+			sender.appendWriteBuffer(err);
 			server.enablePollOut(sender.getFd());
 			continue;
 		}
 		if (!isValidJoinChannelName(channel_name))
 		{
 			std::string err = ":ircserver " + intToString(ERR_BADCHANMASK) + " " + sender.getName() + " " + channel_name + " :Bad channel mask\r\n";
-			sender.appendBuffer(err);
+			sender.appendWriteBuffer(err);
 			server.enablePollOut(sender.getFd());
 			// std::cout << "Client FD " << sender.getFd() << " attempted to join channel with invalid name: " << channel_name << std::endl;
 			continue;
@@ -128,7 +128,7 @@ void Command::handleJOIN(Server &server, Client &sender)
 		if (!alreadyMember && sender.getNumChan() >= sender.getLimitChan())
 		{
 			std::string err = ":ircserver " + intToString(ERR_TOOMANYCHANNELS) + " " + sender.getName() + " " + channel_name + " :You have joined too many channels\r\n";
-			sender.appendBuffer(err);
+			sender.appendWriteBuffer(err);
 			server.enablePollOut(sender.getFd());
 			continue;
 		}
@@ -138,7 +138,7 @@ void Command::handleJOIN(Server &server, Client &sender)
 			if (channel->getKey() != "" && !channel->checkKey(key))
 			{
 				std::string err = ":ircserver " + intToString(ERR_BADCHANNELKEY) + " " + sender.getName() + " " + channel_name + " :Cannot join channel (+k)\r\n";
-				sender.appendBuffer(err);
+			sender.appendWriteBuffer(err);
 				server.enablePollOut(sender.getFd());
 				// std::cout << "Client FD " << sender.getFd() << " attempted to join channel with incorrect key: " << channel_name << std::endl;
 				continue;
@@ -146,7 +146,7 @@ void Command::handleJOIN(Server &server, Client &sender)
 			if (channel->getLimit() > 0 && channel->getChannelSize() >= channel->getLimit())
 			{
 				std::string err = ":ircserver " + intToString(ERR_CHANNELISFULL) + " " + sender.getName() + " " + channel_name + " :Cannot join channel (+l)\r\n";
-				sender.appendBuffer(err);
+				sender.appendWriteBuffer(err);
 				server.enablePollOut(sender.getFd());
 				// std::cout << "Client FD " << sender.getFd() << " attempted to join full channel: " << channel_name << std::endl;
 				continue;
@@ -154,7 +154,7 @@ void Command::handleJOIN(Server &server, Client &sender)
 			if (channel->isInviteOnly() && !channel->isInvited(&sender))
 			{
 				std::string err = ":ircserver " + intToString(ERR_INVITEONLYCHAN) + " " + sender.getName() + " " + channel_name + " :Cannot join channel (+i)\r\n";
-				sender.appendBuffer(err);
+				sender.appendWriteBuffer(err);
 				server.enablePollOut(sender.getFd());
 				// std::cout << "Client FD " << sender.getFd() << " attempted to join invite-only channel without an invitation: " << channel_name << std::endl;
 				continue;
@@ -166,7 +166,7 @@ void Command::handleJOIN(Server &server, Client &sender)
 		if (channel == NULL)
 		{
 			std::string err = ":ircserver " + intToString(ERR_BADCHANNELKEY) + " " + sender.getName() + " " + channel_name + " :Cannot join channel (+k)\r\n";
-			sender.appendBuffer(err);
+			sender.appendWriteBuffer(err);
 			server.enablePollOut(sender.getFd());
 			continue;
 		}

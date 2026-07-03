@@ -1,3 +1,14 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   Server.cpp                                         :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/03 10:59:54 by gyeepach          #+#    #+#             */
+/*   Updated: 2026/07/03 11:00:01 by gyeepach         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "../include/Server.hpp"
 // #include <cstdio>
@@ -118,7 +129,7 @@ void Server::disconnectClient(int client_fd)
 		if (chan != NULL && chan->hasClient(client))
 		{
 
-			chan->broadcast(client, quit_msg);
+			chan->broadcast(*this, client, quit_msg);
 			chan->removeClient(client);
 			chan->removeOperator(client);
 			
