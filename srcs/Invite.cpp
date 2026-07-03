@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Invite.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
+/*   By: psenalia <psenalia@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 19:38:57 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/02 23:37:53 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/03 14:25:37 by psenalia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,7 +19,7 @@ void Command::handleINVITE(Client &sender, Server &server)
 		std::string err = ":ircserver "+ intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " INVITE :Not enough parameters\r\n";
 		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
-		// std::cout << "Client FD " << sender.getFd() << " attempted to invite without providing necessary parameters." << std::endl;        
+		// std::cout << "Client FD " << sender.getFd() << " attempted to invite without providing necessary parameters." << std::endl;
 		return;
 	}
 	std::string targetNick = this->params[0][0];
@@ -71,7 +71,7 @@ void Command::handleINVITE(Client &sender, Server &server)
 	std::string inviteMsg = ":ircserver " + intToString(RPL_INVITING) + " " + sender.getName() + " " + targetNick + " :" + channelName + "\r\n";
 	// targetChannel->removeClient(targetClient); // remove the client from the channel's invite list if they were previously invited
 	// sendResponse(targetClient->getFd(), inviteMsg);
-	sender.appendWriteBuffer(inviteMsg);
+	targetClient->appendWriteBuffer(inviteMsg);
 	server.enablePollOut(targetClient->getFd());
 	// std::cout << sender.getName() << " invited " << targetNick << " to join channel " << channelName << std::endl;
 }
