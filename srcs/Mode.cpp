@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 19:44:44 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/04 12:56:29 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/07/04 15:28:01 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,19 +87,6 @@ if (channel->isOperator(sender.getFd()) == false)
 	}
 
 	std::string modeChanges = this->params[1][0];
-
-	// if (modeChanges.empty())
-	// {
-	// 	std::string err = ":ircserver " +
-	// 		intToString(ERR_NEEDMOREPARAMS) + " " +
-	// 		sender.getName() +
-	// 		" MODE :Not enough parameters\r\n";
-
-	// 	sender.appendWriteBuffer(err);
-	// 	server.enablePollOut(sender.getFd());
-	// 	return;
-	// }
-
 	if (modeChanges[0] != '+' && modeChanges[0] != '-')
 	{
 		std::string err = ":ircserver " +

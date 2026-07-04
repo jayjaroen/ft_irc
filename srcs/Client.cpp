@@ -204,11 +204,6 @@ void Client::appendWriteBuffer(const std::string &data)
     _write_buffer += data;
 }
 
-// std::vector<Channel*> Client::getChannel() const
-// {
-// 	return (_channels);
-// }
-
 std::string	Client::getRealname() const
 {
 	return _realname;

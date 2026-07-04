@@ -20,8 +20,7 @@ class Client
 		std::string _realname; // add 1 _realname;
         std::string _buffer;
 		std::string _write_buffer;
-        // Channel*    _channel;
-        //client join many channels?
+        
         std::vector<Channel*>   _channels;
         int _limitChannel;
   
@@ -74,9 +73,7 @@ class Client
 
         //setter
         void    setNick(const std::string &nickname);
-        
-        // Responses
-        // std::string sendResponse(std::string message);
+    
         
         void    appendBuffer(const std::string &data);
         void    write(const std::string &message);

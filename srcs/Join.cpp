@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 19:37:14 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/04 11:49:59 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/07/04 15:27:01 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,14 +139,6 @@ void Command::handleJOIN(Server &server, Client &sender)
 			server.enablePollOut(sender.getFd());
 			continue;
 		}
-		// if (!alreadyMember && sender.getNumChan() >= sender.getLimitChan())
-		// {
-		// 	std::string err = ":ircserver " + intToString(ERR_TOOMANYCHANNELS) + " " + sender.getName() + " " + channel_name + " :You have joined too many channels\r\n";
-		// 	sender.appendWriteBuffer(err);
-		// 	server.enablePollOut(sender.getFd());
-		// 	continue;
-		// }
-
 		if (channel != NULL)
 		{
 			if (channel->getKey() != "" && !channel->checkKey(key))

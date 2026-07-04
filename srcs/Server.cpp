@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: psenalia <psenalia@student.42.fr>          +#+  +:+       +#+        */
+/*   By: jjaroens <jjaroens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/03 10:59:54 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/04 14:44:08 by psenalia         ###   ########.fr       */
+/*   Updated: 2026/07/04 15:30:58 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -160,69 +160,40 @@ void Server::disconnectClient(int client_fd)
 	delete client;
 }
 
-// void Server::disconnectClient(int client_fd)
-// {
-//     std::cout << "Disconnect client fd: " << client_fd << std::endl;
-//     //close socket
-//     close(client_fd);
-//     //remove from poll
-//     for (std::vector<pollfd>::iterator it = _fds.begin(); it != _fds.end(); ++it)
-//     {
-//         if (it->fd == client_fd)
-//         {
-//             _fds.erase(it);
-//             break;
-//         }
-//     }
-//     //remove from client map
-//     std::map<int, Client*>::iterator it = _clients.find(client_fd);
-//     if (it != _clients.end())//why checking end
-//     {
-//         delete it->second;
-//         _clients.erase(it);
-//     }
-// }
-
 void Server::acceptNewClient()
 {
-	// std::cout << "In accept new client function" << std::endl;
-	// while (true)
-	// {
-		struct sockaddr_in addr;
-		socklen_t len = sizeof(addr);
-		//extract client info
-		
-		int client_fd = accept(_server_fd, (struct sockaddr*)&addr, &len);
-		
-		if (client_fd < 0)
-		{
-			std::perror("accept failed");
-			return;
-			// if (errno == EAGAIN || errno == EWOULDBLOCK)
+
+	struct sockaddr_in addr;
+	socklen_t len = sizeof(addr);
+	
+	
+	int client_fd = accept(_server_fd, (struct sockaddr*)&addr, &len);
+	
+	if (client_fd < 0)
+	{
+		std::perror("accept failed");
+		return;
+		// if (errno == EAGAIN || errno == EWOULDBLOCK)
+		//     break;
+		// else
+		// {
+			//     std::perror("accept");
 			//     break;
-			// else
-			// {
-				//     std::perror("accept");
-				//     break;
-				// }
-		}
-		int port = ntohs(addr.sin_port);
-		std::string ip = inet_ntoa(addr.sin_addr);
-		// std::cout << "New client: fd: " << client_fd
-				// << " ip = " << ip
-				// << " port = " << port << std::endl;
-		
-		if (!setNonBlocking(client_fd))
-		{
-			std::cerr << "Failed to set non-blocking" << std::endl;
-			close(client_fd);
-			return;
-			// continue;
-		}
-		pollfd p = {client_fd, POLLIN, 0}; //fd,events,revents
-		_fds.push_back(p);
-		_clients[client_fd] = new Client(client_fd, port, ip);
-	// }
+			// }
+	}
+	int port = ntohs(addr.sin_port);
+	std::string ip = inet_ntoa(addr.sin_addr);
+	
+	if (!setNonBlocking(client_fd))
+	{
+		std::cerr << "Failed to set non-blocking" << std::endl;
+		close(client_fd);
+		return;
+		// continue;
+	}
+	pollfd p = {client_fd, POLLIN, 0}; //fd,events,revents
+	_fds.push_back(p);
+	_clients[client_fd] = new Client(client_fd, port, ip);
 }
 
 void Server::handleClientMessage(int client_fd)
@@ -270,19 +241,6 @@ void Server::handleClientMessage(int client_fd)
 			// std::cout << "Client fd " << client_fd << " disconnected during command execution" << std::endl;
 			return;
 		}
-		// if (this->get_check_broadcast() == true)
-		// {
-		// 	for (size_t i = 0; i < this->_channels.size(); ++i)
-		// 	{
-		// 		std::string buffer = this->_channels[i]->get_broadcast_buffer();
-		// 		if (!(buffer.empty()))
-		// 			this->_channels[i]->broadcast(client, buffer);
-		// 	}
-		// }
-		// sending both server and client info
-			// --> if (checkBroadcast(p.fd) == true)
-			//		broadcast();
-			// <--
 	}
 }
 
@@ -333,54 +291,6 @@ Channel*	Server::findOrCreateChannel(const std::string &name, const std::string 
 	}
 	return createChannel(name, key, client);
 }
-
-// worked but slow and no POLLOUT
-// void Server::run()
-// {
-//     pollfd server_fd = {_server_fd, POLLIN, 0};
-//     _fds.push_back(server_fd);
-//     while (Server::_serverRunning)
-//     {
-//         int ret = poll(_fds.data(), _fds.size(), 5);//number of fds have event
-//         if (ret < 0)
-//         {
-//             if (errno == EINTR)
-//                 continue;
-//             throw std::runtime_error("poll failed");
-//         }
-//         for (int i = 0; i < (int)_fds.size(); i++)
-//         {
-//             pollfd &p = _fds[i];
-//             if (p.revents == 0)
-//                 continue;
-//             //handle error
-//             if (p.revents & (POLLHUP | POLLERR))
-//             {
-//                 disconnectClient(p.fd);
-//                 i--; // Adjust index since we just removed an element
-//                 continue;
-//             }
-//             //new connection
-//             if (p.fd == _server_fd)
-//             {
-//                 acceptNewClient();
-//             }
-//             else if (p.revents & POLLIN)
-//             {
-//                 // Check if client still exists before handling
-//                 if (_clients.find(p.fd) != _clients.end())
-//                 {
-//                     handleClientMessage(p.fd);
-//                     // Check if client was disconnected during handleClientMessage
-//                     if (_clients.find(p.fd) == _clients.end())
-//                     {
-//                         i--; // Adjust index since we just removed an element
-//                     }
-//                 }
-//             }
-//         }
-//     }
-// }
 
 void Server::run()
 {
@@ -459,86 +369,6 @@ void Server::run()
 	}
 }
 
-// void Server::run()
-// {
-// 	pollfd server_fd = {_server_fd, POLLIN, 0};
-// 	_fds.push_back(server_fd);
-// 	while (Server::_serverRunning)
-// 	{
-// 		int ret = poll(_fds.data(), _fds.size(), 5);//number of fds have event
-// 		if (ret < 0)
-// 		{
-// 			if (errno == EINTR)
-// 				continue;
-// 			throw std::runtime_error("poll failed");
-// 		}
-// 		for (int i = 0; i < (int)_fds.size(); ++i)
-// 		{
-// 			pollfd &p = _fds[i];
-// 			if (p.revents == 0)
-// 			continue;
-// 			//handle error
-// 			if (p.revents & (POLLHUP | POLLERR))
-// 			{
-// 				disconnectClient(p.fd);
-// 				i--; // Adjust index since we just removed an element
-// 				// printf("ragequit %d\t%d/%d/%d\n", ret, p.fd, p.events, p.revents);
-// 				continue;
-// 			}
-// 			//new connection
-// 			if (p.fd == _server_fd)
-// 			{
-// 				acceptNewClient();
-// 				// printf("connect %d\t%d/%d/%d\n", ret, p.fd, p.events, p.revents);
-// 			}
-// 			else if (p.revents & POLLIN)
-// 			{
-// 				// Check if client still exists before handling
-// 				if (_clients.find(p.fd) != _clients.end())
-// 				{
-// 					handleClientMessage(p.fd);
-// 					if (p.revents & POLLOUT)
-// 					{
-// 						std::cout << "access POLLOUT 1" << std::endl;
-// 					}
-// 					// printf("contact %d\t%d/%d/%d\n", ret, p.fd, p.events, p.revents);
-// 					// Check if client was disconnected during handleClientMessage
-// 					if (_clients.find(p.fd) == _clients.end())
-// 						--i; // Adjust index since we just removed an element
-// 					// if (p.revents & POLLOUT)
-// 					// {
-// 					// 	std::cout << "access POLLOUT 2" << std::endl;
-// 					// }
-// 				}
-// 				// if (p.revents & POLLOUT)
-// 				// {
-// 				// 	std::cout << "access POLLOUT 3" << std::endl;
-// 				// }
-// 			}
-// 			if (p.revents & POLLOUT)
-// 			{
-				
-// 				std::cout << "access POLLOUT" << std::endl;
-// 				// printf("boradcast %d\t%d/%d/%d\n", ret, p.fd, p.events, p.revents);
-// 				// if (_clients.find(p.fd) != _clients.end())
-// 				// {
-// 				// 	if (this->get_check_broadcast() == true)
-// 				// 	{
-// 				// 		for (size_t i = 0; i < this->_channels.size(); ++i)
-// 				// 		{
-// 				// 			std::string buffer = this->_channels[i]->get_broadcast_buffer();
-// 				// 			if (!(buffer.empty()))
-// 				// 				this->_channels[i]->test_broadcast(buffer);
-// 				// 		}
-// 				// 	}
-// 				// 	if (_clients.find(p.fd) == _clients.end())
-// 				// 		--i;
-// 				// }
-// 			}
-// 		}
-// 	}
-// }
-
 bool Server::start()
 {
 	if (!openSocket())
@@ -576,19 +406,6 @@ Client*	Server::findClient(const std::string name)
 	}
 	return NULL;
 }
-
-
-// std::string& Server::get_message_send_client_buffer()
-// {
-// 	return _messagebuffer;
-// }
-
-// std::string Server::append_buffer(std::string buffer)
-// {
-// 	this->_messagebuffer = buffer;
-// 	this->check_broadcast = true;
-// 	return (this->_messagebuffer);
-// }
 
 bool Server::get_check_broadcast() const
 {

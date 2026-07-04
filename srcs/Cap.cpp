@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Cap.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
+/*   By: jjaroens <jjaroens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 19:42:37 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/02 23:35:22 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/04 15:25:09 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,6 @@ void Command::handleCAP(Client &sender, Server &server)
 		std::string err = ":ircserver "+ intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " CAP :Not enough parameters\r\n";
 		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
-		// std::cout << "Client FD " << sender.getFd() << " attempted to inquire capabilities without proper input(s)." << std::endl;
 		return;
 	}
 	std::string subcommand = this->params[0][0];
@@ -55,7 +54,6 @@ void Command::handleCAP(Client &sender, Server &server)
 		std::string err = ":ircserver "+ intToString(ERR_INVALIDCAPCMD) + " " + sender.getName() + " CAP :Invalid CAP subcommands\r\n";
 		sender.appendWriteBuffer(err);
 		server.enablePollOut(sender.getFd());
-		// std::cout << "Client FD " << sender.getFd() << " attempted to inquire capabilities without proper subcommand." << std::endl;
 		return;
 	}
 	switch (sub)
@@ -105,8 +103,6 @@ void Command::handleCAP(Client &sender, Server &server)
 		case END:
 			sender.setCap(true); // set a flag in client to indicate that CAP negotiation is complete and the client can now use the enabled capabilities
 			sender.setCapNegotiating(false); // reset the negotiating flag
-			// sendWelcomeMessage(server, sender);
-			// std::cout << "Client FD " << sender.getFd() << "end CAP negotiations" << std::endl;
 			break;
 		
 		default:

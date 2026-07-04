@@ -6,7 +6,7 @@
 /*   By: jjaroens <jjaroens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:39 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/07/04 11:47:52 by jjaroens         ###   ########.fr       */
+/*   Updated: 2026/07/04 15:25:44 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -192,36 +192,6 @@ bool    Channel::checkOperator(Client &client)
 	return true;
 }
 
-// void    Channel::handleInviteMode(Client &sender, const std::string &modeChanges, Server &server)
-// {
-//     if (!checkOperator(sender))
-//         return;
-
-//     _inviteOnly = (modeChanges[0] == '+');
-
-//     // 1. สร้างข้อความ
-//     std::string msg = buildClientPrefix(sender) + " MODE " + _name + " " + modeChanges + "\r\n";
-//     std::string rpl_324 = ":ircserver 324 " + sender.getName() + " " + _name + " :" + (modeChanges[0] == '+' ? "+i" : "") + "\r\n";
-
-//     // 2. ลูปที่ 1: ยัดลง Buffer ให้ครบทุกคน (เตรียมของให้พร้อม)
-//     for (unsigned long i = 0; i < _clients.size(); i++) {
-//         if (_clients[i] != NULL) {
-//             _clients[i]->appendWriteBuffer(msg);
-//             // ถ้าเป็นคนสั่ง ให้แปะ 324 ตามลงไปใน Buffer ทันที
-//             if (_clients[i]->getFd() == sender.getFd()) {
-//                 _clients[i]->appendWriteBuffer(rpl_324);
-//             }
-//         }
-//     }
-
-//     // 3. ลูปที่ 2: เปิด POLLOUT ให้ทุกคนพร้อมกัน (กดสวิตช์ส่งพร้อมกัน)
-//     for (unsigned long i = 0; i < _clients.size(); i++) {
-//         if (_clients[i] != NULL) {
-//             server.enablePollOut(_clients[i]->getFd());
-//         }
-//     }
-// }
-
 void	Channel::handleInviteMode(Client &sender, const std::string &modeChanges, Server &server)
 {
 	if (!checkOperator(sender))
@@ -246,13 +216,6 @@ void	Channel::handleInviteMode(Client &sender, const std::string &modeChanges, S
 
 void	Channel::handleTopicMode(Client &sender, const std::string &modeChanges, Server &server)
 {
-	// if (!checkOperator(sender))
-	// 	return;
-	// if (modeChanges[0] == '+')
-	// 	_topicRestrict = true;
-	// else
-	// 	_topicRestrict = false;
-	// broadcastModeChange(sender, modeChanges);
 	if (!checkOperator(sender))
 		return;
 	if (modeChanges[0] == '+')
@@ -336,32 +299,6 @@ void	Channel::handleKeyMode(Client &sender, const std::string &modeChanges, cons
 
 void	Channel::handleLimitMode(Client &sender, const std::string &modeChanges, const std::string &param, Server &server)
 {
-	// if (!checkOperator(sender))
-	// 	return;
-	// if (modeChanges[0] == '+')
-	// {
-	// 	if (param.empty())
-	// 	{
-	// 		std::string err = ":ircserver " + intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " MODE :Not enough parameters\r\n";
-	// 		response(sender.getFd(), err);
-	// 		// std::cout << "Client FD " << sender.getFd() << " attempted to change modes without specifying changes." << std::endl;
-	// 		return;
-	// 	}
-	// 	_hasLimited = true;
-	// 	_limit = std::atoi(param.c_str());
-	// }
-	// else if (modeChanges[0] == '-')
-	// {
-	// 	_hasLimited = false;
-	// 	_limit = 0;
-	// }
-	// else
-	// {
-	// 	std::string err = ":ircserver " + intToString(ERR_UMODEUNKOWNFLAG) + " " + sender.getName() + " " + modeChanges[1] + " :is unknown mode char\r\n";
-	// 	response(sender.getFd(), err);
-	// 	// std::cout << "Client FD " << sender.getFd() << " attempted to change modes with unknown mode character: " << modeChanges[1] << std::endl;
-	// }
-	// broadcastModeChange(sender, modeChanges);
 	if (!checkOperator(sender))
 		return;
 	if (modeChanges[0] == '+')
