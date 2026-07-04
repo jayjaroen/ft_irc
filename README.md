@@ -14,7 +14,7 @@ According to the subject provided by 42 for this project, this iteration of IRC 
 - The client who first created the channel is granted priviledge as an operator, gaining access to modify the channel.
 - Once joined the channel, clients can also leave at their discretion. The same also applies for disconnecting from the IRC server.
 - Users can connect to this server and able to use all of its capabilities mentioned above through **at least** one IRC client program of choice.
-- Only the expected errors and procedures of a typical IRC protocols are allowed, and the protocol numbers of said error reports **must** align with the universal IRC protocol rules.
+- Only the expected errors and procedures of a typical IRC protocols are allowed, and the protocol numbers of said error reports align with the universal IRC protocol rules.
 
 ### PROJECT RESULTS
 ___
@@ -33,7 +33,7 @@ Once properly executed, the terminal used will be dedicated to the server as the
 
 while any activity the server receives and acknowledges during the server runtime will be displayed after the line above.
 ### Client Side
-Clients can connect to the server via two commands; netcat (nc) or irssi. For project evaluation, both methods must be used for testing. Below is the commands for netcat method:
+Clients can connect to the server via two commands; netcat (nc) or irssi. For project evaluation, both methods must be used for testing. Below are the commands for netcat method:
 > nc -C localhost [port]
 
 After which, netcat clients would have to manually authenticate in order to verify connection and gain full access to the IRC server. This can be done by:
@@ -69,15 +69,20 @@ Below is the table listing all available commands implemented in this project an
 || Subcommand for ending capability negotiations | CAP END |
 | QUIT    | For disconnecting from the server | QUIT |
 | PING    | For fetching/checking connection to the server | PING |
-| JOIN    | For joining the specified channel, or create a new one if the channel doesn't exist. Can add keys as a password to the private channel. | JOIN [#channel] [key(optional)] |
+| JOIN    | For joining the specified channel, or create a new one if the channel doesn't exist. Can add keys as a password to the private channel. | JOIN [#channel1,#channel2,...] [key1,key2,...(optional)] |
 | PART    | For leaving the specified channel | PART |
 | PRIVMSG | For sending message to the specified target, which can be client or channel | PRIVMSG [target] : [text] |
-| MODE    | For channel operator to modify the channel. This project supports k, l, t, o, i mode flags | MODE [#channel] [+/-][flag] [input(conditional)] |
+| MODE    | For channel operator to modify the channel. This project supports k, l, t, o, i mode flags | |
+|| Flag for setup/remove key/password for the channel | MODE [#channel] [+/-]k [password] |
+|| Flag for setup/remove limit amount of users in the channel | MODE [#channel] [+/-]l [limit number] |
+|| Flag for setup/remove TOPIC usage permission to channel operator only | MODE [#channel] [+/-]t |
+|| Flag for assign/revoke user in the channel as an operator | MODE [#channel] [+/-]o [nickname] |
+|| Flag for setup/remove invite only channel | MODE [#channel] [+/-]i |
 | TOPIC   | Set up the topic of conversation for the channel | TOPIC [#channel] [topic] |
 | INVITE  | For inviting target client(s) not in the channel to join | INVITE [nickname] [#channel] |
 | KICK    | For channel operator to kick the specified client out of the channel | KICK [#channel] [nickname] |
 | HELP    | For displaying the function of specified command | HELP [command] |
-> *NOTE that in irssi, every command must type / at the start of the input line. This can be followed by either lowercase or UPPERCASE.*
+> *NOTE that in irssi, every command must type / at the start of the input line. This can be followed by either lowercase or UPPERCASE. Also, there are many extra input commands exclusive to irssi, please refer to the irssi document in the resources for those inputs.*
 
 ### RESOURCES
 ___
@@ -97,6 +102,7 @@ Below are the references used in research and development of this project, cited
 During this project development, we have implemented the use of AI as follows:
 - **Code Uniformity:** Generating the layout format of the code so that every contributor can read, understand, and follow through other's code more easily and efficiently, promoting team collaboration.
 - **Debugging:** Help identifying causes of bugs and errors so that contributors can assess and effectively fix issues faster.
+- **Coding Assist:** Help suggesting fixes and coding in certain edge case tests. These generated codes are strictly suggestions and its implementations are made under our supervising.
 - **Research Assist:** Help analyze resources and research materials for further and clearer understanding.
 
 <!--###FURTHER IN DEPTH DETAILS HERE FOR EXPLANATION ASSIST/PROMPT BELOW-->
