@@ -208,3 +208,13 @@ void Client::appendWriteBuffer(const std::string &data)
 // {
 // 	return (_channels);
 // }
+
+std::string	Client::getRealname() const
+{
+	return _realname;
+}
+
+void	Client::setRealname(const std::string &realname)
+{
+	_realname = realname;
+}

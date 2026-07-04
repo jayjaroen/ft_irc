@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/07/02 23:42:54 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/04 07:32:39 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,18 +15,6 @@
 #include <unistd.h>
 #include <cstdio>
 #include <string>
-
-// void sendResponse(int fd, const std::string &message)
-// {
-// 	if (fd <= 0)
-// 		return;
-//     // std::cout << "Sending to FD " << fd << ": " << message << std::endl;
-// 	ssize_t sent = send(fd, message.c_str(), message.length(), MSG_NOSIGNAL);
-// 	if (sent < 0)
-// 	{
-// 		::perror("Failed to send message");
-// 	}
-// }
 
 void Command::execute_command(Server &server, Client &sender)
 {
@@ -75,11 +63,9 @@ void Command::execute_command(Server &server, Client &sender)
 		default:      break;
 	}
 	if (sender.isPassSet() == true && sender.isNickSet() == true && sender.isUserSet() == true && sender.isAuthenticated() == false)
-	{
 		sendWelcomeMessage(server, sender);
-	}
 	if (this->type == 0)
-		return;                                                                                                                                         
+		return;
 }
 
 
@@ -91,7 +77,7 @@ void sendWelcomeMessage(Server &server, Client &sender)
 		sender.setAuthenticated(true);
 		// std::cout << "Client FD " << sender.getFd() << " has successfully registered." << std::endl;
 		std::string clientNick = sender.getName();
-		std::string welcomeMsg = ":ircserver 001 " + clientNick + " :Welcome to the IRC server, " + clientNick + "!\r\n";
+		std::string welcomeMsg = ":ircserver 001 " + clientNick + " :Welcome to the IRC server " + clientNick + "!" + sender.getUsername() + "@" + sender.getIp() + "\r\n";
 		welcomeMsg += ":ircserver 002 " + clientNick + " :Your host is ircserver, running version 1.0\r\n";
 		welcomeMsg += ":ircserver 003 " + clientNick + " :This server was created on " + server.get_creation_date() + "\r\n";
 		welcomeMsg += ":ircserver 004 " + clientNick + " ircserver 1.0 i tkolk\r\n";

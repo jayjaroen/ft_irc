@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 19:49:11 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/02 23:38:57 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/04 07:37:09 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,6 +44,7 @@ void Command::handleUSER(Client &sender, Server &server)
 	if (realname.length() > 128)
 		realname = realname.substr(0, 128);
 	sender.setUsername(username);
+	sender.setRealname(realname);
 	// std::cout << "Client FD " << sender.getFd() << " set username to " << username << std::endl;
 	sender.setUserSet(true);
 }

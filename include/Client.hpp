@@ -17,6 +17,7 @@ class Client
         std::string _ip;
         std::string _nickname;
         std::string _username;
+		std::string _realname; // add 1 _realname;
         std::string _buffer;
 		std::string _write_buffer;
         // Channel*    _channel;
@@ -47,8 +48,10 @@ class Client
         int getPort() const;
         std::string getName() const;
         std::string getUsername() const;
+		std::string getRealname() const; //add 2 get Realname;
         std::string getIp() const;
         void    setUsername(const std::string &username);
+		void	setRealname(const std::string &realname); // add 3 set Realname
         bool    setAuthenticated(bool auth);
         bool    setNickSet(bool isset);
         bool    isNickSet() const;
@@ -81,7 +84,6 @@ class Client
 
         int     getNumChan() const;
         int     getLimitChan() const;
-
 };
 
 
