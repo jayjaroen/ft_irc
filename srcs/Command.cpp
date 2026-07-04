@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/03/31 13:46:55 by codespace         #+#    #+#             */
-/*   Updated: 2026/07/04 07:32:39 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/04 10:37:15 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,7 +60,7 @@ void Command::execute_command(Server &server, Client &sender)
 			server.enablePollOut(sender.getFd());
 			break;
 		}
-		default:      break;
+		default:	break;
 	}
 	if (sender.isPassSet() == true && sender.isNickSet() == true && sender.isUserSet() == true && sender.isAuthenticated() == false)
 		sendWelcomeMessage(server, sender);

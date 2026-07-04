@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 19:37:14 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/02 23:28:21 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/04 10:15:31 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,10 +24,7 @@ static bool isValidJoinChannelName(const std::string &channel_name)
 {
 	if (channel_name.empty() || channel_name.length() > 50)
 		return false;
-
 	if (channel_name.length() == 1)
-		return false;
-	if (channel_name.empty() || channel_name.length() > 50)
 		return false;
 	if (channel_name[0] != '#')
 		return false;
@@ -58,7 +55,11 @@ static void sendJoinReplies(Server &server, Client &sender, Channel *channel)
 		std::string topic_msg = ":ircserver " + intToString(RPL_TOPIC) + " " + sender.getName() + " " + channel_name + " :" + topic + "\r\n";
 		sender.appendWriteBuffer(topic_msg);
 		std::string setter = channel->getsetter_topic();
-		std::string topic_time_msg = ":ircserver " + intToString(RPL_TOPICWHOTIME) + " " + sender.getName() + " " + channel_name + " " + setter + " :Topic set time\r\n";
+		time_t topic_time = channel->getCreationTime_Topic();
+		std::stringstream ss;
+		ss << topic_time;
+		std::string topic_time_str = ss.str();
+		std::string topic_time_msg = ":ircserver " + intToString(RPL_TOPICWHOTIME) + " " + sender.getName() + " " + channel_name + " " + setter + " :Topic set time " + topic_time_str + "\r\n";
 		sender.appendWriteBuffer(topic_time_msg);
 	}
 	std::string names_msg = ":ircserver " + intToString(RPL_NAMREPLY) + " " + sender.getName() + " = " + channel_name + " :";
@@ -72,8 +73,10 @@ static void sendJoinReplies(Server &server, Client &sender, Channel *channel)
 	}
 	names_msg += "\r\n";
 	sender.appendWriteBuffer(names_msg);
+
 	std::string end_of_names_msg = ":ircserver " + intToString(RPL_ENDOFNAMES) + " " + sender.getName() + " " + channel_name + " :End of NAMES list\r\n";
 	sender.appendWriteBuffer(end_of_names_msg);
+
 	server.enablePollOut(sender.getFd());
 }
 
@@ -97,6 +100,7 @@ void Command::handleJOIN(Server &server, Client &sender)
 	}
 	std::vector<std::string> channels = this->params[0];
 	std::vector<std::string> keys;
+
 	if (this->params.size() > 1)
 		keys = this->params[1];
 
@@ -125,20 +129,30 @@ void Command::handleJOIN(Server &server, Client &sender)
 		Channel *channel = server.findChannel(channel_name);
 		bool alreadyMember = (channel != NULL && channel->hasClient(&sender));
 
-		if (!alreadyMember && sender.getNumChan() >= sender.getLimitChan())
+		if (alreadyMember)
+			continue;
+
+		if (sender.getNumChan() >= sender.getLimitChan())
 		{
 			std::string err = ":ircserver " + intToString(ERR_TOOMANYCHANNELS) + " " + sender.getName() + " " + channel_name + " :You have joined too many channels\r\n";
 			sender.appendWriteBuffer(err);
 			server.enablePollOut(sender.getFd());
 			continue;
 		}
+		// if (!alreadyMember && sender.getNumChan() >= sender.getLimitChan())
+		// {
+		// 	std::string err = ":ircserver " + intToString(ERR_TOOMANYCHANNELS) + " " + sender.getName() + " " + channel_name + " :You have joined too many channels\r\n";
+		// 	sender.appendWriteBuffer(err);
+		// 	server.enablePollOut(sender.getFd());
+		// 	continue;
+		// }
 
-		if (channel != NULL && !alreadyMember)
+		if (channel != NULL)
 		{
 			if (channel->getKey() != "" && !channel->checkKey(key))
 			{
 				std::string err = ":ircserver " + intToString(ERR_BADCHANNELKEY) + " " + sender.getName() + " " + channel_name + " :Cannot join channel (+k)\r\n";
-			sender.appendWriteBuffer(err);
+				sender.appendWriteBuffer(err);
 				server.enablePollOut(sender.getFd());
 				// std::cout << "Client FD " << sender.getFd() << " attempted to join channel with incorrect key: " << channel_name << std::endl;
 				continue;

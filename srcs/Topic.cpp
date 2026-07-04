@@ -6,7 +6,7 @@
 /*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 19:43:08 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/02 23:38:53 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/04 10:25:12 by gyeepach         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ static std::string buildClientPrefix(const Client &sender)
 
 void Command::handleTOPIC(Client &sender, Server &server)
 {
-	if (this->params.empty() || this->params[0].empty() || this->params[1].empty())
+	if (this->params.empty() || this->params[0].empty())
 	{
 		std::string err = ":ircserver "+ intToString(ERR_NEEDMOREPARAMS) + " " + sender.getName() + " TOPIC :Not enough parameters\r\n";
 		sender.appendWriteBuffer(err);
@@ -32,6 +32,7 @@ void Command::handleTOPIC(Client &sender, Server &server)
 
 	std::string channelName = this->params[0][0];
 	Channel *target_channel = server.findChannel(channelName);
+
 	if (target_channel == NULL)
 	{
 		std::string err = ":ircserver " + intToString(ERR_NOSUCHCHANNEL) + " " + sender.getName() + " " + channelName + " :No such channel\r\n";
@@ -48,7 +49,7 @@ void Command::handleTOPIC(Client &sender, Server &server)
 		return;
 	}
 
-	if (this->params.size() < 2 || this->params[1].empty() || this->params[1][0] == "")
+	if (this->params.size() < 2 || this->params[1].empty())
 	{
 		std::string topic = target_channel->getTopic();
 		if (!topic.empty())
