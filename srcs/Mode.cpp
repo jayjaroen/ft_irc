@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Mode.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
+/*   By: jjaroens <jjaroens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 19:44:44 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/02 23:38:19 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/04 12:56:29 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,13 +63,13 @@ if (this->params.size() < 2 || this->params[1].empty())
 		modestring += "l";
 	if (channel->getTopic_mode())
 		modestring += "t";
-	std::string rpl_mode_324 = ":ircserver " + intToString(RPL_CHANNELMODEIS) + " " + nick + " " + channel->getName() + " :" + modestring + mode_args + "\r\n";
+	std::string rpl_mode_324 = ":ircserver " + intToString(RPL_CHANNELMODEIS) + " " + nick + " " + channel->getName() + " : " + modestring + mode_args + "\r\n";
 	sender.appendWriteBuffer(rpl_mode_324);
 	server.enablePollOut(sender.getFd());
 	std::stringstream ss_chan;
 	ss_chan << channel->getCreationTime();
 	std::string rpl_329_msg = ":ircserver " + intToString(RPL_CREATIONTIME) + " " + sender.getName() + " " + channel->getName() + " " + ss_chan.str() + "\r\n";
-	sender.appendWriteBuffer(rpl_mode_324);
+	sender.appendWriteBuffer(rpl_329_msg);
 	server.enablePollOut(sender.getFd());
 	return;
 }

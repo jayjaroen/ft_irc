@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.hpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
+/*   By: jjaroens <jjaroens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:29 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/07/02 13:45:58 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/04 11:43:09 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,6 +66,7 @@ class Channel
 		void					setInviteOnly(bool inviteOnly);
 		bool					isInviteOnly() const;
 		bool					isInvited(Client *client) const;
+		void					removeInvite(Client *client);
 		std::string 			getsetter_topic() const;
 		std::string				getCreationTimestr() const;
 		std::time_t				getCreationTime() const;

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Channel.cpp                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
+/*   By: jjaroens <jjaroens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/04/25 12:23:39 by jjaroens          #+#    #+#             */
-/*   Updated: 2026/07/03 17:06:34 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/04 11:47:52 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -479,6 +479,18 @@ bool	Channel::isInvited(Client *client) const
 			return true;
 	}
 	return false;
+}
+
+void	Channel::removeInvite(Client *client)
+{
+	for (std::vector<Client*>::iterator it = _invited_clients.begin(); it != _invited_clients.end(); it++)
+	{
+		if (*it == client)
+		{
+			_invited_clients.erase(it);
+			break;
+		}
+	}	
 }
 
 std::string	Channel::getsetter_topic() const

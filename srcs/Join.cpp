@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Join.cpp                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
+/*   By: jjaroens <jjaroens@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/02 19:37:14 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/04 10:15:31 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/04 11:49:59 by jjaroens         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -172,6 +172,10 @@ void Command::handleJOIN(Server &server, Client &sender)
 				server.enablePollOut(sender.getFd());
 				// std::cout << "Client FD " << sender.getFd() << " attempted to join invite-only channel without an invitation: " << channel_name << std::endl;
 				continue;
+			}
+			if (channel->isInviteOnly() && channel->isInvited(&sender)) // add
+			{
+				channel->removeInvite(&sender);
 			}
 		}
 
