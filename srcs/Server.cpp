@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Server.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: gyeepach <gyeepach@student.42bangkok.com>  +#+  +:+       +#+        */
+/*   By: psenalia <psenalia@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/03 10:59:54 by gyeepach          #+#    #+#             */
-/*   Updated: 2026/07/03 11:00:01 by gyeepach         ###   ########.fr       */
+/*   Updated: 2026/07/04 14:44:08 by psenalia         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -237,10 +237,16 @@ void Server::handleClientMessage(int client_fd)
 	
 	int bytes = recv(client_fd, buffer, sizeof(buffer), 0);
 	//client disconnect or error
-	if (bytes <= 0) //check condition: 0 -> client close connection, < 0 -> error
+	if (bytes == 0)
 	{
 		// std::cout << "Client " << client_fd << " disconnected" << std::endl;
 		disconnectClient(client_fd);
+		return;
+	}
+	if (bytes < 0) //check condition: 0 -> client close connection, < 0 -> error
+	{
+		// std::cout << "Client " << client_fd << " disconnected" << std::endl;
+		// disconnectClient(client_fd);
 		return;
 	}
 	Client* client = _clients[client_fd];
@@ -414,41 +420,41 @@ void Server::run()
 				acceptNewClient();
 			else
 			{
-			if (p.revents & POLLIN)
-			{
-				handleClientMessage(p.fd);
-				if (_clients.find(p.fd) == _clients.end())
+				if (p.revents & POLLIN)
 				{
-					i--;
-					continue;
-				}
-			}
-			if (p.revents & POLLOUT)
-			{
-				Client *c = _clients[p.fd];
-				if (c && !c->getWriteBuffer().empty())
-				{
-					std::string &buf = c->getWriteBuffer();
-					std::cout << "[DEBUG] Sending to fd " << p.fd << " : " << buf;
-					int sent = send(p.fd, buf.c_str(), buf.length(), 0);
-					if (sent > 0)
+					handleClientMessage(p.fd);
+					if (_clients.find(p.fd) == _clients.end())
 					{
-						buf.erase(0, sent);
-					} 
-					else if (sent < 0)
-					{
-						if (errno != EAGAIN && errno != EWOULDBLOCK) {
-								disconnectClient(p.fd);
-								i--;
-								continue;
-							}
+						i--;
+						continue;
 					}
+				}
+				if (p.revents & POLLOUT)
+				{
+					Client *c = _clients[p.fd];
+					if (c && !c->getWriteBuffer().empty())
+					{
+						std::string &buf = c->getWriteBuffer();
+						std::cout << "[DEBUG] Sending to fd " << p.fd << " : " << buf;
+						int sent = send(p.fd, buf.c_str(), buf.length(), 0);
+						if (sent > 0)
+						{
+							buf.erase(0, sent);
+						} 
+						else if (sent < 0)
+						{
+							// if (errno != EAGAIN && errno != EWOULDBLOCK) {
+							// 		disconnectClient(p.fd);
+							// 		--i;
+									continue;
+								// }
+						}
 
-					if (buf.empty())
-						p.events &= ~POLLOUT;
+						if (buf.empty())
+							p.events &= ~POLLOUT;
+					}
 				}
 			}
-		}
 		}
 	}
 }
